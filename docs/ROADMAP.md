@@ -245,7 +245,7 @@ Phase 0 is complete only when:
 
 **Goal:** Connect scanning and cleaning into a reliable workflow.
 
-**Phase status:** In progress
+**Phase status:** Complete
 
 * [x] **P3-01** Implement cleanup state machine
 * [x] **P3-02** Validate capability before every cleanup
@@ -260,18 +260,18 @@ Phase 0 is complete only when:
 * [x] **P3-11** Calculate reported cache delta
 * [x] **P3-12** Clamp negative freed values
 * [x] **P3-13** Add noise/significance threshold
-* [ ] **P3-14** Build cleanup confirmation screen
-* [ ] **P3-15** Build cleaning progress screen
-* [ ] **P3-16** Build cleanup result screen
-* [ ] **P3-17** Display partial failures
+* [x] **P3-14** Build cleanup confirmation screen
+* [x] **P3-15** Build cleaning progress screen
+* [x] **P3-16** Build cleanup result screen
+* [x] **P3-17** Display partial failures
 
 ## Phase 3 Gate
 
-* [ ] Full scan → clean → rescan workflow works
-* [ ] Results never claim guaranteed reclaim amounts
-* [ ] Negative values are handled
-* [ ] Storage-stat delay is handled
-* [ ] Interrupted Shizuku session fails safely
+* [x] Full scan → clean → rescan workflow works
+* [x] Results never claim guaranteed reclaim amounts
+* [x] Negative values are handled
+* [x] Storage-stat delay is handled
+* [x] Interrupted Shizuku session fails safely
 
 ---
 

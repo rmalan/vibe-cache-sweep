@@ -53,8 +53,15 @@ class MainActivity : ComponentActivity() {
                                     shizukuManager = app.container.shizukuManager
                                 )
                             )
+                            val cleanerViewModel: my.id.rmalan.cache.sweep.ui.viewmodel.CleanerViewModel = viewModel(
+                                factory = my.id.rmalan.cache.sweep.ui.viewmodel.CleanerViewModel.Factory(
+                                    coordinator = app.container.cleanupCoordinator,
+                                    shizukuManager = app.container.shizukuManager
+                                )
+                            )
                             AppCacheListScreen(
                                 viewModel = appsViewModel,
+                                cleanerViewModel = cleanerViewModel,
                                 packageRepository = app.container.packageRepository,
                                 onNavigateBack = {
                                     currentDestination = MainDestination.DIAGNOSTIC

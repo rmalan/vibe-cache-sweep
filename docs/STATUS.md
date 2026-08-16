@@ -2,8 +2,8 @@
 
 **Last updated:** 2026-08-16
 **Overall status:** In progress
-**Current phase:** Phase 3 (Cleanup Coordinator & Results) — In progress
-**Current task:** P3-14 through P3-17 — Cleanup Confirmation, Progress, Result Screens, and Partial Failures UI
+**Current phase:** Phase 4 (Product UI & Persistence) — Ready to start
+**Current task:** P4-01 through P4-04 — Onboarding Flow & First Launch Experience
 
 ---
 
@@ -12,7 +12,7 @@
 * [x] Phase 0 — Technical Feasibility
 * [x] Phase 1 — Production Cache Scanner
 * [x] Phase 2 — Production Cleaner
-* [ ] Phase 3 — Cleanup Coordinator & Results (Core Coordinator Complete)
+* [x] Phase 3 — Cleanup Coordinator & Results
 * [ ] Phase 4 — Product UI & Persistence
 * [ ] Phase 5 — Hardening & Release
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P3-14 through P3-17 — Cleanup Confirmation, Progress, Result Screens, and Partial Failures UI
+## P4-01 through P4-04 — Onboarding Flow & First Launch Experience
 
 **Status:** Ready to start
 
 ### Objective
 
-Build the Compose user interface screens for the cleanup workflow: cleanup confirmation modal/sheet, live cleaning progress screen with package count and app name, cleanup result screen with before/after physical and cache metrics, and expandable partial failures section.
+Implement the complete user onboarding and initial capability acquisition workflow: welcome screen with value proposition, contextual Usage Access authorization screen, Shizuku discovery and connection screen, and first scan flow initiation.
 
 ### Expected outcome
 
-End-to-end interactive cleanup user experience reflecting real-time state machine progression and accurate reclamation telemetry.
+Smooth first launch user experience introducing storage capabilities, transparent permission requests, and transitioning to dashboard.
 
 ---
 
@@ -213,7 +213,15 @@ End-to-end interactive cleanup user experience reflecting real-time state machin
 * [x] P3-12 Negative freed values clamped to zero (`maxOf(0L, ...)`) protecting against background write noise
 * [x] P3-13 Noise threshold constant (`DEFAULT_NOISE_THRESHOLD_BYTES = 16MB`) and `isSignificantReclaim` evaluation implemented conforming to TECH_SPEC Section 37
 * [x] `CleanupCoordinator` wired into dependency container `AppContainer`
-* [x] Comprehensive unit tests added in `CleaningStateTest`, `CleanupResultTest`, and `CleanupCoordinatorTest` (16 new tests)
+
+## Cleanup Screens & Partial Failures UI (P3-14 to P3-17)
+
+* [x] P3-14 Cleanup confirmation dialog implemented (`CleanupConfirmationDialog`) conforming to PRD FR-009 with clear educational expectations and reported cache estimates (avoiding guaranteed reclaim claims)
+* [x] P3-15 Cleaning progress screen implemented (`CleaningProgressScreen`) conforming to PRD FR-011 with real-time state machine progression (Validating, SnapshotBefore, Clearing with live package counts and app names, WaitingForStats, and SnapshotAfter) without fake percentage indicators
+* [x] P3-16 Cleanup result screen implemented (`CleanupResultScreen`) displaying physical storage before/after metrics, reported cache before/after metrics, significance evaluation, duration, and educational disclaimer
+* [x] P3-17 Expandable partial failures section implemented (`PartialFailuresSection`) displaying failed packages with app icons, display names, and attributed failure reasons
+* [x] `CleanerViewModel` implemented and wired to `AppCacheListScreen` with multi-select cleaning, single-app clearing from bottom sheet, and result dismissal refresh
+* [x] Comprehensive unit tests added in `CleanerViewModelTest` and `CleanupScreensFormattingTest` (12 new tests)
 
 ---
 
@@ -254,16 +262,27 @@ End-to-end interactive cleanup user experience reflecting real-time state machin
 
 ---
 
+# Phase 3 Gate: PASSED
+
+* [x] Full scan → clean → rescan workflow works
+* [x] Results never claim guaranteed reclaim amounts
+* [x] Negative values are handled
+* [x] Storage-stat delay is handled
+* [x] Interrupted Shizuku session fails safely
+* [x] All 171 unit tests passing across 31 test suites
+
+---
+
 # Current Technical Knowledge
 
 The intended architecture is:
 
 ```text
-Compose UI (AppCacheListScreen / DiagnosticScreen)
+Compose UI (AppCacheListScreen / DiagnosticScreen / CleaningProgressScreen / CleanupResultScreen)
     |
-ViewModels (AppsViewModel)
+ViewModels (AppsViewModel / CleanerViewModel)
     |
-Domain / Coordinator
+Domain / Coordinator (CleanupCoordinator)
     |
     +---- PackageRepository (Package discovery, icons, system classification)
     |
@@ -331,7 +350,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (159/159 unit tests passed across 29 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (171/171 unit tests passed across 31 test suites).
 ```
 
 ---
@@ -380,22 +399,15 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P3-01 through P3-13 — Cleanup State Machine, Pre-Clean Capability Validation, Coordinator, Snapshots, Settling, Rescan, and Metrics (Phase 3 — Cleanup Coordinator & Results)**
+**P3-14 through P3-17 — Cleanup Confirmation, Progress, Result Screens, and Partial Failures UI (Phase 3 — Cleanup Coordinator & Results)**
 
-* Implemented cleanup state machine sealed interface `CleaningState` with progress fraction calculations (`P3-01`)
-* Implemented capability pre-validation before every cleanup operation in `CleanupCoordinator` ensuring strict gating on Shizuku, permissions, and mode capability (`P3-02`)
-* Captured pre-clean physical storage snapshot via `DeviceStorageRepository.snapshot()` (`P3-03`)
-* Captured pre-clean reported cache snapshot across target packages (`P3-04`)
-* Implemented plan execution through `CacheCleaner.executePlan` with progress callback propagation (`P3-05`)
-* Added bounded storage-stat settling delay support (`settlingDelayMillis` with 500ms default) (`P3-06`)
-* Implemented post-cleanup rescan of target packages via `StorageStatsRepository` (`P3-07`)
-* Captured post-clean physical storage snapshot (`P3-08`)
-* Computed post-clean reported cache footprint and residual cache (`P3-09`)
-* Calculated physical free-space delta (`P3-10`) and reported cache reduction delta (`P3-11`)
-* Enforced negative delta clamping to `0L` protecting against background write fluctuations (`P3-12`)
-* Added 16 MB noise threshold constant (`DEFAULT_NOISE_THRESHOLD_BYTES`) and `isSignificantReclaim` evaluation (`P3-13`)
-* Wired `CleanupCoordinator` into `AppContainer`
-* Added 16 unit tests across `CleaningStateTest`, `CleanupResultTest`, and `CleanupCoordinatorTest`; 159/159 tests passing across 29 test suites
+* Built cleanup confirmation dialog `CleanupConfirmationDialog` conforming to PRD FR-009 with clear educational expectations and reported cache estimates (`P3-14`)
+* Built cleaning progress screen `CleaningProgressScreen` conforming to PRD FR-011 with real-time state machine progression (`Validating`, `SnapshotBefore`, `Clearing` with live package counts and app names, `WaitingForStats`, `SnapshotAfter`) without fake percentages (`P3-15`)
+* Built cleanup result screen `CleanupResultScreen` displaying physical storage before/after metrics, reported cache before/after metrics, significance evaluation, duration, and educational disclaimer (`P3-16`)
+* Built expandable partial failures section `PartialFailuresSection` displaying failed packages with app icons, display names, and attributed failure reasons (`P3-17`)
+* Implemented `CleanerViewModel` managing cleaning flow, confirmation, execution, and results
+* Wired `CleanerViewModel` to `AppCacheListScreen` with multi-select cleaning, single-app clearing from bottom sheet, and result dismissal refresh
+* Added 12 unit tests across `CleanerViewModelTest` and `CleanupScreensFormattingTest`; 171/171 tests passing across 31 test suites
 
 ---
 
@@ -403,14 +415,9 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P3-14 through P3-17 — Cleanup Confirmation, Progress, Result Screens, and Partial Failures UI (Phase 3 — Cleanup Coordinator & Results)**
+**P4-01 through P4-04 — Onboarding Flow & First Launch Experience (Phase 4 — Product UI & Persistence)**
 
-* Build cleanup confirmation modal/dialog (`P3-14`)
-* Build cleaning progress screen with animated package progress and app name (`P3-15`)
-* Build cleanup result screen with before/after physical and cache metrics (`P3-16`)
-* Display expandable partial failures section on result screen (`P3-17`)
-
-
-
-
-
+* Build welcome screen with value proposition (`P4-01`)
+* Build Usage Access onboarding screen with permission intent (`P4-02`)
+* Build Shizuku onboarding screen with connection status (`P4-03`)
+* Implement first scan flow and state transitions (`P4-04`)

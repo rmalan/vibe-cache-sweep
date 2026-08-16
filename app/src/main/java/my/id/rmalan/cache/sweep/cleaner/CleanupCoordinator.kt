@@ -1,5 +1,6 @@
 package my.id.rmalan.cache.sweep.cleaner
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -21,7 +22,8 @@ class CleanupCoordinator(
     private val storage: DeviceStorageRepository,
     private val storageStatsRepository: StorageStatsRepository,
     private val packageRepository: PackageRepository? = null,
-    private val settlingDelayMillis: Long = DEFAULT_SETTLING_DELAY_MS
+    private val settlingDelayMillis: Long = DEFAULT_SETTLING_DELAY_MS,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default
 ) {
 
     suspend fun clean(
@@ -29,7 +31,7 @@ class CleanupCoordinator(
         userId: Int = 0,
         scannedPackageSet: Set<String>? = null,
         onProgress: (suspend (CleaningState) -> Unit)? = null
-    ): CleanupResult = withContext(Dispatchers.Default) {
+    ): CleanupResult = withContext(dispatcher) {
         val startedAt = System.currentTimeMillis()
 
         // 1. Validating capabilities and plan

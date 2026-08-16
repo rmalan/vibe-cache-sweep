@@ -89,6 +89,16 @@ data class CleanupPlan(
             )
         }
 
+        fun selectiveSingle(
+            packageName: String,
+            estimatedCacheBytes: Long = 0L
+        ): CleanupPlan {
+            return selective(
+                packages = listOf(packageName),
+                estimatedCacheBytes = estimatedCacheBytes
+            )
+        }
+
         fun fromApps(
             apps: List<AppCacheInfo>
         ): CleanupPlan {
