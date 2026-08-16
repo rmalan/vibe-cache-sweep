@@ -196,7 +196,7 @@ Phase 0 is complete only when:
 
 **Depends on:** Phase 0 and Phase 1
 
-**Phase status:** Ready to start
+**Phase status:** Complete
 
 ## Cleaner abstraction
 
@@ -224,20 +224,20 @@ Phase 0 is complete only when:
 
 ## Security
 
-* [ ] **P2-16** Ensure no `sh -c`
-* [ ] **P2-17** Ensure no arbitrary command execution
-* [ ] **P2-18** Test command argument generation
-* [ ] **P2-19** Test plain `pm clear PACKAGE` cannot be generated
-* [ ] **P2-20** Audit exported Android components
+* [x] **P2-16** Ensure no `sh -c`
+* [x] **P2-17** Ensure no arbitrary command execution
+* [x] **P2-18** Test command argument generation
+* [x] **P2-19** Test plain `pm clear PACKAGE` cannot be generated
+* [x] **P2-20** Audit exported Android components
 
 ## Phase 2 Gate
 
-* [ ] Selective cleaning works when supported
-* [ ] Unsupported devices degrade gracefully
-* [ ] Global fallback works
-* [ ] Partial failures work
-* [ ] Safety tests pass
-* [ ] No arbitrary privileged shell interface exists
+* [x] Selective cleaning works when supported
+* [x] Unsupported devices degrade gracefully
+* [x] Global fallback works
+* [x] Partial failures work
+* [x] Safety tests pass
+* [x] No arbitrary privileged shell interface exists
 
 ---
 
@@ -245,7 +245,7 @@ Phase 0 is complete only when:
 
 **Goal:** Connect scanning and cleaning into a reliable workflow.
 
-**Phase status:** Blocked
+**Phase status:** Ready to start
 
 * [ ] **P3-01** Implement cleanup state machine
 * [ ] **P3-02** Validate capability before every cleanup

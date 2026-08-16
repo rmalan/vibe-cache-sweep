@@ -45,8 +45,12 @@ object PackageCommands {
     }
 
     fun execute(args: List<String>, timeoutSeconds: Long = DEFAULT_TIMEOUT_SECONDS): CommandResult {
-        // Enforce that if 'clear' is in args, '--cache-only' MUST be present
-        if (args.contains("clear")) {
+        require(args.isNotEmpty()) { "Command arguments list cannot be empty" }
+        require(args.all { it.isNotBlank() }) { "Command argument cannot be blank" }
+
+        // Enforce that if 'clear' is in args (either as an individual arg or token), '--cache-only' MUST be present
+        val hasClear = args.any { arg -> arg == "clear" || arg.split(Regex("\\s+")).contains("clear") }
+        if (hasClear) {
             check(args.contains("--cache-only")) {
                 "CRITICAL DEFECT: Attempted execution of clear command without --cache-only"
             }

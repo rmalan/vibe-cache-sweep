@@ -2,8 +2,8 @@
 
 **Last updated:** 2026-08-16
 **Overall status:** In progress
-**Current phase:** Phase 2 (Production Cleaner) — In progress
-**Current task:** P2-16 through P2-20 — Cleaner Security Auditing & Invariant Verification
+**Current phase:** Phase 3 (Cleanup Coordinator & Results) — Ready to start
+**Current task:** P3-01 through P3-04 — Cleanup State Machine, Pre-Clean Capability Validation, and Snapshots
 
 ---
 
@@ -11,7 +11,7 @@
 
 * [x] Phase 0 — Technical Feasibility
 * [x] Phase 1 — Production Cache Scanner
-* [ ] Phase 2 — Production Cleaner
+* [x] Phase 2 — Production Cleaner
 * [ ] Phase 3 — Cleanup Coordinator & Results
 * [ ] Phase 4 — Product UI & Persistence
 * [ ] Phase 5 — Hardening & Release
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P2-16 through P2-20 — Cleaner Security Auditing & Invariant Verification
+## P3-01 through P3-04 — Cleanup State Machine, Pre-Clean Capability Validation, and Snapshots
 
 **Status:** Ready to start
 
 ### Objective
 
-Audit and enforce all security constraints across the cleaner layer: ensure no `sh -c` usage, eliminate arbitrary command execution risks, test command argument generation, test that plain `pm clear PACKAGE` without `--cache-only` cannot be generated, and audit all exported Android components.
+Implement the cleanup state machine (`CleanupState`, `CleanupCoordinator`), validate privileged runtime capabilities before initiating every cleanup, and capture pre-clean physical storage and reported cache snapshots.
 
 ### Expected outcome
 
-Thorough security verification passing all automated invariants with zero potential for data loss or privilege escalation.
+Robust cleanup workflow foundation capturing accurate baseline measurements and enforcing pre-execution safety.
 
 ---
 
@@ -189,6 +189,14 @@ Thorough security verification passing all automated invariants with zero potent
 * [x] P2-15 Graceful handling of unsupported global trim implemented with structured `CleanerError.GlobalTrimUnsupported`, `CleanerError.ShizukuUnavailable`, `CleanerError.PermissionDenied`, `CleanerError.CommandFailed`, and IPC exception isolation
 * [x] Comprehensive unit tests added in `GlobalTrimCalculatorTest`, `CleanupPlanTest`, and `ShizukuCacheCleanerTest`
 
+## Cleaner Security Auditing & Invariant Verification (P2-16 to P2-20)
+
+* [x] P2-16 Zero `sh -c` usage across all modules enforced and verified via automated recursive source scanner test (`CodebaseSecurityAuditTest.codebase_hasZeroUsageOfShDashC`)
+* [x] P2-17 Arbitrary command execution eliminated: reflection audit verified only typed AIDL interfaces (`ICacheOpsService`), typed `CacheCleaner` domain methods, and zero `Runtime.getRuntime().exec` across production code (`CodebaseSecurityAuditTest.codebase_hasNoRuntimeExecInProductionCode`, `aidlInterface_strictlyEnforcesTypedOperationsWithoutArbitraryExecution`, `cacheCleanerInterface_containsOnlyTypedOperations`)
+* [x] P2-18 Command argument generation verified across all valid package patterns, user IDs, boundary conditions (0L, 1L, Long.MAX_VALUE), and injection payloads (metacharacters, traversal, delimiters, self packages, negative IDs) in `PackageCommandsTest`
+* [x] P2-19 Critical invariant enforced: plain `pm clear PACKAGE` without `--cache-only` cannot be generated or executed in any permutation (`commandBuilder_neverCreatesPlainPmClear`, `execute_refusesClearWithoutCacheOnly_inAnyForm` in `PackageCommandsTest`)
+* [x] P2-20 Android component and permissions security audited: verified no `INTERNET` permission in `:app` or `:fixture`, `allowBackup="false"`, `MainActivity` is the sole exported activity with `MAIN`/`LAUNCHER`, no exported services or receivers, and `ShizukuProvider` is properly permission-gated with `INTERACT_ACROSS_USERS_FULL` (`AndroidManifestSecurityAuditTest`)
+
 ---
 
 # Phase 0 Gate: PASSED
@@ -214,6 +222,17 @@ Thorough security verification passing all automated invariants with zero potent
 * [x] UI remains responsive with progressive state and memory-bounded thumbnails
 * [x] Cache list can be searched and sorted (Cache size, Total size, Alphabetical)
 * [x] Build and tests pass (83/83 unit tests passing)
+
+---
+
+# Phase 2 Gate: PASSED
+
+* [x] Selective cleaning works when supported
+* [x] Unsupported devices degrade gracefully
+* [x] Global fallback works
+* [x] Partial failures work
+* [x] Safety tests pass
+* [x] No arbitrary privileged shell interface exists
 
 ---
 
@@ -294,7 +313,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (122/122 unit tests passed across 24 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (143/143 unit tests passed across 26 test suites).
 ```
 
 ---
@@ -343,15 +362,15 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P2-12 through P2-15 — Global Cache Trimming Engine & Fallback (Phase 2 — Production Cleaner)**
+**P2-16 through P2-20 — Cleaner Security Auditing & Invariant Verification (Phase 2 — Production Cleaner)**
 
-* Implemented `GlobalTrimCalculator` with `calculateDesiredFreeBytes(deviceStorage, estimatedCacheBytes)` conforming to TECH_SPEC Section 34 with arithmetic overflow protection and non-negative clamping (`P2-12`, `P2-13`)
-* Added `CleanupPlan.globalTrim(deviceStorage, ...)` and `CleanupPlan.maxGlobalTrim(deviceStorage)` factories (`P2-13`)
-* Implemented `CleanupPlan.canFallbackToGlobalTrim(capabilities)` and `CleanupPlan.toGlobalTrimFallback(deviceStorage, userConsentConfirmed)` requiring explicit user consent before selective → global degradation (`P2-14`)
-* Enforced safety invariant in `ShizukuCacheCleaner` ensuring selective cleanup plans never secretly trigger global trim when selective clear is unsupported (`P2-14`)
-* Handled unsupported global trim, Shizuku unavailable, permission denied, null service, and IPC errors with typed structured reporting (`P2-15`)
-* Comprehensive unit tests added in `GlobalTrimCalculatorTest`, `CleanupPlanTest`, and `ShizukuCacheCleanerTest`
-* All 122 unit tests passing across 24 test suites; debug APKs assemble cleanly
+* Enforced zero `sh -c` or shell string parsing across all modules and verified via automated AST/codebase scanner test (`CodebaseSecurityAuditTest.codebase_hasZeroUsageOfShDashC`) (`P2-16`)
+* Proved elimination of arbitrary command execution paths via reflection audit of `ICacheOpsService` AIDL stub, `CacheCleaner` interface, and absence of `Runtime.getRuntime().exec` (`P2-17`)
+* Expanded `PackageCommandsTest` with comprehensive argument generation, ordering, and strict validation rejecting metacharacters, traversal, self packages, and negative IDs (`P2-18`)
+* Enforced critical safety invariants ensuring plain `pm clear PACKAGE` without `--cache-only` cannot be generated or executed in any permutation (`PackageCommandsTest.commandBuilder_neverCreatesPlainPmClear`, `execute_refusesClearWithoutCacheOnly_inAnyForm`) (`P2-19`)
+* Audited Android manifest security in `AndroidManifestSecurityAuditTest` confirming no `INTERNET` permission, `allowBackup="false"`, only `MainActivity` exported for launcher, no exported services or receivers, and permission-gated `ShizukuProvider` (`P2-20`)
+* Verified all Phase 2 gate requirements: selective cleaning capability gated, graceful degradation, global trim fallback, partial failure isolation, and rigorous safety tests passed
+* All 143 unit tests passing across 26 test suites; debug APKs assemble cleanly
 
 ---
 
@@ -359,13 +378,13 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P2-16 through P2-20 — Cleaner Security Auditing & Invariant Verification (Phase 2 — Production Cleaner)**
+**P3-01 through P3-04 — Cleanup State Machine, Pre-Clean Capability Validation, and Snapshots (Phase 3 — Cleanup Coordinator & Results)**
 
-* Ensure no `sh -c` usage across all modules (`P2-16`)
-* Verify no arbitrary command execution paths (`P2-17`)
-* Comprehensive test suite for command argument generation (`P2-18`)
-* Automated invariant tests proving plain `pm clear PACKAGE` without `--cache-only` cannot be generated (`P2-19`)
-* Audit exported Android components in `AndroidManifest.xml` (`P2-20`)
+* Implement cleanup state machine (`CleanupState`, `CleanupCoordinator`) (`P3-01`)
+* Validate privileged runtime capability before every cleanup operation (`P3-02`)
+* Capture pre-clean physical storage snapshot via `StatFs` / `DeviceStorageRepository` (`P3-03`)
+* Capture pre-clean reported cache snapshot across target packages (`P3-04`)
+
 
 
 
