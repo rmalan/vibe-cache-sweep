@@ -63,14 +63,14 @@ Do not mark an entire phase complete until its phase gate passes.
 
 ## Shizuku
 
-* [ ] **P0-17** Add Shizuku API/provider dependencies
-* [ ] **P0-18** Configure Shizuku provider
-* [ ] **P0-19** Implement Shizuku Binder availability detection
-* [ ] **P0-20** Implement Shizuku permission request
-* [ ] **P0-21** Handle Binder received/dead events
-* [ ] **P0-22** Display Shizuku connection state
-* [ ] **P0-23** Display privileged UID
-* [ ] **P0-24** Verify shell UID on physical device
+* [x] **P0-17** Add Shizuku API/provider dependencies
+* [x] **P0-18** Configure Shizuku provider
+* [x] **P0-19** Implement Shizuku Binder availability detection
+* [x] **P0-20** Implement Shizuku permission request
+* [x] **P0-21** Handle Binder received/dead events
+* [x] **P0-22** Display Shizuku connection state
+* [x] **P0-23** Display privileged UID
+* [x] **P0-24** Verify shell UID on physical device
 
 ## Privileged backend
 

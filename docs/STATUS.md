@@ -3,7 +3,7 @@
 **Last updated:** 2026-08-16
 **Overall status:** In progress
 **Current phase:** Phase 0 — Technical Feasibility
-**Current task:** P0-17 through P0-24 — Shizuku Connection and Privileged UID Validation
+**Current task:** P0-25 through P0-29 — Privileged Backend Verification (AIDL & UserService)
 
 ---
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P0-17 through P0-24 — Shizuku Connection and Privileged UID Validation
+## P0-25 through P0-29 — Privileged Backend Verification (AIDL & UserService)
 
 **Status:** Ready to start
 
 ### Objective
 
-Verify Shizuku connection state, permission workflow, Binder death handling, and shell UID retrieval on device.
+Verify typed privileged AIDL communication between the application process and `CacheOpsUserService`, ensuring no arbitrary shell APIs are exposed and privileged operations are strictly typed.
 
 ### Expected outcome
 
-Shizuku connection status and privileged backend UID (expected 2000 for ADB shell) are displayed and verified on the diagnostic screen.
+Application successfully communicates with `CacheOpsUserService` over AIDL, invokes typed methods, and handles errors safely.
 
 ---
 
@@ -69,6 +69,17 @@ Shizuku connection status and privileged backend UID (expected 2000 for ADB shel
 * [x] P0-15 Interactive single-package storage inspector and top scanned apps list with cache/app/data/total size breakdown displayed on diagnostic screen
 * [x] P0-16 StorageStats behavior verified live on physical Android 16 device (Samsung SM-A346E): 542 packages enumerated, 542 measured successfully in 840ms with 15.99 GB total reported cache
 
+## Shizuku Connection & Privileged UID (P0-17 to P0-24)
+
+* [x] P0-17 Shizuku API/provider dependencies declared in `libs.versions.toml` (`dev.rikka.shizuku:api:13.1.5`, `provider:13.1.5`)
+* [x] P0-18 Shizuku provider configured in `AndroidManifest.xml` (`rikka.shizuku.ShizukuProvider`)
+* [x] P0-19 Shizuku Binder availability detection implemented (`Shizuku.pingBinder()`)
+* [x] P0-20 Shizuku permission request and result handling implemented (`Shizuku.requestPermission`, `checkSelfPermission`, listener callbacks)
+* [x] P0-21 Binder received and dead event handling implemented in `ShizukuManager`
+* [x] P0-22 Shizuku connection state flow (`StateFlow<ShizukuState>`) bound to diagnostic screen
+* [x] P0-23 Privileged UID retrieval implemented (`Shizuku.getUid()` and `ICacheOpsService.getPrivilegedUid()`)
+* [x] P0-24 Shizuku connection and shell UID verified on physical device (Samsung SM-A346E): Shizuku server running, permission requested and granted, State = `Ready (UID 2000)`
+
 ---
 
 # Phase 0 Progress
@@ -93,7 +104,7 @@ Shizuku connection status and privileged backend UID (expected 2000 for ADB shel
 
 ## Shizuku
 
-* [ ] P0-17 through P0-24
+* [x] P0-17 through P0-24
 
 ## Privileged backend
 
@@ -190,7 +201,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk generated
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (23/23 unit tests passed across 6 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (28/28 unit tests passed across 7 test suites).
 ```
 
 ---
@@ -206,9 +217,9 @@ Validation items:
 * [x] StatFs storage snapshot verified (Total, Used, Free accurately reported)
 * [x] StorageStats returns useful package cache information (542 apps scanned in 840ms, 15.99 GB total reported cache)
 * [x] Single package StorageStats inspector verified with app/cache/data/total size breakdown
-* [ ] Shizuku starts successfully
-* [ ] CacheSweep Shizuku permission works
-* [ ] Shizuku privileged UID identified
+* [x] Shizuku starts successfully (PID 10529)
+* [x] CacheSweep Shizuku permission works (Requested and granted in Shizuku UI)
+* [x] Shizuku privileged UID identified (UID 2000 confirmed, state `Ready (UID 2000)`)
 * [ ] `clear --cache-only` capability detected
 * [ ] Selective cache clearing tested safely
 * [ ] App data verified intact
@@ -239,7 +250,7 @@ Current implementation follows `TECH_SPEC.md`.
 
 # Most Recent Completed Task
 
-**P0-12 through P0-16 — Storage Statistics Validation**
+**P0-17 through P0-24 — Shizuku Connection and Privileged UID Validation**
 
 ---
 
@@ -247,9 +258,9 @@ Current implementation follows `TECH_SPEC.md`.
 
 Implement / Verify:
 
-**P0-17 through P0-24 — Shizuku connection and privileged UID validation**
+**P0-25 through P0-29 — Privileged backend verification (AIDL & UserService)**
 
 Then continue with:
 
-* P0-25 through P0-29: Privileged backend verification
 * P0-30 through P0-34: Capability detection
+* P0-35 through P0-44: Cache clearing safety test
