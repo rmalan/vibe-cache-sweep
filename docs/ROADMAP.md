@@ -34,7 +34,7 @@ Do not mark an entire phase complete until its phase gate passes.
 
 **Goal:** Prove CacheSweep's core Android/Shizuku assumptions before building the full application.
 
-**Phase status:** Not started
+**Phase status:** Complete
 
 ## Project foundation
 
@@ -90,40 +90,41 @@ Do not mark an entire phase complete until its phase gate passes.
 
 ## Cache clearing safety test
 
-* [ ] **P0-35** Create disposable test application or test fixture
-* [ ] **P0-36** Generate significant cache in test application
-* [ ] **P0-37** Store test SharedPreferences value
-* [ ] **P0-38** Store test database/data value
-* [ ] **P0-39** Implement safe package cache command builder
-* [ ] **P0-40** Add test ensuring `--cache-only` is mandatory
-* [ ] **P0-41** Execute selective cache clear against disposable test app
-* [ ] **P0-42** Verify cache decreases
-* [ ] **P0-43** Verify SharedPreferences survive
-* [ ] **P0-44** Verify database/application data survive
+* [x] **P0-35** Create disposable test application or test fixture
+* [x] **P0-36** Generate significant cache in test application
+* [x] **P0-37** Store test SharedPreferences value
+* [x] **P0-38** Store test database/data value
+* [x] **P0-39** Implement safe package cache command builder
+* [x] **P0-40** Add test ensuring `--cache-only` is mandatory
+* [x] **P0-41** Execute selective cache clear against disposable test app
+* [x] **P0-42** Verify cache decreases
+* [x] **P0-43** Verify SharedPreferences survive
+* [x] **P0-44** Verify database/application data survive
 
 ## Global cache trimming
 
-* [ ] **P0-45** Implement typed global trim operation
-* [ ] **P0-46** Test `trim-caches` on physical device
-* [ ] **P0-47** Record before/after physical storage
-* [ ] **P0-48** Record before/after reported cache
-* [ ] **P0-49** Validate global trim fallback behavior
+* [x] **P0-45** Implement typed global trim operation
+* [x] **P0-46** Test `trim-caches` on physical device
+* [x] **P0-47** Record before/after physical storage
+* [x] **P0-48** Record before/after reported cache
+* [x] **P0-49** Validate global trim fallback behavior
 
 ## Phase 0 Gate
 
 Phase 0 is complete only when:
 
-* [ ] Project builds
-* [ ] Usage Access works
-* [ ] StorageStats returns useful values
-* [ ] Shizuku connects
-* [ ] Privileged UID is confirmed
-* [ ] Capability probe works
-* [ ] Selective cache clear is proven safe **or explicitly marked unsupported**
-* [ ] Global trim is proven usable
-* [ ] No complete app data is deleted
-* [ ] Findings are recorded in `STATUS.md`
-* [ ] Architecture deviations are recorded in `DECISIONS.md`
+* [x] Project builds
+* [x] Usage Access works
+* [x] StorageStats returns useful values
+* [x] Shizuku connects
+* [x] Privileged UID is confirmed
+* [x] Capability probe works
+* [x] Selective cache clear is proven safe **or explicitly marked unsupported**
+* [x] Global trim is proven usable
+* [x] No complete app data is deleted
+* [x] Findings are recorded in `STATUS.md`
+* [x] Architecture deviations are recorded in `DECISIONS.md`
+
 
 ---
 

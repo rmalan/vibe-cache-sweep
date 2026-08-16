@@ -24,3 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "CacheSweep"
 include(":app")
+include(":fixture")
+

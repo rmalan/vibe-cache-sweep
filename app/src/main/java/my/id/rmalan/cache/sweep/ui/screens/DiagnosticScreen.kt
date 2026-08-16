@@ -417,6 +417,181 @@ fun DiagnosticScreen(
                 }
             }
 
+            // Safety Verification Card (P0-35 to P0-44)
+            var safetyTestReport by remember { mutableStateOf<my.id.rmalan.cache.sweep.cleaner.SafetyTestReport?>(null) }
+            var isRunningSafetyTest by remember { mutableStateOf(false) }
+            var fixtureStatus by remember { mutableStateOf<my.id.rmalan.cache.sweep.cleaner.FixtureStatusResult?>(null) }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Selective Cache Clearing Safety Test (P0-35 - P0-44)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    HorizontalDivider()
+                    Text(
+                        text = "Verifies that executing selective cache clearing using --cache-only safely removes cache files while keeping SharedPreferences, SQLite databases, and app files 100% intact.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    DiagnosticRow("Target Fixture", my.id.rmalan.cache.sweep.cleaner.SafetyTestManager.FIXTURE_PACKAGE)
+
+                    fixtureStatus?.let { fs ->
+                        DiagnosticRow("Fixture Reachable", if (fs.connected) "CONNECTED" else "UNREACHABLE")
+                        if (fs.connected) {
+                            DiagnosticRow("Fixture Cache", "${ByteFormatter.format(fs.cacheBytes)} (${fs.cacheFilesCount} files)")
+                            DiagnosticRow("Fixture Prefs", if (fs.prefsIntact) "INTACT" else "CORRUPT / MISSING")
+                            DiagnosticRow("Fixture Files", if (fs.filesIntact) "INTACT" else "CORRUPT / MISSING")
+                            DiagnosticRow("Fixture SQLite DB", if (fs.dbIntact) "INTACT" else "CORRUPT / MISSING")
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                scope.launch {
+                                    fixtureStatus = container.safetyTestManager.populateFixture()
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Populate Fixture")
+                        }
+
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    isRunningSafetyTest = true
+                                    try {
+                                        safetyTestReport = container.safetyTestManager.runSafetyTest(
+                                            cacheCleaner = container.cacheCleaner,
+                                            cacheScanner = container.cacheScanner,
+                                            userId = 0
+                                        )
+                                        fixtureStatus = safetyTestReport?.finalFixtureStatus
+                                        refreshAll()
+                                    } finally {
+                                        isRunningSafetyTest = false
+                                    }
+                                }
+                            },
+                            enabled = shizukuState is ShizukuState.Ready && !isRunningSafetyTest,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(if (isRunningSafetyTest) "Testing..." else "Run Safety Pipeline")
+                        }
+                    }
+
+                    safetyTestReport?.let { report ->
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        Text(
+                            text = if (report.passed) "SAFETY VERIFICATION PASSED" else "SAFETY VERIFICATION FAILED",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (report.passed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                        )
+                        DiagnosticRow("Command Executed", report.clearCommand)
+                        DiagnosticRow("Exit Code Success", if (report.clearSuccess) "YES (0)" else "NO")
+                        DiagnosticRow("Cache Decreased", if (report.cacheDecreased) "YES (Cache Cleaned)" else "NO")
+                        DiagnosticRow("SharedPreferences Preserved", if (report.prefsPreserved) "YES (100% INTACT)" else "NO / LOST")
+                        DiagnosticRow("App Files Preserved", if (report.filesPreserved) "YES (100% INTACT)" else "NO / LOST")
+                        DiagnosticRow("SQLite Database Preserved", if (report.dbPreserved) "YES (100% INTACT)" else "NO / LOST")
+                        Text(
+                            text = report.summary,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (report.passed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+
+            // Global Cache Trimming Card (P0-45 to P0-49)
+            var isTrimmingGlobally by remember { mutableStateOf(false) }
+            var globalTrimReport by remember { mutableStateOf<my.id.rmalan.cache.sweep.cleaner.GlobalTrimReport?>(null) }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Global Cache Trimming (P0-45 - P0-49)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    HorizontalDivider()
+                    Text(
+                        text = "Tests the fallback global cache trimming operation ('pm trim-caches <DESIRED_FREE_SPACE>') and measures physical storage deltas.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                isTrimmingGlobally = true
+                                try {
+                                    val beforeStorage = container.deviceStorageRepository.snapshot()
+                                    val beforeScan = scanResult?.totalReportedCacheBytes ?: 0L
+
+                                    // Target: ask Android to free up space (current available + 1GB or reported cache)
+                                    val targetFreeBytes = beforeStorage.availableBytes + maxOf(beforeScan, 1024L * 1024L * 1024L)
+
+                                    val success = container.cacheCleaner.trimGlobally(targetFreeBytes)
+                                    kotlinx.coroutines.delay(800) // Settling delay
+
+                                    val afterStorage = container.deviceStorageRepository.snapshot()
+                                    val afterScanResult = container.cacheScanner.scan()
+                                    scanResult = afterScanResult
+                                    val afterScan = afterScanResult.totalReportedCacheBytes
+
+                                    val physicalFreed = maxOf(0L, afterStorage.availableBytes - beforeStorage.availableBytes)
+                                    val cacheDelta = maxOf(0L, beforeScan - afterScan)
+
+                                    globalTrimReport = my.id.rmalan.cache.sweep.cleaner.GlobalTrimReport(
+                                        timestamp = System.currentTimeMillis(),
+                                        physicalFreeBefore = beforeStorage.availableBytes,
+                                        reportedCacheBefore = beforeScan,
+                                        desiredFreeTarget = targetFreeBytes,
+                                        trimSuccess = success,
+                                        physicalFreeAfter = afterStorage.availableBytes,
+                                        reportedCacheAfter = afterScan,
+                                        physicalFreedDelta = physicalFreed,
+                                        reportedCacheDelta = cacheDelta,
+                                        summary = if (success) {
+                                            "Global trim executed successfully. Physical free space: ${ByteFormatter.format(beforeStorage.availableBytes)} -> ${ByteFormatter.format(afterStorage.availableBytes)} (Delta: ${ByteFormatter.format(physicalFreed)})."
+                                        } else {
+                                            "Global trim operation failed."
+                                        }
+                                    )
+                                    refreshAll()
+                                } finally {
+                                    isTrimmingGlobally = false
+                                }
+                            }
+                        },
+                        enabled = shizukuState is ShizukuState.Ready && !isTrimmingGlobally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(if (isTrimmingGlobally) "Trimming Caches..." else "Execute Global Cache Trim (pm trim-caches)")
+                    }
+
+                    globalTrimReport?.let { trim ->
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        DiagnosticRow("Operation Status", if (trim.trimSuccess) "SUCCESS (Exit 0)" else "FAILED")
+                        DiagnosticRow("Physical Free Before", ByteFormatter.format(trim.physicalFreeBefore))
+                        DiagnosticRow("Physical Free After", ByteFormatter.format(trim.physicalFreeAfter))
+                        DiagnosticRow("Physical Storage Freed", ByteFormatter.format(trim.physicalFreedDelta))
+                        DiagnosticRow("Reported Cache Delta", ByteFormatter.format(trim.reportedCacheDelta))
+                        Text(
+                            text = trim.summary,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
             // Actions & Status
             statusMessage?.let {
                 Text(
@@ -437,6 +612,7 @@ fun DiagnosticScreen(
         }
     }
 }
+
 
 @Composable
 private fun DiagnosticRow(label: String, value: String) {

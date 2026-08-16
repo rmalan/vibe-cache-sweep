@@ -36,4 +36,8 @@ class AppContainer(
         ShizukuCacheCleaner(
             shizukuManager = shizukuManager
         )
+
+    val safetyTestManager =
+        my.id.rmalan.cache.sweep.cleaner.SafetyTestManager(context)
 }
+

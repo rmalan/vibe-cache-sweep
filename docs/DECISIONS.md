@@ -600,9 +600,32 @@ The privileged service terminates gracefully when CacheSweep unbinds or closes.
 
 ---
 
-# New Decision Template
+# D-027 — Runtime handling of `INTERNAL_DELETE_CACHE_FILES` and Global Trim validation
 
-Copy this section when adding a significant decision.
+**Status:** Accepted
+
+## Context
+
+During physical device testing on Samsung Galaxy A34 5G (Android 16 / One UI, API 36), `pm help` advertises `clear [--user USER_ID] [--cache-only] PACKAGE`. However, when UID 2000 (shell/Shizuku) executes `clear --cache-only`, `PackageManagerService` enforces signature permission `android.permission.INTERNAL_DELETE_CACHE_FILES`, logging `Calling uid 2000 does not have android.permission.INTERNAL_DELETE_CACHE_FILES, silently ignoring`. 
+
+In contrast, `pm trim-caches <DESIRED_FREE_SPACE>` succeeds immediately without special signature restrictions and reclaimed 5.82 GB of real storage on the test device.
+
+## Decision
+
+1. Enforce process execution timeouts (15s) and closed standard streams in `PackageCommands` so blocked/ignored operations do not hang the caller.
+2. In accordance with D-010, D-011, and D-012, gracefully fallback to `pm trim-caches` when selective cache clear is unsupported or restricted on the target device.
+3. Keep automated tests and runtime safety invariants strictly prohibiting unflagged `pm clear` commands.
+
+## Reason
+
+Real-device OEM/AOSP variance means advertised CLI flags may be gated by internal system permissions. The architecture must handle this without crashing, hanging, or fake support.
+
+## Consequences
+
+Global cache trimming remains the primary verified reclamation mechanism on Android 16 non-root configurations. Selective cache clear remains capability-gated.
+
+---
+
 
 ---
 

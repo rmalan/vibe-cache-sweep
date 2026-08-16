@@ -1,9 +1,11 @@
 package my.id.rmalan.cache.sweep.cleaner
 
 import my.id.rmalan.cache.sweep.util.PackageValidator
+import java.util.concurrent.TimeUnit
 
 object PackageCommands {
     const val PM_PATH = "/system/bin/pm"
+    const val DEFAULT_TIMEOUT_SECONDS = 15L
 
     data class CommandResult(
         val exitCode: Int,
@@ -42,7 +44,7 @@ object PackageCommands {
         )
     }
 
-    fun execute(args: List<String>): CommandResult {
+    fun execute(args: List<String>, timeoutSeconds: Long = DEFAULT_TIMEOUT_SECONDS): CommandResult {
         // Enforce that if 'clear' is in args, '--cache-only' MUST be present
         if (args.contains("clear")) {
             check(args.contains("--cache-only")) {
@@ -51,9 +53,24 @@ object PackageCommands {
         }
 
         val process = ProcessBuilder(args).start()
-        val output = process.inputStream.bufferedReader().use { it.readText() }
-        val error = process.errorStream.bufferedReader().use { it.readText() }
-        val exitCode = process.waitFor()
+        process.outputStream.close()
+
+        val outputReader = process.inputStream.bufferedReader()
+        val errorReader = process.errorStream.bufferedReader()
+
+        val completed = process.waitFor(timeoutSeconds, TimeUnit.SECONDS)
+        if (!completed) {
+            process.destroyForcibly()
+            return CommandResult(
+                exitCode = -1,
+                output = "",
+                error = "Command timed out after ${timeoutSeconds}s: ${args.joinToString(" ")}"
+            )
+        }
+
+        val output = outputReader.use { it.readText() }
+        val error = errorReader.use { it.readText() }
+        val exitCode = process.exitValue()
 
         return CommandResult(
             exitCode = exitCode,
