@@ -299,18 +299,18 @@ Phase 0 is complete only when:
 
 ## Settings
 
-* [ ] **P4-11** Show system apps preference
-* [ ] **P4-12** Show zero-cache apps preference
-* [ ] **P4-13** Sort preference
-* [ ] **P4-14** Theme preference
-* [ ] **P4-15** Clear local history
+* [x] **P4-11** Show system apps preference
+* [x] **P4-12** Show zero-cache apps preference
+* [x] **P4-13** Sort preference
+* [x] **P4-14** Theme preference
+* [x] **P4-15** Clear local history
 
 ## Persistence
 
-* [ ] **P4-16** Configure DataStore
-* [ ] **P4-17** Persist settings
-* [ ] **P4-18** Persist limited cleanup history
-* [ ] **P4-19** Limit cleanup history size
+* [x] **P4-16** Configure DataStore
+* [x] **P4-17** Persist settings
+* [x] **P4-18** Persist limited cleanup history
+* [x] **P4-19** Limit cleanup history size
 
 ## Appearance/accessibility
 

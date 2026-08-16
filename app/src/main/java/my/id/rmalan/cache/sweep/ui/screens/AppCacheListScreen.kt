@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.CleaningServices
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -71,7 +72,8 @@ fun AppCacheListScreen(
     cleanerViewModel: CleanerViewModel? = null,
     packageRepository: PackageRepository? = null,
     modifier: Modifier = Modifier,
-    onNavigateBack: (() -> Unit)? = null
+    onNavigateBack: (() -> Unit)? = null,
+    onOpenSettings: (() -> Unit)? = null
 ) {
     val state by viewModel.uiState.collectAsState()
     val cleanerState = cleanerViewModel?.uiState?.collectAsState()?.value
@@ -161,6 +163,11 @@ fun AppCacheListScreen(
                             }
                         ) {
                             Icon(Icons.Default.Check, contentDescription = "Select Apps")
+                        }
+                        if (onOpenSettings != null) {
+                            IconButton(onClick = onOpenSettings) {
+                                Icon(Icons.Outlined.Settings, contentDescription = "Settings")
+                            }
                         }
                         IconButton(
                             onClick = { viewModel.onEvent(AppsEvent.Refresh) },

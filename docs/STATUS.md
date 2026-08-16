@@ -3,7 +3,7 @@
 **Last updated:** 2026-08-16
 **Overall status:** In progress
 **Current phase:** Phase 4 (Product UI & Persistence) — In progress
-**Current task:** P4-11 through P4-15 — Settings Screen & Preferences
+**Current task:** P4-20 through P4-25 — Theme, Modes & Accessibility Review
 
 ---
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P4-11 through P4-15 — Settings Screen & Preferences
+## P4-20 through P4-25 — Theme, Modes & Accessibility Review
 
 **Status:** Ready to start
 
 ### Objective
 
-Implement the product settings screen: show system apps preference toggle, show zero-cache apps preference toggle, default sort preference picker, theme mode selector (System, Light, Dark), local history management, and integration with `UserSettingsRepository`.
+Perform comprehensive visual, accessibility, and theming validation across all application screens: Material 3 styling compliance, explicit Light mode styling, Dark mode contrast ratios, dynamic font scaling adaptation, TalkBack accessibility semantics, and touch-target bounds (>=48dp).
 
 ### Expected outcome
 
-A clean Material 3 Settings screen bound to DataStore preferences allowing users to configure scanner filters, sorting defaults, and theme appearance.
+A thoroughly audited and polished product UI supporting system, light, and dark modes with complete accessibility compliance conforming to PRD Section 17-19.
 
 ---
 
@@ -246,6 +246,22 @@ A clean Material 3 Settings screen bound to DataStore preferences allowing users
 * [x] `MainActivity` updated with `MainDestination.DASHBOARD` as default post-onboarding screen with seamless navigation between Dashboard, App Cache List, Diagnostics, and Onboarding
 * [x] Added 9 unit tests across `DashboardViewModelTest` and `DashboardFormattingTest`; 197/197 unit tests passing across 36 test suites
 
+## Settings Screen, Preferences & Cleanup History (P4-11 to P4-19)
+
+* [x] P4-11 Show system apps preference toggle implemented with real-time scanner filtering and DataStore synchronization
+* [x] P4-12 Show zero-cache apps preference toggle implemented with real-time scanner filtering and DataStore synchronization
+* [x] P4-13 Default sort preference picker implemented supporting Cache Size, Total Footprint, and Alphabetical sorting
+* [x] P4-14 Theme mode selector implemented supporting System Default, Light, and Dark themes with dynamic Material 3 composition in `MainActivity`
+* [x] P4-15 Local cleanup history clearance implemented with confirmation dialog and non-blocking DataStore reset
+* [x] P4-16 DataStore Preferences configured for non-blocking persistence (`user_settings` and `cleanup_history`)
+* [x] P4-17 User preferences persistence implemented across app lifecycle and restarts
+* [x] P4-18 Cleanup history persistence implemented (`CleanupHistoryEntry`, `CleanupHistoryRepository`, `DataStoreCleanupHistoryRepository`)
+* [x] P4-19 Cleanup history bounded at 25 records max per TECH_SPEC Section 49, automatically trimming oldest entries upon new cleanup records
+* [x] `SettingsViewModel` and `SettingsScreen` implemented conforming to PRD Section 19 with Shizuku status inspection, privacy guarantees, and about info
+* [x] `CleanupCoordinator` updated to automatically record completed cleanup operations to `CleanupHistoryRepository`
+* [x] `AppsViewModel` updated to respect user preferences for sort order and system apps filtering
+* [x] Added 16 unit tests across `CleanupHistoryRepositoryTest`, `SettingsViewModelTest`, and `SettingsFormattingTest`; 213/213 unit tests passing across 39 test suites
+
 ---
 
 # Phase 0 Gate: PASSED
@@ -375,7 +391,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (197/197 unit tests passed across 36 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (213/213 unit tests passed across 39 test suites).
 ```
 
 ---
@@ -424,17 +440,21 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P4-05 through P4-10 — Dashboard Screen & Storage Visualizations (Phase 4 — Product UI & Persistence)**
+**P4-11 through P4-19 — Settings Screen, Preferences & Cleanup History (Phase 4 — Product UI & Persistence)**
 
-* Built device storage visualization bar and metrics (`DeviceStorageCard`) fulfilling PRD FR-001 (`P4-05`)
-* Built aggregate application cache summary (`ApplicationCacheCard`) with estimated cache headline, scanned/measured metrics, and educational notice (`P4-06`)
-* Built largest cache consumers preview list (`LargestCachesCard`) with app icons, cache sizes, bottom sheet inspection, and "View all apps →" navigation (`P4-07`)
-* Built live Shizuku connection status card (`ShizukuStatusCard`) handling Ready (UID 2000), Permission Required (with grant action), Not Running (with open/check actions), Connecting, and Error states conforming to PRD FR-008 (`P4-08`)
-* Built last scan metadata display with relative time formatting ("Just now", "X minutes ago", "Yesterday") and scan duration (`DashboardTimeFormatter`) (`P4-09`)
-* Implemented primary one-tap cache cleanup action trigger (`PrimaryCleanupHero`) integrating with `CleanupCoordinator` workflow (Confirmation dialog -> Progress -> Result screen) (`P4-10`)
-* Implemented `DashboardViewModel` with immediate storage snapshotting for sub-500ms initial render, reactive Shizuku observation, and progressive scan flow
-* Updated `MainActivity` with `MainDestination.DASHBOARD` as default post-onboarding destination with hierarchical navigation
-* Added 9 unit tests across `DashboardViewModelTest` and `DashboardFormattingTest`; 197/197 unit tests passing across 36 test suites
+* Built Material 3 Settings screen (`SettingsScreen.kt`) with scanning, appearance, Shizuku, data & history, privacy, and about categories (`P4-11` - `P4-15`)
+* Implemented show system apps preference toggle (`P4-11`)
+* Implemented show zero-cache apps preference toggle (`P4-12`)
+* Implemented default sort preference picker dialog with single-choice selection (`P4-13`)
+* Implemented theme mode preference selector dialog (System, Light, Dark) (`P4-14`)
+* Implemented local cleanup history clearance with confirmation dialog (`P4-15`)
+* Configured DataStore Preferences for settings and cleanup history (`P4-16`, `P4-17`, `D-028`)
+* Implemented bounded local cleanup history persistence (`CleanupHistoryEntry`, `CleanupHistoryRepository`, `DataStoreCleanupHistoryRepository`) capped at 25 entries max (`P4-18`, `P4-19`, `D-029`)
+* Implemented `SettingsViewModel` managing settings flows, cleanup history, and Shizuku interaction
+* Updated `CleanupCoordinator` to automatically record completed cleanup operations to `CleanupHistoryRepository`
+* Updated `AppsViewModel` to respect user settings for default sort mode and system apps filter
+* Updated `MainActivity` with `MainDestination.SETTINGS` destination and dynamic `themeMode` binding
+* Added 16 unit tests across `CleanupHistoryRepositoryTest`, `SettingsViewModelTest`, and `SettingsFormattingTest`; 213/213 unit tests passing across 39 test suites
 
 ---
 
@@ -442,11 +462,12 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P4-11 through P4-15 — Settings Screen & Preferences (Phase 4 — Product UI & Persistence)**
+**P4-20 through P4-25 — Material 3 Theme, Light/Dark Modes, Accessibility Review (Phase 4 — Product UI & Persistence)**
 
-* Build Settings screen UI (`SettingsScreen.kt`) (`P4-11` - `P4-15`)
-* Implement show system apps preference toggle (`P4-11`)
-* Implement show zero-cache apps preference toggle (`P4-12`)
-* Implement default sort preference picker (`P4-13`)
-* Implement theme mode preference selector (`P4-14`)
-* Implement local history / cache reset option (`P4-15`)
+* Validate and refine Material 3 color schemes (`Theme.kt`, `Color.kt`) (`P4-20`)
+* Validate explicit Light mode styling and contrast (`P4-21`)
+* Validate explicit Dark mode styling and contrast (`P4-22`)
+* Conduct font scaling review (SP text sizing, layout flexibility) (`P4-23`)
+* Conduct TalkBack semantics review (content descriptions, role semantics) (`P4-24`)
+* Conduct touch-target bounds review (ensure minimum 48dp interactive areas) (`P4-25`)
+

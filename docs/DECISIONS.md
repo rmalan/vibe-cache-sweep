@@ -651,6 +651,32 @@ UI state and settings are synchronized reactively across all screens.
 
 ---
 
+# D-029 — Bounded Local Cleanup History Persistence in DataStore
+
+**Status:** Accepted
+
+## Context
+
+CacheSweep needs to preserve a short local history of past cleanup operations (timestamps, cleanup mode, package counts, measured storage freed, and reported cache reduced) without introducing heavy SQLite/Room dependencies, cloud databases, or network synchronization.
+
+## Decision
+
+1. Model cleanup records in `CleanupHistoryEntry` conforming to TECH_SPEC Section 49.
+2. Implement `CleanupHistoryRepository` and `DataStoreCleanupHistoryRepository` using AndroidX DataStore Preferences (`cleanup_history.preferences_pb`).
+3. Store records using pure Kotlin delimiter serialization and enforce a strict capacity limit of 25 records (`MAX_HISTORY_ENTRIES = 25`), automatically dropping the oldest records when new entries are recorded.
+4. Provide immediate, non-blocking history clearance via `clearHistory()`.
+5. Record history asynchronously inside `CleanupCoordinator` upon completion of valid cleanups.
+
+## Reason
+
+Keeps the architecture minimal, private, and 100% offline while satisfying product requirements for auditability and history inspection.
+
+## Consequences
+
+Cleanup history is preserved across app restarts, bounded in size, and completely isolated to local storage without any external dependencies.
+
+---
+
 # D-XXX — Decision title
 
 **Status:** Proposed / Accepted / Superseded / Rejected

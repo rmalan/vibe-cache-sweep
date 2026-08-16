@@ -44,18 +44,22 @@ class AppContainer(
             packageRepository = packageRepository
         )
 
+    val cleanupHistoryRepository: my.id.rmalan.cache.sweep.storage.CleanupHistoryRepository =
+        my.id.rmalan.cache.sweep.storage.DataStoreCleanupHistoryRepository(context)
+
+    val userSettingsRepository: my.id.rmalan.cache.sweep.storage.UserSettingsRepository =
+        my.id.rmalan.cache.sweep.storage.DataStoreUserSettingsRepository(context)
+
     val cleanupCoordinator: my.id.rmalan.cache.sweep.cleaner.CleanupCoordinator =
         my.id.rmalan.cache.sweep.cleaner.CleanupCoordinator(
             cleaner = cacheCleaner,
             scanner = cacheScanner,
             storage = deviceStorageRepository,
             storageStatsRepository = storageStatsRepository,
-            packageRepository = packageRepository
+            packageRepository = packageRepository,
+            historyRepository = cleanupHistoryRepository
         )
 
     val safetyTestManager =
         my.id.rmalan.cache.sweep.cleaner.SafetyTestManager(context)
-
-    val userSettingsRepository: my.id.rmalan.cache.sweep.storage.UserSettingsRepository =
-        my.id.rmalan.cache.sweep.storage.DataStoreUserSettingsRepository(context)
 }

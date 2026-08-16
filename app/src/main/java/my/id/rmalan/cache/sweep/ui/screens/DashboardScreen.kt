@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.AlertDialog
@@ -87,6 +88,7 @@ fun DashboardScreen(
     packageRepository: PackageRepository? = null,
     onOpenAppList: () -> Unit,
     onOpenDiagnostic: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -134,6 +136,12 @@ fun DashboardScreen(
                         Icon(
                             imageVector = Icons.Outlined.BugReport,
                             contentDescription = "Diagnostics"
+                        )
+                    }
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = "Settings"
                         )
                     }
                     IconButton(

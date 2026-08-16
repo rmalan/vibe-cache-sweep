@@ -8,11 +8,13 @@ import my.id.rmalan.cache.sweep.model.CleanerBatchResult
 import my.id.rmalan.cache.sweep.model.CleanerCapabilities
 import my.id.rmalan.cache.sweep.model.CleanerError
 import my.id.rmalan.cache.sweep.model.CleaningState
+import my.id.rmalan.cache.sweep.model.CleanupHistoryEntry
 import my.id.rmalan.cache.sweep.model.CleanupMode
 import my.id.rmalan.cache.sweep.model.CleanupPlan
 import my.id.rmalan.cache.sweep.model.CleanupResult
 import my.id.rmalan.cache.sweep.scanner.CacheScanner
 import my.id.rmalan.cache.sweep.scanner.PackageRepository
+import my.id.rmalan.cache.sweep.storage.CleanupHistoryRepository
 import my.id.rmalan.cache.sweep.storage.DeviceStorageRepository
 import my.id.rmalan.cache.sweep.storage.StorageStatsRepository
 
@@ -22,6 +24,7 @@ class CleanupCoordinator(
     private val storage: DeviceStorageRepository,
     private val storageStatsRepository: StorageStatsRepository,
     private val packageRepository: PackageRepository? = null,
+    private val historyRepository: CleanupHistoryRepository? = null,
     private val settlingDelayMillis: Long = DEFAULT_SETTLING_DELAY_MS,
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default
 ) {
@@ -225,6 +228,24 @@ class CleanupCoordinator(
             mode = plan.mode,
             completedAtMillis = System.currentTimeMillis()
         )
+
+        if (result.attemptedPackages > 0 || result.measuredFreedBytes > 0 || result.reportedCacheReduction > 0) {
+            try {
+                historyRepository?.addEntry(
+                    CleanupHistoryEntry(
+                        timestampMillis = result.completedAtMillis,
+                        mode = result.mode,
+                        packagesAttempted = result.attemptedPackages,
+                        packagesSucceeded = result.successfulPackages,
+                        measuredFreedBytes = result.measuredFreedBytes,
+                        reportedCacheReductionBytes = result.reportedCacheReduction,
+                        durationMillis = result.durationMillis
+                    )
+                )
+            } catch (e: Exception) {
+                // Non-blocking history record failure
+            }
+        }
 
         onProgress?.invoke(CleaningState.Completed(result))
         result

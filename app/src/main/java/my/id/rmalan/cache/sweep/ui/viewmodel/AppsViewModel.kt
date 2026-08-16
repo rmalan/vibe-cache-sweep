@@ -14,6 +14,7 @@ import my.id.rmalan.cache.sweep.model.ScanResult
 import my.id.rmalan.cache.sweep.model.ScanState
 import my.id.rmalan.cache.sweep.scanner.CacheScanner
 import my.id.rmalan.cache.sweep.shizuku.ShizukuManager
+import my.id.rmalan.cache.sweep.storage.UserSettingsRepository
 import my.id.rmalan.cache.sweep.util.AppFilter
 
 data class AppsUiState(
@@ -54,7 +55,8 @@ sealed interface AppsEvent {
 
 class AppsViewModel(
     private val cacheScanner: CacheScanner,
-    private val shizukuManager: ShizukuManager? = null
+    private val shizukuManager: ShizukuManager? = null,
+    private val userSettingsRepository: UserSettingsRepository? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AppsUiState())
@@ -62,6 +64,30 @@ class AppsViewModel(
 
     init {
         loadCapabilities()
+        observeUserSettings()
+    }
+
+    private fun observeUserSettings() {
+        val repo = userSettingsRepository ?: return
+        viewModelScope.launch {
+            repo.settings.collect { settings ->
+                _uiState.update { state ->
+                    val newDisplayed = AppFilter.filterAndSort(
+                        apps = state.rawApps,
+                        query = state.query,
+                        sort = settings.sortMode,
+                        showSystemApps = settings.showSystemApps,
+                        showZeroCacheApps = settings.showZeroCacheApps
+                    )
+                    state.copy(
+                        sort = settings.sortMode,
+                        showSystemApps = settings.showSystemApps,
+                        showZeroCacheApps = settings.showZeroCacheApps,
+                        displayedApps = newDisplayed
+                    )
+                }
+            }
+        }
     }
 
     private fun loadCapabilities() {
@@ -197,11 +223,12 @@ class AppsViewModel(
 
     class Factory(
         private val cacheScanner: CacheScanner,
-        private val shizukuManager: ShizukuManager? = null
+        private val shizukuManager: ShizukuManager? = null,
+        private val userSettingsRepository: UserSettingsRepository? = null
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return AppsViewModel(cacheScanner, shizukuManager) as T
+            return AppsViewModel(cacheScanner, shizukuManager, userSettingsRepository) as T
         }
     }
 }

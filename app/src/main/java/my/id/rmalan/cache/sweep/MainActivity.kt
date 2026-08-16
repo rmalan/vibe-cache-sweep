@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -17,21 +18,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import my.id.rmalan.cache.sweep.model.ThemeMode
 import my.id.rmalan.cache.sweep.ui.screens.AppCacheListScreen
 import my.id.rmalan.cache.sweep.ui.screens.DashboardScreen
 import my.id.rmalan.cache.sweep.ui.screens.DiagnosticScreen
 import my.id.rmalan.cache.sweep.ui.screens.OnboardingScreen
+import my.id.rmalan.cache.sweep.ui.screens.SettingsScreen
 import my.id.rmalan.cache.sweep.ui.theme.CacheSweepTheme
 import my.id.rmalan.cache.sweep.ui.viewmodel.AppsViewModel
 import my.id.rmalan.cache.sweep.ui.viewmodel.CleanerViewModel
 import my.id.rmalan.cache.sweep.ui.viewmodel.DashboardViewModel
 import my.id.rmalan.cache.sweep.ui.viewmodel.OnboardingViewModel
+import my.id.rmalan.cache.sweep.ui.viewmodel.SettingsViewModel
 
 enum class MainDestination {
     ONBOARDING,
     DASHBOARD,
     DIAGNOSTIC,
-    APP_CACHE_LIST
+    APP_CACHE_LIST,
+    SETTINGS
 }
 
 class MainActivity : ComponentActivity() {
@@ -41,21 +46,29 @@ class MainActivity : ComponentActivity() {
         val app = application as CacheSweepApp
 
         setContent {
-            CacheSweepTheme {
+            val settingsState by app.container.userSettingsRepository.settings.collectAsState(initial = null)
+
+            val initialSettings = settingsState
+            if (initialSettings == null) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    val settingsState by app.container.userSettingsRepository.settings.collectAsState(initial = null)
-
-                    val initialSettings = settingsState
-                    if (initialSettings == null) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                        return@Surface
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
+                }
+                return@setContent
+            }
 
+            val darkTheme = when (initialSettings.themeMode) {
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+            }
+
+            CacheSweepTheme(darkTheme = darkTheme) {
+                Surface(modifier = Modifier.fillMaxSize()) {
                     var currentDestination by remember(initialSettings.onboardingCompleted) {
                         mutableStateOf(
                             if (initialSettings.onboardingCompleted) {
@@ -112,6 +125,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onOpenDiagnostic = {
                                     currentDestination = MainDestination.DIAGNOSTIC
+                                },
+                                onOpenSettings = {
+                                    currentDestination = MainDestination.SETTINGS
                                 }
                             )
                         }
@@ -138,7 +154,8 @@ class MainActivity : ComponentActivity() {
                             val appsViewModel: AppsViewModel = viewModel(
                                 factory = AppsViewModel.Factory(
                                     cacheScanner = app.container.cacheScanner,
-                                    shizukuManager = app.container.shizukuManager
+                                    shizukuManager = app.container.shizukuManager,
+                                    userSettingsRepository = app.container.userSettingsRepository
                                 )
                             )
                             val cleanerViewModel: CleanerViewModel = viewModel(
@@ -151,6 +168,29 @@ class MainActivity : ComponentActivity() {
                                 viewModel = appsViewModel,
                                 cleanerViewModel = cleanerViewModel,
                                 packageRepository = app.container.packageRepository,
+                                onNavigateBack = {
+                                    currentDestination = MainDestination.DASHBOARD
+                                },
+                                onOpenSettings = {
+                                    currentDestination = MainDestination.SETTINGS
+                                }
+                            )
+                        }
+
+                        MainDestination.SETTINGS -> {
+                            BackHandler {
+                                currentDestination = MainDestination.DASHBOARD
+                            }
+                            val settingsViewModel: SettingsViewModel = viewModel(
+                                factory = SettingsViewModel.Factory(
+                                    userSettingsRepository = app.container.userSettingsRepository,
+                                    cleanupHistoryRepository = app.container.cleanupHistoryRepository,
+                                    shizukuManager = app.container.shizukuManager
+                                )
+                            )
+                            SettingsScreen(
+                                viewModel = settingsViewModel,
+                                shizukuManager = app.container.shizukuManager,
                                 onNavigateBack = {
                                     currentDestination = MainDestination.DASHBOARD
                                 }
