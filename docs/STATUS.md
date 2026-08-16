@@ -3,7 +3,7 @@
 **Last updated:** 2026-08-16
 **Overall status:** In progress
 **Current phase:** Phase 0 — Technical Feasibility
-**Current task:** P0-05 — Create initial package/project structure
+**Current task:** P0-08 — Usage Access Verification (P0-08 to P0-11)
 
 ---
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P0-05 — Create Initial Package/Project Structure
+## P0-08 through P0-11 — Usage Access Verification
 
 **Status:** Ready to start
 
 ### Objective
 
-Establish the initial package structure (`di`, `model`, `permissions`, `scanner`, `storage`, `shizuku`, `cleaner`, `data`, `util`, `ui`) as defined in `TECH_SPEC.md` Section 10.
+Verify Usage Access flow (`PACKAGE_USAGE_STATS` declaration, permission detection, settings intent, and display on diagnostic screen) on target device.
 
 ### Expected outcome
 
-Directories and initial placeholder/interface files created according to the single-module architecture, maintaining buildability and testability.
+Usage Access status is cleanly checked, settings screen can be launched, and state updates dynamically.
 
 ---
 
@@ -44,12 +44,15 @@ Directories and initial placeholder/interface files created according to the sin
 * [x] Architecture/security constraints defined
 * [x] Phase-based development strategy defined
 
-## Foundation (P0-01 to P0-04)
+## Foundation (P0-01 to P0-07)
 
-* [x] P0-01 Android project configured with namespace/applicationId `dev.cachesweep.app`
+* [x] P0-01 Android project configured with namespace/applicationId `my.id.rmalan.cache.sweep`
 * [x] P0-02 Kotlin + Jetpack Compose configured with `org.jetbrains.kotlin.plugin.compose`
 * [x] P0-03 Android SDK versions (minSdk 30, targetSdk 36, compileSdk 37) and Java 17 compatibility configured
 * [x] P0-04 Initial dependencies configured in `libs.versions.toml` and `app/build.gradle.kts` (Compose BOM 2026.08.00, Activity Compose, Lifecycle, Shizuku 13.1.5, Coroutines 1.11.0, DataStore, Navigation)
+* [x] P0-05 Initial package and architecture structure created (`di`, `model`, `permissions`, `scanner`, `storage`, `shizuku`, `cleaner`, `util`, `ui`, and typed AIDL `ICacheOpsService`)
+* [x] P0-06 Diagnostic Compose screen implemented displaying system info, storage, Usage Access status, Shizuku state, detected capabilities, and cache scanner actions
+* [x] P0-07 Debug APK builds cleanly (`app-debug.apk`) and all unit tests pass with safety invariant enforcement
 
 ---
 
@@ -61,9 +64,9 @@ Directories and initial placeholder/interface files created according to the sin
 * [x] P0-02 Configure Kotlin + Jetpack Compose
 * [x] P0-03 Configure SDK/Gradle
 * [x] P0-04 Add dependencies
-* [ ] P0-05 Create project structure
-* [ ] P0-06 Diagnostic Compose screen
-* [ ] P0-07 Verify debug build
+* [x] P0-05 Create project structure
+* [x] P0-06 Diagnostic Compose screen
+* [x] P0-07 Verify debug build
 
 ## Usage Access
 
@@ -218,17 +221,17 @@ Current implementation follows `TECH_SPEC.md`.
 
 # Most Recent Completed Task
 
-**P0-01 through P0-04 — Project Foundation and Dependency Configuration**
+**P0-05 through P0-07 — Package Structure, Diagnostic Screen & Feasibility Foundation**
 
 ---
 
 # Exact Next Action
 
-Implement:
+Implement / Verify:
 
-**P0-05 — Create initial package/project structure**
+**P0-08 through P0-11 — Usage Access Verification**
 
 Then continue with:
 
-* P0-06 Diagnostic Compose screen
-* P0-07 Verify debug APK builds successfully
+* P0-12 through P0-16: Storage statistics validation
+* P0-17 through P0-24: Shizuku connection and privileged UID validation

@@ -42,9 +42,9 @@ Do not mark an entire phase complete until its phase gate passes.
 * [x] **P0-02** Configure Kotlin + Jetpack Compose
 * [x] **P0-03** Configure Android SDK versions and Gradle
 * [x] **P0-04** Add required dependencies
-* [ ] **P0-05** Create initial package/project structure
-* [ ] **P0-06** Create diagnostic Compose screen
-* [ ] **P0-07** Verify debug APK builds successfully
+* [x] **P0-05** Create initial package/project structure
+* [x] **P0-06** Create diagnostic Compose screen
+* [x] **P0-07** Verify debug APK builds successfully
 
 ## Usage Access
 
