@@ -300,4 +300,42 @@ class AndroidCacheScannerTest {
         assertEquals(20, result.successfulApps)
         assertTrue("Max concurrent ($maxConcurrent) should be <= concurrency limit ($concurrencyLimit)", maxConcurrent.get() <= concurrencyLimit)
     }
+
+    @Test
+    fun `scan handles 350+ applications efficiently with accurate aggregates`() = runTest {
+        val count = 350
+        val packages = (1..count).map {
+            DiscoveredPackage(
+                packageName = "com.example.app_$it",
+                appName = "Application $it",
+                isSystemApp = (it % 5 == 0)
+            )
+        }
+
+        val expectedCachePerApp = 1_000_000L // 1 MB
+        val statsMap = packages.associate {
+            it.packageName to PackageStorageStats(
+                cacheBytes = expectedCachePerApp,
+                appBytes = 5_000_000L,
+                dataBytes = 2_000_000L
+            )
+        }
+
+        val repo = FakeStorageStatsRepository(statsMap = statsMap)
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        val scanner = AndroidCacheScanner(
+            packageRepository = FakePackageRepository(packages),
+            storageStatsRepository = repo,
+            concurrencyLimit = 6,
+            ioDispatcher = testDispatcher
+        )
+
+        val result = scanner.scan()
+
+        assertEquals(count, result.attemptedApps)
+        assertEquals(count, result.successfulApps)
+        assertEquals(count * expectedCachePerApp, result.totalReportedCacheBytes)
+        assertEquals(count, result.apps.size)
+        assertTrue(result.durationMillis >= 0)
+    }
 }

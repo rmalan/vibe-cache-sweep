@@ -2,15 +2,15 @@
 
 **Last updated:** 2026-08-16
 **Overall status:** In progress
-**Current phase:** Phase 1 — Production Cache Scanner
-**Current task:** P1-17 through P1-24 & P1-27 through P1-28 — Cache Application List UI, Search, Sorting, Detail & Shortcuts
+**Current phase:** Phase 1 Complete (Gate Passed) — Ready for Phase 2 (Production Cleaner)
+**Current task:** P2-01 through P2-04 — Cleaner Abstraction & Typed Plan Engine
 
 ---
 
 # At a Glance
 
 * [x] Phase 0 — Technical Feasibility
-* [ ] Phase 1 — Production Cache Scanner (P1-01 to P1-16 Complete)
+* [x] Phase 1 — Production Cache Scanner
 * [ ] Phase 2 — Production Cleaner
 * [ ] Phase 3 — Cleanup Coordinator & Results
 * [ ] Phase 4 — Product UI & Persistence
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P1-17 through P1-24 & P1-27 through P1-28 — Cache Application List UI, Search, Sorting, Detail & Shortcuts
+## P2-01 through P2-04 — Cleaner Abstraction & Typed Plan Engine
 
 **Status:** Ready to start
 
 ### Objective
 
-Build the user-facing cache application list with sorting (cache size, total size, alphabetical), search filtering, pull-to-refresh, application detail view, and native Android storage settings shortcut.
+Build the production `CacheCleaner` abstraction, typed `CleanerCapabilities` model, selective & global `CleanupPlan` models, and structured `CleanerError` types.
 
 ### Expected outcome
 
-Interactive, responsive production UI for browsing and inspecting application cache footprints.
+Clean, strongly typed privileged cleaning API isolating Shizuku/UserService operations behind verified safe domain boundaries.
 
 ---
 
@@ -146,6 +146,20 @@ Interactive, responsive production UI for browsing and inspecting application ca
 * [x] P1-16 Accurate scan duration measurement recorded in milliseconds
 * [x] Comprehensive unit tests added in `ScanStateTest` and `AndroidCacheScannerTest` (P1-25, P1-26)
 
+## User Experience & Cache List UI (P1-17 to P1-24 & P1-27 to P1-29)
+
+* [x] P1-17 Production cache application list implemented (`AppCacheListScreen`, `AppCacheRow`, `AppIcon`)
+* [x] P1-18 Sort by cache size implemented (`AppSort.CACHE_DESC`)
+* [x] P1-19 Sort by total storage footprint implemented (`AppSort.TOTAL_DESC`)
+* [x] P1-20 Sort alphabetically implemented (`AppSort.NAME_ASC`)
+* [x] P1-21 Real-time live search filtering implemented by app name and package name (`AppFilter`)
+* [x] P1-22 Pull-to-refresh scanner trigger implemented (`PullToRefreshBox`)
+* [x] P1-23 Application detail bottom sheet implemented with storage breakdown and educational note (`AppDetailBottomSheet`)
+* [x] P1-24 Native Android per-app storage settings shortcut intent implemented (`PackageShortcuts`)
+* [x] P1-27 Sorting unit tests added in `AppSortTest`
+* [x] P1-28 Search and filtering unit tests added in `AppFilterTest`
+* [x] P1-29 350+ application high-capacity scan performance test verified in `AndroidCacheScannerTest`
+
 ---
 
 # Phase 0 Gate: PASSED
@@ -164,14 +178,24 @@ Interactive, responsive production UI for browsing and inspecting application ca
 
 ---
 
+# Phase 1 Gate: PASSED
+
+* [x] Scanner works independently of Shizuku
+* [x] One bad package does not fail the scan
+* [x] UI remains responsive with progressive state and memory-bounded thumbnails
+* [x] Cache list can be searched and sorted (Cache size, Total size, Alphabetical)
+* [x] Build and tests pass (83/83 unit tests passing)
+
+---
+
 # Current Technical Knowledge
 
 The intended architecture is:
 
 ```text
-Compose UI
+Compose UI (AppCacheListScreen / DiagnosticScreen)
     |
-ViewModels
+ViewModels (AppsViewModel)
     |
 Domain / Coordinator
     |
@@ -241,7 +265,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (61/61 unit tests passed across 16 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (83/83 unit tests passed across 19 test suites).
 ```
 
 ---
@@ -290,17 +314,19 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P1-10 through P1-16 — Production CacheScanner Engine (Phase 1 — Production Cache Scanner)**
+**P1-17 through P1-24 & P1-27 through P1-29 — Cache Application List UI, Search, Sorting, Detail & Shortcuts (Phase 1 — Production Cache Scanner)**
 
-* Refined `CacheScanner` interface with one-shot `scan` and progressive `scanFlow` (`P1-10`, `P1-12`)
-* Created `ScanState` sealed interface (`Idle`, `Discovering`, `Scanning` with progress fraction, `Complete`, `Failed`)
-* Implemented bounded concurrency with `Semaphore(6)` and channel coroutine coordination in `AndroidCacheScanner` (`P1-11`)
-* Implemented robust exception isolation protecting whole-scan execution from individual package query failures (`P1-13`)
-* Implemented accurate aggregate reported cache sum (`P1-14`)
-* Implemented attempted vs successful package measurement counting (`P1-15`)
-* Implemented scan duration tracking in milliseconds (`P1-16`)
-* Integrated progressive scanning and `LinearProgressIndicator` into diagnostic screen
-* Added comprehensive unit test suites in `ScanStateTest` and `AndroidCacheScannerTest` (61/61 tests passing across 16 suites) (`P1-25`, `P1-26`)
+* Implemented `AppSort` enum (`CACHE_DESC`, `TOTAL_DESC`, `NAME_ASC`) with robust multi-field comparators (`P1-18`, `P1-19`, `P1-20`)
+* Implemented `AppFilter` search and visibility engine (`P1-21`)
+* Created `AppsViewModel` with reactive state flow, search, sort, selection, and scan lifecycle coordination
+* Built `AppIcon` with memory-bounded thumbnail caching and fallback (`P1-03`, `P1-17`)
+* Built `AppCacheRow` presenting display name, package, cache size, total footprint, and system app badge (`P1-17`)
+* Built `AppDetailBottomSheet` showing full storage breakdown and educational cache explanation (`P1-23`)
+* Implemented native Android storage settings shortcut in `PackageShortcuts` (`P1-24`)
+* Built `AppCacheListScreen` with pull-to-refresh (`PullToRefreshBox`), live search, sort chips, and scan progress (`P1-17`, `P1-22`)
+* Added unit tests in `AppSortTest`, `AppFilterTest`, `PackageShortcutsTest`, `AppsViewModelTest`, and high-capacity 350+ app scan test in `AndroidCacheScannerTest` (`P1-27`, `P1-28`, `P1-29`)
+* All 83 unit tests passing across 19 suites; debug APKs assemble cleanly
+* Phase 1 Gate PASSED
 
 ---
 
@@ -308,11 +334,9 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P1-17 through P1-24 & P1-27 through P1-28 — Cache Application List UI, Search, Sorting, Detail & Shortcuts (Phase 1 — Production Cache Scanner)**
+**P2-01 through P2-04 — Cleaner Abstraction & Typed Plan Engine (Phase 2 — Production Cleaner)**
 
-* Implement cache application list presentation with sorting (Cache Size, Total Storage, Alphabetical) (`P1-17`, `P1-18`, `P1-19`, `P1-20`, `P1-27`)
-* Implement real-time application search filtering (`P1-21`, `P1-28`)
-* Implement pull-to-refresh scanner trigger (`P1-22`)
-* Implement application detail view with storage breakdown (`P1-23`)
-* Add native Android per-app storage settings shortcut intent (`P1-24`)
-
+* Implement production `CacheCleaner` abstraction (`P2-01`)
+* Implement `CleanerCapabilities` model and validation (`P2-02`)
+* Implement typed `CleanupPlan` model supporting selective and global trim modes (`P2-03`)
+* Implement typed `CleanerError` error hierarchy (`P2-04`)

@@ -54,7 +54,8 @@ import my.id.rmalan.cache.sweep.util.ByteFormatter
 @Composable
 fun DiagnosticScreen(
     container: AppContainer,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenAppList: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -96,7 +97,17 @@ fun DiagnosticScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("CacheSweep Diagnostic Spike") }
+                title = { Text("CacheSweep Diagnostic Spike") },
+                actions = {
+                    if (onOpenAppList != null) {
+                        Button(
+                            onClick = onOpenAppList,
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text("App List")
+                        }
+                    }
+                }
             )
         },
         modifier = modifier
@@ -451,6 +462,15 @@ fun DiagnosticScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Run Full Cache Scan")
+                        }
+
+                        if (onOpenAppList != null) {
+                            OutlinedButton(
+                                onClick = onOpenAppList,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Open Full App Cache List (Search & Sort)")
+                            }
                         }
                     }
                 }

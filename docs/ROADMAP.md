@@ -134,7 +134,7 @@ Phase 0 is complete only when:
 
 **Depends on:** Phase 0
 
-**Phase status:** In progress
+**Phase status:** Complete
 
 ## Package discovery
 
@@ -163,30 +163,30 @@ Phase 0 is complete only when:
 
 ## User experience
 
-* [ ] **P1-17** Build cache application list
-* [ ] **P1-18** Sort by cache size
-* [ ] **P1-19** Sort by total size
-* [ ] **P1-20** Sort alphabetically
-* [ ] **P1-21** Implement application search
-* [ ] **P1-22** Implement pull-to-refresh
-* [ ] **P1-23** Build application detail screen
-* [ ] **P1-24** Add native Android storage-settings shortcut
+* [x] **P1-17** Build cache application list
+* [x] **P1-18** Sort by cache size
+* [x] **P1-19** Sort by total size
+* [x] **P1-20** Sort alphabetically
+* [x] **P1-21** Implement application search
+* [x] **P1-22** Implement pull-to-refresh
+* [x] **P1-23** Build application detail screen
+* [x] **P1-24** Add native Android storage-settings shortcut
 
 ## Tests
 
 * [x] **P1-25** Scanner unit tests
 * [x] **P1-26** Partial failure tests
-* [ ] **P1-27** Sorting tests
-* [ ] **P1-28** Search tests
-* [ ] **P1-29** Test 300+ application scan if possible
+* [x] **P1-27** Sorting tests
+* [x] **P1-28** Search tests
+* [x] **P1-29** Test 300+ application scan if possible
 
 ## Phase 1 Gate
 
-* [ ] Scanner works independently of Shizuku
-* [ ] One bad package does not fail the scan
-* [ ] UI remains responsive
-* [ ] Cache list can be searched/sorted
-* [ ] Build and tests pass
+* [x] Scanner works independently of Shizuku
+* [x] One bad package does not fail the scan
+* [x] UI remains responsive
+* [x] Cache list can be searched/sorted
+* [x] Build and tests pass
 
 ---
 
@@ -194,9 +194,9 @@ Phase 0 is complete only when:
 
 **Goal:** Build the safe privileged cache-cleaning backend.
 
-**Depends on:** Phase 0 and preferably Phase 1
+**Depends on:** Phase 0 and Phase 1
 
-**Phase status:** Blocked
+**Phase status:** Ready to start
 
 ## Cleaner abstraction
 
