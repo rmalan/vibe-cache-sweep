@@ -166,12 +166,14 @@ fun AppCacheListScreen(
                             )
                         }
                     } else {
-                        IconButton(
-                            onClick = {
-                                isSelectionMode = true
+                        if (state.supportsSelectiveCleaning) {
+                            IconButton(
+                                onClick = {
+                                    isSelectionMode = true
+                                }
+                            ) {
+                                Icon(Icons.Default.Check, contentDescription = "Select Apps")
                             }
-                        ) {
-                            Icon(Icons.Default.Check, contentDescription = "Select Apps")
                         }
                         if (onOpenSettings != null) {
                             IconButton(onClick = onOpenSettings) {
@@ -197,9 +199,14 @@ fun AppCacheListScreen(
                     state.displayedApps.filter { it.cacheBytes > 0 }
                 }
 
-                if (targetApps.isNotEmpty()) {
-                    val totalCache = targetApps.sumOf { it.cacheBytes }
-                    val label = if (hasSelected) {
+                if (targetApps.isNotEmpty() || state.totalReportedCacheBytes > 0) {
+                    val totalCache = if (hasSelected) {
+                        targetApps.sumOf { it.cacheBytes }
+                    } else {
+                        state.totalReportedCacheBytes
+                    }
+
+                    val label = if (hasSelected && state.supportsSelectiveCleaning) {
                         "Clean Selected (${targetApps.size})"
                     } else {
                         "Clean All Cache"
@@ -207,7 +214,7 @@ fun AppCacheListScreen(
 
                     ExtendedFloatingActionButton(
                         onClick = {
-                            val plan = if (!hasSelected && !state.supportsSelectiveCleaning) {
+                            val plan = if (!state.supportsSelectiveCleaning || !hasSelected) {
                                 CleanupPlan.globalTrim(
                                     desiredFreeBytes = 0L,
                                     estimatedCacheBytes = totalCache

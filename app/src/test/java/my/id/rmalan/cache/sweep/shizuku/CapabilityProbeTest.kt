@@ -7,7 +7,7 @@ import org.junit.Test
 class CapabilityProbeTest {
 
     @Test
-    fun parseCapabilities_withCacheOnlyAndTrimCaches() {
+    fun parseCapabilities_withCacheOnlyAndTrimCaches_asRoot() {
         val helpOutput = """
             Package manager (package) commands:
               help
@@ -18,8 +18,25 @@ class CapabilityProbeTest {
                 Trim cache files to reach the given free space.
         """.trimIndent()
 
-        val capabilities = CapabilityProbe.parseCapabilities(helpOutput)
+        val capabilities = CapabilityProbe.parseCapabilities(helpOutput, isRoot = true)
         assertTrue(capabilities.supportsSelectiveCacheClear)
+        assertTrue(capabilities.supportsTrimCaches)
+    }
+
+    @Test
+    fun parseCapabilities_withCacheOnlyAndTrimCaches_asNonRoot() {
+        val helpOutput = """
+            Package manager (package) commands:
+              help
+                Print this help text.
+              clear [--user USER_ID] [--cache-only] PACKAGE
+                Deletes all data associated with a package.
+              trim-caches DESIRED_FREE_SPACE [FLAGS]
+                Trim cache files to reach the given free space.
+        """.trimIndent()
+
+        val capabilities = CapabilityProbe.parseCapabilities(helpOutput, isRoot = false)
+        assertFalse(capabilities.supportsSelectiveCacheClear)
         assertTrue(capabilities.supportsTrimCaches)
     }
 

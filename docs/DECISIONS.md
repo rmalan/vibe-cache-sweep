@@ -315,3 +315,27 @@ Ensures CacheSweep is usable for all users, respects system accessibility settin
 ## Consequences
 
 Full accessibility and Material 3 compliance across all screens, passing Phase 4 Product UI & Persistence gates.
+
+---
+
+# D-031 — Selective Cache Clear Root-Privilege Gating and Global Cache Trim Default
+
+**Status:** Accepted
+
+## Context
+
+On modern Android (11+) non-root configurations with Shizuku (UID 2000), `pm help` advertises the `--cache-only` flag. However, `PackageManagerService` enforces signature-level permission `android.permission.INTERNAL_DELETE_CACHE_FILES` when `--cache-only` is passed, silently dropping the operation without invoking the observer callback. This causes `pm clear --cache-only` to hang and time out for UID 2000. Conversely, `pm trim-caches <DESIRED_FREE_SPACE>` is fully authorized for UID 2000, executing in milliseconds and reclaiming real physical cache storage.
+
+## Decision
+
+1. In `CapabilityProbe`, gate `supportsSelectiveCacheClear` strictly behind root privilege (`Process.myUid() == 0`). Non-root Shizuku sessions (UID 2000) evaluate `supportsSelectiveCacheClear = false` and `supportsTrimCaches = true`.
+2. On non-root devices, configure Dashboard and App Cache List action buttons to default to Global Cache Trimming (`pm trim-caches`), executing immediate and safe system-wide cache reclamation.
+3. Keep per-app storage inspection fully available via `StorageStatsManager` and `AppDetailBottomSheet`, providing direct one-tap shortcuts to native Android Application Storage Settings (`PackageShortcuts.openStorageSettings`) for manual per-app clearance.
+
+## Reason
+
+Prevents command timeouts and failed cleanup attempts on Android non-root devices, ensuring the one-tap cache cleaning operation works reliably via `pm trim-caches` while maintaining transparent per-app storage visibility.
+
+## Consequences
+
+CacheSweep operates reliably on non-root Shizuku configurations with instantaneous global cache trimming, while selective single/multi-app cleaning is safely capability-gated.
