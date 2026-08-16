@@ -1,4 +1,4 @@
-package dev.cachesweep.app
+package my.id.rmalan.cache.sweep
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "dev.cachesweep.app"
+    namespace = "my.id.rmalan.cache.sweep"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "dev.cachesweep.app"
+        applicationId = "my.id.rmalan.cache.sweep"
 
         minSdk = 30
         targetSdk = 36

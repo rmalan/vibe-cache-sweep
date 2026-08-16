@@ -1,4 +1,4 @@
-package dev.cachesweep.app
+package my.id.rmalan.cache.sweep
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

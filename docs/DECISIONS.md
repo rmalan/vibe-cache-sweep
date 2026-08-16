@@ -558,6 +558,28 @@ Git gives both humans and agents a reliable history and rollback mechanism.
 
 ---
 
+# D-025 — Use existing project package and application ID `my.id.rmalan.cache.sweep`
+
+**Status:** Accepted
+
+## Context
+
+The initial Android project created in this workspace used the package name and application ID `my.id.rmalan.cache.sweep`, whereas `TECH_SPEC.md` originally used `dev.cachesweep.app`.
+
+## Decision
+
+Use `my.id.rmalan.cache.sweep` as the official namespace, package name, and `applicationId` for the application, maintaining the project structure initialized in this repository.
+
+## Reason
+
+Preserves the project configuration created by the user and ensures consistency across local tooling and sideloading.
+
+## Consequences
+
+All internal package imports, AIDL declarations, and manifest references use `my.id.rmalan.cache.sweep`.
+
+---
+
 # New Decision Template
 
 Copy this section when adding a significant decision.
@@ -589,3 +611,4 @@ What becomes easier, harder, enabled, or restricted?
 If applicable:
 
 `D-XXX`
+
