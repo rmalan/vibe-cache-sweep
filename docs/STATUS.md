@@ -1,9 +1,9 @@
 # CacheSweep Development Status
 
-**Last updated:** 2026-08-14
-**Overall status:** Pre-implementation
+**Last updated:** 2026-08-16
+**Overall status:** In progress
 **Current phase:** Phase 0 — Technical Feasibility
-**Current task:** P0-01 — Create Android Studio project
+**Current task:** P0-05 — Create initial package/project structure
 
 ---
 
@@ -20,35 +20,17 @@
 
 # Current Task
 
-## P0-01 — Create Android Studio Project
+## P0-05 — Create Initial Package/Project Structure
 
-**Status:** Not started
+**Status:** Ready to start
 
 ### Objective
 
-Create the initial CacheSweep Android application according to `TECH_SPEC.md`.
+Establish the initial package structure (`di`, `model`, `permissions`, `scanner`, `storage`, `shizuku`, `cleaner`, `data`, `util`, `ui`) as defined in `TECH_SPEC.md` Section 10.
 
 ### Expected outcome
 
-A minimal Android project that:
-
-* uses Kotlin,
-* uses Jetpack Compose,
-* has the intended application ID/package structure,
-* has the initial SDK configuration,
-* builds a debug APK successfully.
-
-### Do not implement yet
-
-Do not jump ahead to:
-
-* production scanner,
-* cache cleaner,
-* complete dashboard,
-* selective cleaning,
-* global trimming.
-
-Start with the foundation required for Phase 0.
+Directories and initial placeholder/interface files created according to the single-module architecture, maintaining buildability and testability.
 
 ---
 
@@ -62,7 +44,12 @@ Start with the foundation required for Phase 0.
 * [x] Architecture/security constraints defined
 * [x] Phase-based development strategy defined
 
-No application code has been created yet.
+## Foundation (P0-01 to P0-04)
+
+* [x] P0-01 Android project configured with namespace/applicationId `dev.cachesweep.app`
+* [x] P0-02 Kotlin + Jetpack Compose configured with `org.jetbrains.kotlin.plugin.compose`
+* [x] P0-03 Android SDK versions (minSdk 30, targetSdk 36, compileSdk 37) and Java 17 compatibility configured
+* [x] P0-04 Initial dependencies configured in `libs.versions.toml` and `app/build.gradle.kts` (Compose BOM 2026.08.00, Activity Compose, Lifecycle, Shizuku 13.1.5, Coroutines 1.11.0, DataStore, Navigation)
 
 ---
 
@@ -70,10 +57,10 @@ No application code has been created yet.
 
 ## Foundation
 
-* [ ] P0-01 Create Android Studio project
-* [ ] P0-02 Configure Kotlin + Jetpack Compose
-* [ ] P0-03 Configure SDK/Gradle
-* [ ] P0-04 Add dependencies
+* [x] P0-01 Create Android Studio project
+* [x] P0-02 Configure Kotlin + Jetpack Compose
+* [x] P0-03 Configure SDK/Gradle
+* [x] P0-04 Add dependencies
 * [ ] P0-05 Create project structure
 * [ ] P0-06 Diagnostic Compose screen
 * [ ] P0-07 Verify debug build
@@ -177,7 +164,7 @@ These must not be violated.
 # Build Status
 
 ```text
-Not available — project has not been created yet.
+SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk generated).
 ```
 
 ---
@@ -185,7 +172,7 @@ Not available — project has not been created yet.
 # Test Status
 
 ```text
-Not available — project has not been created yet.
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (all unit tests passed).
 ```
 
 ---
@@ -211,7 +198,7 @@ Still needs validation:
 
 # Known Issues
 
-None yet.
+None.
 
 ---
 
@@ -219,23 +206,19 @@ None yet.
 
 None.
 
-Phase 0 implementation can begin.
-
 ---
 
 # Architecture Deviations
 
 None.
 
-Current implementation should follow `TECH_SPEC.md`.
-
-If an implementation constraint requires changing the architecture, record the decision in `DECISIONS.md` before silently changing the design.
+Current implementation follows `TECH_SPEC.md`.
 
 ---
 
 # Most Recent Completed Task
 
-Documentation initialization.
+**P0-01 through P0-04 — Project Foundation and Dependency Configuration**
 
 ---
 
@@ -243,20 +226,9 @@ Documentation initialization.
 
 Implement:
 
-**P0-01 — Create Android Studio project**
+**P0-05 — Create initial package/project structure**
 
 Then continue with:
 
-* P0-02 Compose setup
-* P0-03 SDK/Gradle configuration
-* P0-04 initial dependencies
-
-A coding agent may reasonably complete P0-01 through P0-04 in the same session if the build remains green.
-
-Before ending that session:
-
-1. Run the debug build.
-2. Run available tests.
-3. Update this file.
-4. Record any architecture changes in `DECISIONS.md`.
-5. Document the exact next task.
+* P0-06 Diagnostic Compose screen
+* P0-07 Verify debug APK builds successfully

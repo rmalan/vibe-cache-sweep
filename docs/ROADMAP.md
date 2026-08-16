@@ -38,10 +38,10 @@ Do not mark an entire phase complete until its phase gate passes.
 
 ## Project foundation
 
-* [ ] **P0-01** Create Android Studio project
-* [ ] **P0-02** Configure Kotlin + Jetpack Compose
-* [ ] **P0-03** Configure Android SDK versions and Gradle
-* [ ] **P0-04** Add required dependencies
+* [x] **P0-01** Create Android Studio project
+* [x] **P0-02** Configure Kotlin + Jetpack Compose
+* [x] **P0-03** Configure Android SDK versions and Gradle
+* [x] **P0-04** Add required dependencies
 * [ ] **P0-05** Create initial package/project structure
 * [ ] **P0-06** Create diagnostic Compose screen
 * [ ] **P0-07** Verify debug APK builds successfully
