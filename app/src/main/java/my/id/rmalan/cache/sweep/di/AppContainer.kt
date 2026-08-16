@@ -44,6 +44,15 @@ class AppContainer(
             packageRepository = packageRepository
         )
 
+    val cleanupCoordinator: my.id.rmalan.cache.sweep.cleaner.CleanupCoordinator =
+        my.id.rmalan.cache.sweep.cleaner.CleanupCoordinator(
+            cleaner = cacheCleaner,
+            scanner = cacheScanner,
+            storage = deviceStorageRepository,
+            storageStatsRepository = storageStatsRepository,
+            packageRepository = packageRepository
+        )
+
     val safetyTestManager =
         my.id.rmalan.cache.sweep.cleaner.SafetyTestManager(context)
 }

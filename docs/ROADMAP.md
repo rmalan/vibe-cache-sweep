@@ -245,21 +245,21 @@ Phase 0 is complete only when:
 
 **Goal:** Connect scanning and cleaning into a reliable workflow.
 
-**Phase status:** Ready to start
+**Phase status:** In progress
 
-* [ ] **P3-01** Implement cleanup state machine
-* [ ] **P3-02** Validate capability before every cleanup
-* [ ] **P3-03** Capture pre-clean physical storage
-* [ ] **P3-04** Capture pre-clean reported cache
-* [ ] **P3-05** Execute cleanup plan
-* [ ] **P3-06** Implement bounded storage-stat settling
-* [ ] **P3-07** Rescan affected packages
-* [ ] **P3-08** Capture post-clean physical storage
-* [ ] **P3-09** Capture post-clean reported cache
-* [ ] **P3-10** Calculate physical free-space delta
-* [ ] **P3-11** Calculate reported cache delta
-* [ ] **P3-12** Clamp negative freed values
-* [ ] **P3-13** Add noise/significance threshold
+* [x] **P3-01** Implement cleanup state machine
+* [x] **P3-02** Validate capability before every cleanup
+* [x] **P3-03** Capture pre-clean physical storage
+* [x] **P3-04** Capture pre-clean reported cache
+* [x] **P3-05** Execute cleanup plan
+* [x] **P3-06** Implement bounded storage-stat settling
+* [x] **P3-07** Rescan affected packages
+* [x] **P3-08** Capture post-clean physical storage
+* [x] **P3-09** Capture post-clean reported cache
+* [x] **P3-10** Calculate physical free-space delta
+* [x] **P3-11** Calculate reported cache delta
+* [x] **P3-12** Clamp negative freed values
+* [x] **P3-13** Add noise/significance threshold
 * [ ] **P3-14** Build cleanup confirmation screen
 * [ ] **P3-15** Build cleaning progress screen
 * [ ] **P3-16** Build cleanup result screen

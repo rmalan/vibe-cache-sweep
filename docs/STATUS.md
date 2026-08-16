@@ -2,8 +2,8 @@
 
 **Last updated:** 2026-08-16
 **Overall status:** In progress
-**Current phase:** Phase 3 (Cleanup Coordinator & Results) — Ready to start
-**Current task:** P3-01 through P3-04 — Cleanup State Machine, Pre-Clean Capability Validation, and Snapshots
+**Current phase:** Phase 3 (Cleanup Coordinator & Results) — In progress
+**Current task:** P3-14 through P3-17 — Cleanup Confirmation, Progress, Result Screens, and Partial Failures UI
 
 ---
 
@@ -12,7 +12,7 @@
 * [x] Phase 0 — Technical Feasibility
 * [x] Phase 1 — Production Cache Scanner
 * [x] Phase 2 — Production Cleaner
-* [ ] Phase 3 — Cleanup Coordinator & Results
+* [ ] Phase 3 — Cleanup Coordinator & Results (Core Coordinator Complete)
 * [ ] Phase 4 — Product UI & Persistence
 * [ ] Phase 5 — Hardening & Release
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P3-01 through P3-04 — Cleanup State Machine, Pre-Clean Capability Validation, and Snapshots
+## P3-14 through P3-17 — Cleanup Confirmation, Progress, Result Screens, and Partial Failures UI
 
 **Status:** Ready to start
 
 ### Objective
 
-Implement the cleanup state machine (`CleanupState`, `CleanupCoordinator`), validate privileged runtime capabilities before initiating every cleanup, and capture pre-clean physical storage and reported cache snapshots.
+Build the Compose user interface screens for the cleanup workflow: cleanup confirmation modal/sheet, live cleaning progress screen with package count and app name, cleanup result screen with before/after physical and cache metrics, and expandable partial failures section.
 
 ### Expected outcome
 
-Robust cleanup workflow foundation capturing accurate baseline measurements and enforcing pre-execution safety.
+End-to-end interactive cleanup user experience reflecting real-time state machine progression and accurate reclamation telemetry.
 
 ---
 
@@ -197,6 +197,24 @@ Robust cleanup workflow foundation capturing accurate baseline measurements and 
 * [x] P2-19 Critical invariant enforced: plain `pm clear PACKAGE` without `--cache-only` cannot be generated or executed in any permutation (`commandBuilder_neverCreatesPlainPmClear`, `execute_refusesClearWithoutCacheOnly_inAnyForm` in `PackageCommandsTest`)
 * [x] P2-20 Android component and permissions security audited: verified no `INTERNET` permission in `:app` or `:fixture`, `allowBackup="false"`, `MainActivity` is the sole exported activity with `MAIN`/`LAUNCHER`, no exported services or receivers, and `ShizukuProvider` is properly permission-gated with `INTERACT_ACROSS_USERS_FULL` (`AndroidManifestSecurityAuditTest`)
 
+## Cleanup Coordinator Engine & Snapshots (P3-01 to P3-13)
+
+* [x] P3-01 Cleanup state machine sealed interface implemented (`CleaningState`: `Idle`, `Validating`, `SnapshotBefore`, `Clearing`, `WaitingForStats`, `SnapshotAfter`, `Completed`, `Failed`) with progress fraction calculation
+* [x] P3-02 Capability pre-validation enforced before initiating every cleanup operation in `CleanupCoordinator` (Shizuku availability, permission authorization, selective vs global trim mode support, plan integrity)
+* [x] P3-03 Pre-clean physical storage snapshot captured via `DeviceStorageRepository.snapshot()`
+* [x] P3-04 Pre-clean reported cache snapshot captured across target packages via `StorageStatsRepository` / `CleanupPlan`
+* [x] P3-05 Cleanup plan executed via `CacheCleaner.executePlan` with progressive package-count and application name feedback
+* [x] P3-06 Bounded storage-stat settling delay implemented (`settlingDelayMillis` with `DEFAULT_SETTLING_DELAY_MS = 500ms`, zero-delay configurable for instant unit testing)
+* [x] P3-07 Target packages rescanned after cleanup to measure actual remaining cache footprint
+* [x] P3-08 Post-clean physical storage snapshot captured via `DeviceStorageRepository.snapshot()`
+* [x] P3-09 Post-clean reported cache snapshot calculated/measured
+* [x] P3-10 Physical free-space delta calculated (`physicalFreeAfter - physicalFreeBefore`)
+* [x] P3-11 Reported cache delta calculated (`cacheBefore - cacheAfter`)
+* [x] P3-12 Negative freed values clamped to zero (`maxOf(0L, ...)`) protecting against background write noise
+* [x] P3-13 Noise threshold constant (`DEFAULT_NOISE_THRESHOLD_BYTES = 16MB`) and `isSignificantReclaim` evaluation implemented conforming to TECH_SPEC Section 37
+* [x] `CleanupCoordinator` wired into dependency container `AppContainer`
+* [x] Comprehensive unit tests added in `CleaningStateTest`, `CleanupResultTest`, and `CleanupCoordinatorTest` (16 new tests)
+
 ---
 
 # Phase 0 Gate: PASSED
@@ -313,7 +331,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (143/143 unit tests passed across 26 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (159/159 unit tests passed across 29 test suites).
 ```
 
 ---
@@ -362,15 +380,22 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P2-16 through P2-20 — Cleaner Security Auditing & Invariant Verification (Phase 2 — Production Cleaner)**
+**P3-01 through P3-13 — Cleanup State Machine, Pre-Clean Capability Validation, Coordinator, Snapshots, Settling, Rescan, and Metrics (Phase 3 — Cleanup Coordinator & Results)**
 
-* Enforced zero `sh -c` or shell string parsing across all modules and verified via automated AST/codebase scanner test (`CodebaseSecurityAuditTest.codebase_hasZeroUsageOfShDashC`) (`P2-16`)
-* Proved elimination of arbitrary command execution paths via reflection audit of `ICacheOpsService` AIDL stub, `CacheCleaner` interface, and absence of `Runtime.getRuntime().exec` (`P2-17`)
-* Expanded `PackageCommandsTest` with comprehensive argument generation, ordering, and strict validation rejecting metacharacters, traversal, self packages, and negative IDs (`P2-18`)
-* Enforced critical safety invariants ensuring plain `pm clear PACKAGE` without `--cache-only` cannot be generated or executed in any permutation (`PackageCommandsTest.commandBuilder_neverCreatesPlainPmClear`, `execute_refusesClearWithoutCacheOnly_inAnyForm`) (`P2-19`)
-* Audited Android manifest security in `AndroidManifestSecurityAuditTest` confirming no `INTERNET` permission, `allowBackup="false"`, only `MainActivity` exported for launcher, no exported services or receivers, and permission-gated `ShizukuProvider` (`P2-20`)
-* Verified all Phase 2 gate requirements: selective cleaning capability gated, graceful degradation, global trim fallback, partial failure isolation, and rigorous safety tests passed
-* All 143 unit tests passing across 26 test suites; debug APKs assemble cleanly
+* Implemented cleanup state machine sealed interface `CleaningState` with progress fraction calculations (`P3-01`)
+* Implemented capability pre-validation before every cleanup operation in `CleanupCoordinator` ensuring strict gating on Shizuku, permissions, and mode capability (`P3-02`)
+* Captured pre-clean physical storage snapshot via `DeviceStorageRepository.snapshot()` (`P3-03`)
+* Captured pre-clean reported cache snapshot across target packages (`P3-04`)
+* Implemented plan execution through `CacheCleaner.executePlan` with progress callback propagation (`P3-05`)
+* Added bounded storage-stat settling delay support (`settlingDelayMillis` with 500ms default) (`P3-06`)
+* Implemented post-cleanup rescan of target packages via `StorageStatsRepository` (`P3-07`)
+* Captured post-clean physical storage snapshot (`P3-08`)
+* Computed post-clean reported cache footprint and residual cache (`P3-09`)
+* Calculated physical free-space delta (`P3-10`) and reported cache reduction delta (`P3-11`)
+* Enforced negative delta clamping to `0L` protecting against background write fluctuations (`P3-12`)
+* Added 16 MB noise threshold constant (`DEFAULT_NOISE_THRESHOLD_BYTES`) and `isSignificantReclaim` evaluation (`P3-13`)
+* Wired `CleanupCoordinator` into `AppContainer`
+* Added 16 unit tests across `CleaningStateTest`, `CleanupResultTest`, and `CleanupCoordinatorTest`; 159/159 tests passing across 29 test suites
 
 ---
 
@@ -378,12 +403,13 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P3-01 through P3-04 — Cleanup State Machine, Pre-Clean Capability Validation, and Snapshots (Phase 3 — Cleanup Coordinator & Results)**
+**P3-14 through P3-17 — Cleanup Confirmation, Progress, Result Screens, and Partial Failures UI (Phase 3 — Cleanup Coordinator & Results)**
 
-* Implement cleanup state machine (`CleanupState`, `CleanupCoordinator`) (`P3-01`)
-* Validate privileged runtime capability before every cleanup operation (`P3-02`)
-* Capture pre-clean physical storage snapshot via `StatFs` / `DeviceStorageRepository` (`P3-03`)
-* Capture pre-clean reported cache snapshot across target packages (`P3-04`)
+* Build cleanup confirmation modal/dialog (`P3-14`)
+* Build cleaning progress screen with animated package progress and app name (`P3-15`)
+* Build cleanup result screen with before/after physical and cache metrics (`P3-16`)
+* Display expandable partial failures section on result screen (`P3-17`)
+
 
 
 
