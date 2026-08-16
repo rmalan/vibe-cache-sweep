@@ -3,7 +3,7 @@
 **Last updated:** 2026-08-16
 **Overall status:** In progress
 **Current phase:** Phase 2 (Production Cleaner) — In progress
-**Current task:** P2-12 through P2-15 — Global Cache Trimming Engine & Fallback
+**Current task:** P2-16 through P2-20 — Cleaner Security Auditing & Invariant Verification
 
 ---
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P2-12 through P2-15 — Global Cache Trimming Engine & Fallback
+## P2-16 through P2-20 — Cleaner Security Auditing & Invariant Verification
 
 **Status:** Ready to start
 
 ### Objective
 
-Productionize global cache trimming (`pm trim-caches <DESIRED_FREE_SPACE>`) fallback mechanism with target free-storage calculation, explicit user consent requirement when degrading from selective to global mode, and graceful handling of unsupported trim operations.
+Audit and enforce all security constraints across the cleaner layer: ensure no `sh -c` usage, eliminate arbitrary command execution risks, test command argument generation, test that plain `pm clear PACKAGE` without `--cache-only` cannot be generated, and audit all exported Android components.
 
 ### Expected outcome
 
-Safe, reliable global trimming engine that calculates realistic free-storage targets, preserves explicit user intent, and fails gracefully when unsupported.
+Thorough security verification passing all automated invariants with zero potential for data loss or privilege escalation.
 
 ---
 
@@ -181,6 +181,14 @@ Safe, reliable global trimming engine that calculates realistic free-storage tar
 * [x] P2-11 Granular failed-package reporting implemented with `CleanerBatchResult`, `errors` map, and `errorMessageSummary()`
 * [x] Comprehensive unit tests added in `PackageValidatorTest`, `CleanerErrorTest`, `CleanupPlanTest`, and `ShizukuCacheCleanerTest`
 
+## Global Cache Trimming Engine & Fallback (P2-12 to P2-15)
+
+* [x] P2-12 Production global cache trimming engine implemented (`pm trim-caches <DESIRED_FREE_SPACE>`) in `GlobalTrimCalculator`, `ShizukuCacheCleaner`, `CacheOpsUserService`, and `PackageCommands`
+* [x] P2-13 Target free-storage calculation implemented in `GlobalTrimCalculator.calculateDesiredFreeBytes(deviceStorage, estimatedCacheBytes)` conforming to TECH_SPEC Section 34 with overflow and non-negative boundary protection, plus `CleanupPlan.globalTrim(deviceStorage, ...)` and `CleanupPlan.maxGlobalTrim(deviceStorage)` factories
+* [x] P2-14 Explicit user consent strictly required before selective → global degradation in `CleanupPlan.toGlobalTrimFallback(deviceStorage, userConsentConfirmed)`, `CleanupPlan.canFallbackToGlobalTrim`, and enforced in `ShizukuCacheCleaner` (preventing silent auto-downgrades)
+* [x] P2-15 Graceful handling of unsupported global trim implemented with structured `CleanerError.GlobalTrimUnsupported`, `CleanerError.ShizukuUnavailable`, `CleanerError.PermissionDenied`, `CleanerError.CommandFailed`, and IPC exception isolation
+* [x] Comprehensive unit tests added in `GlobalTrimCalculatorTest`, `CleanupPlanTest`, and `ShizukuCacheCleanerTest`
+
 ---
 
 # Phase 0 Gate: PASSED
@@ -286,7 +294,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (114/114 unit tests passed across 23 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (122/122 unit tests passed across 24 test suites).
 ```
 
 ---
@@ -335,16 +343,15 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P2-05 through P2-11 — Production Selective Cleaning & Multi-Package Engine (Phase 2 — Production Cleaner)**
+**P2-12 through P2-15 — Global Cache Trimming Engine & Fallback (Phase 2 — Production Cleaner)**
 
-* Enhanced `PackageValidator` with `isKnownPackage` and typed `validatePackage` Result verification (`P2-06`, `P2-07`)
-* Updated `CleanupPlan.validate(scannedPackages)` and added `CleanupPlan.fromApps(apps)` factory (`P2-06`, `P2-08`)
-* Added `PackageNotScanned` error variant and progress display text in `CleanerError` / `CleaningProgress` (`P2-06`, `P2-09`)
-* Implemented multi-package cleaning engine in `ShizukuCacheCleaner` with app display name resolution via `PackageRepository` (`P2-08`, `P2-09`)
-* Implemented resilient individual failure isolation: individual package failures never abort remaining batch (`P2-10`)
-* Structured failed-package reporting with `CleanerBatchResult`, `errors` map, and `errorMessageSummary()` (`P2-11`)
-* Comprehensive unit tests added in `PackageValidatorTest`, `CleanerErrorTest`, `CleanupPlanTest`, and `ShizukuCacheCleanerTest`
-* All 114 unit tests passing across 23 test suites; debug APKs assemble cleanly
+* Implemented `GlobalTrimCalculator` with `calculateDesiredFreeBytes(deviceStorage, estimatedCacheBytes)` conforming to TECH_SPEC Section 34 with arithmetic overflow protection and non-negative clamping (`P2-12`, `P2-13`)
+* Added `CleanupPlan.globalTrim(deviceStorage, ...)` and `CleanupPlan.maxGlobalTrim(deviceStorage)` factories (`P2-13`)
+* Implemented `CleanupPlan.canFallbackToGlobalTrim(capabilities)` and `CleanupPlan.toGlobalTrimFallback(deviceStorage, userConsentConfirmed)` requiring explicit user consent before selective → global degradation (`P2-14`)
+* Enforced safety invariant in `ShizukuCacheCleaner` ensuring selective cleanup plans never secretly trigger global trim when selective clear is unsupported (`P2-14`)
+* Handled unsupported global trim, Shizuku unavailable, permission denied, null service, and IPC errors with typed structured reporting (`P2-15`)
+* Comprehensive unit tests added in `GlobalTrimCalculatorTest`, `CleanupPlanTest`, and `ShizukuCacheCleanerTest`
+* All 122 unit tests passing across 24 test suites; debug APKs assemble cleanly
 
 ---
 
@@ -352,9 +359,13 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P2-12 through P2-15 — Global Cache Trimming Engine & Fallback (Phase 2 — Production Cleaner)**
+**P2-16 through P2-20 — Cleaner Security Auditing & Invariant Verification (Phase 2 — Production Cleaner)**
 
-* Productionize global cache trimming with target free-storage calculation (`P2-12`, `P2-13`)
-* Require explicit user consent before selective → global fallback (`P2-14`)
-* Handle unsupported global trim gracefully (`P2-15`)
+* Ensure no `sh -c` usage across all modules (`P2-16`)
+* Verify no arbitrary command execution paths (`P2-17`)
+* Comprehensive test suite for command argument generation (`P2-18`)
+* Automated invariant tests proving plain `pm clear PACKAGE` without `--cache-only` cannot be generated (`P2-19`)
+* Audit exported Android components in `AndroidManifest.xml` (`P2-20`)
+
+
 

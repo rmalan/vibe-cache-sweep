@@ -217,10 +217,10 @@ Phase 0 is complete only when:
 
 ## Global fallback
 
-* [ ] **P2-12** Productionize global trim
-* [ ] **P2-13** Calculate desired free-storage target
-* [ ] **P2-14** Require explicit user consent before selective → global fallback
-* [ ] **P2-15** Handle unsupported global trim
+* [x] **P2-12** Productionize global trim
+* [x] **P2-13** Calculate desired free-storage target
+* [x] **P2-14** Require explicit user consent before selective → global fallback
+* [x] **P2-15** Handle unsupported global trim
 
 ## Security
 

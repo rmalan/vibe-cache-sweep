@@ -33,6 +33,23 @@ data class CleanupPlan(
     val isGlobalTrim: Boolean
         get() = mode == CleanupMode.GLOBAL_TRIM
 
+    fun canFallbackToGlobalTrim(capabilities: CleanerCapabilities): Boolean {
+        return isSelective && !capabilities.canCleanSelective && capabilities.canCleanGlobal
+    }
+
+    fun toGlobalTrimFallback(
+        deviceStorage: DeviceStorageInfo,
+        userConsentConfirmed: Boolean
+    ): CleanupPlan {
+        require(userConsentConfirmed) {
+            "Explicit user consent is strictly required to convert a selective cleanup plan to global trim fallback."
+        }
+        return globalTrim(
+            deviceStorage = deviceStorage,
+            estimatedCacheBytes = this.estimatedCacheBytes
+        )
+    }
+
     fun validate(scannedPackages: Set<String>? = null): Result<Unit> {
         return when (mode) {
             CleanupMode.SELECTIVE -> {
@@ -98,6 +115,30 @@ data class CleanupPlan(
                 selectedPackages = emptyList(),
                 estimatedCacheBytes = maxOf(0L, estimatedCacheBytes),
                 desiredFreeBytes = maxOf(0L, desiredFreeBytes)
+            )
+        }
+
+        fun globalTrim(
+            deviceStorage: DeviceStorageInfo,
+            estimatedCacheBytes: Long = 0L
+        ): CleanupPlan {
+            val target = my.id.rmalan.cache.sweep.cleaner.GlobalTrimCalculator.calculateDesiredFreeBytes(
+                deviceStorage = deviceStorage,
+                estimatedCacheBytes = estimatedCacheBytes
+            )
+            return globalTrim(
+                desiredFreeBytes = target,
+                estimatedCacheBytes = estimatedCacheBytes
+            )
+        }
+
+        fun maxGlobalTrim(
+            deviceStorage: DeviceStorageInfo
+        ): CleanupPlan {
+            val target = my.id.rmalan.cache.sweep.cleaner.GlobalTrimCalculator.calculateMaxFreeBytes(deviceStorage)
+            return globalTrim(
+                desiredFreeBytes = target,
+                estimatedCacheBytes = 0L
             )
         }
     }

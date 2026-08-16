@@ -321,4 +321,113 @@ class ShizukuCacheCleanerTest {
         assertEquals("Google Chrome", chromeProgress.currentAppName)
         assertEquals("Cleaning 1 of 2 (Google Chrome)", chromeProgress.displayText)
     }
+
+    @Test
+    fun `executePlan for Global Trim handles Shizuku unavailable, permission denied, and unsupported`() = runBlocking {
+        val globalPlan = CleanupPlan.globalTrim(desiredFreeBytes = 5000000000L)
+
+        // Shizuku Unavailable
+        val unavailCaps = CleanerCapabilities.UNAVAILABLE
+        val cleanerUnavail = ShizukuCacheCleaner(FakeShizukuManager(fakeCapabilities = unavailCaps))
+        val resUnavail = cleanerUnavail.executePlan(globalPlan)
+        assertEquals(1, resUnavail.totalAttempted)
+        assertTrue(resUnavail.isCompleteFailure)
+        assertEquals(CleanerError.ShizukuUnavailable, resUnavail.errors["global_trim"])
+
+        // Permission Denied
+        val unauthCaps = CleanerCapabilities(
+            shizukuAvailable = true,
+            shizukuAuthorized = false,
+            privilegedUid = null,
+            supportsSelectiveCacheClear = false,
+            supportsGlobalTrim = true
+        )
+        val cleanerUnauth = ShizukuCacheCleaner(FakeShizukuManager(fakeCapabilities = unauthCaps))
+        val resUnauth = cleanerUnauth.executePlan(globalPlan)
+        assertEquals(CleanerError.PermissionDenied, resUnauth.errors["global_trim"])
+
+        // Global Trim Unsupported
+        val unsupportedCaps = CleanerCapabilities(
+            shizukuAvailable = true,
+            shizukuAuthorized = true,
+            privilegedUid = 2000,
+            supportsSelectiveCacheClear = true,
+            supportsGlobalTrim = false
+        )
+        val cleanerUnsupported = ShizukuCacheCleaner(FakeShizukuManager(fakeCapabilities = unsupportedCaps))
+        val resUnsupported = cleanerUnsupported.executePlan(globalPlan)
+        assertEquals(CleanerError.GlobalTrimUnsupported, resUnsupported.errors["global_trim"])
+    }
+
+    @Test
+    fun `executePlan for Global Trim isolates command failure and IPC exceptions`() = runBlocking {
+        val globalPlan = CleanupPlan.globalTrim(desiredFreeBytes = 5000000000L)
+
+        // Command failure (non-zero exit code)
+        val fakeServiceFail = object : ICacheOpsService {
+            override fun destroy() {}
+            override fun getProtocolVersion(): Int = 1
+            override fun getPrivilegedUid(): Int = 2000
+            override fun supportsSelectiveCacheClear(): Boolean = true
+            override fun supportsGlobalTrim(): Boolean = true
+            override fun clearPackageCache(packageName: String, userId: Int): Int = 0
+            override fun trimCaches(desiredFreeBytes: Long): Int = 1
+            override fun getLastError(): String = "trim-caches failed: storage locked"
+            override fun asBinder(): IBinder? = null
+        }
+        val cleanerFail = ShizukuCacheCleaner(FakeShizukuManager(fakeService = fakeServiceFail))
+        val resFail = cleanerFail.executePlan(globalPlan)
+        assertTrue(resFail.isCompleteFailure)
+        val cmdError = resFail.errors["global_trim"] as? CleanerError.CommandFailed
+        assertNotNull(cmdError)
+        assertEquals(1, cmdError?.exitCode)
+        assertEquals("trim-caches failed: storage locked", cmdError?.rawError)
+
+        // IPC Exception
+        val fakeServiceIpc = object : ICacheOpsService {
+            override fun destroy() {}
+            override fun getProtocolVersion(): Int = 1
+            override fun getPrivilegedUid(): Int = 2000
+            override fun supportsSelectiveCacheClear(): Boolean = true
+            override fun supportsGlobalTrim(): Boolean = true
+            override fun clearPackageCache(packageName: String, userId: Int): Int = 0
+            override fun trimCaches(desiredFreeBytes: Long): Int = throw RuntimeException("DeadObjectException")
+            override fun getLastError(): String = ""
+            override fun asBinder(): IBinder? = null
+        }
+        val cleanerIpc = ShizukuCacheCleaner(FakeShizukuManager(fakeService = fakeServiceIpc))
+        val resIpc = cleanerIpc.executePlan(globalPlan)
+        assertTrue(resIpc.isCompleteFailure)
+        assertTrue(resIpc.errors["global_trim"] is CleanerError.Unexpected)
+    }
+
+    @Test
+    fun `executePlan with selective plan strictly NEVER executes global trim when selective unsupported`() = runBlocking {
+        val fakeService = FakeCacheOpsService(
+            selectiveSupported = false,
+            globalTrimSupported = true,
+            trimResult = 0
+        )
+        val fakeManager = FakeShizukuManager(
+            fakeCapabilities = CleanerCapabilities(
+                shizukuAvailable = true,
+                shizukuAuthorized = true,
+                privilegedUid = 2000,
+                supportsSelectiveCacheClear = false,
+                supportsGlobalTrim = true
+            ),
+            fakeService = fakeService
+        )
+        val cleaner = ShizukuCacheCleaner(fakeManager)
+
+        val selectivePlan = CleanupPlan.selective(listOf("com.android.chrome", "org.mozilla.firefox"))
+        val result = cleaner.executePlan(selectivePlan)
+
+        // Must fail with SelectiveUnsupported and NOT run global trim
+        assertTrue(result.isCompleteFailure)
+        assertEquals(CleanerError.SelectiveUnsupported, result.errors["com.android.chrome"])
+        assertEquals(CleanerError.SelectiveUnsupported, result.errors["org.mozilla.firefox"])
+        assertEquals(0L, fakeService.trimmedBytes)
+        assertTrue(fakeService.clearedPackages.isEmpty())
+    }
 }

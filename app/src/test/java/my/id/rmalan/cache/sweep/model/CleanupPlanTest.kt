@@ -149,4 +149,97 @@ class CleanupPlanTest {
         assertEquals(listOf("com.android.chrome", "org.mozilla.firefox"), plan.selectedPackages)
         assertEquals(3000L, plan.estimatedCacheBytes)
     }
+
+    @Test
+    fun `globalTrim from DeviceStorageInfo calculates correct target bytes`() {
+        val storage = DeviceStorageInfo(
+            totalBytes = 100L * 1024L * 1024L * 1024L,
+            availableBytes = 15L * 1024L * 1024L * 1024L
+        )
+        val estimatedCache = 3L * 1024L * 1024L * 1024L
+
+        val plan = CleanupPlan.globalTrim(storage, estimatedCache)
+        assertEquals(CleanupMode.GLOBAL_TRIM, plan.mode)
+        assertTrue(plan.isGlobalTrim)
+        assertEquals(18L * 1024L * 1024L * 1024L, plan.desiredFreeBytes)
+        assertEquals(estimatedCache, plan.estimatedCacheBytes)
+    }
+
+    @Test
+    fun `maxGlobalTrim creates global trim plan targeting total device storage`() {
+        val storage = DeviceStorageInfo(
+            totalBytes = 256L * 1024L * 1024L * 1024L,
+            availableBytes = 50L * 1024L * 1024L * 1024L
+        )
+
+        val plan = CleanupPlan.maxGlobalTrim(storage)
+        assertEquals(CleanupMode.GLOBAL_TRIM, plan.mode)
+        assertEquals(256L * 1024L * 1024L * 1024L, plan.desiredFreeBytes)
+        assertEquals(0L, plan.estimatedCacheBytes)
+    }
+
+    @Test
+    fun `canFallbackToGlobalTrim evaluates true only when selective unsupported and global supported`() {
+        val selectivePlan = CleanupPlan.selective(listOf("com.android.chrome"))
+        val globalPlan = CleanupPlan.globalTrim(desiredFreeBytes = 5000L)
+
+        // Selective unsupported, global supported -> can fallback
+        val capsFallbackPossible = CleanerCapabilities(
+            shizukuAvailable = true,
+            shizukuAuthorized = true,
+            privilegedUid = 2000,
+            supportsSelectiveCacheClear = false,
+            supportsGlobalTrim = true
+        )
+        assertTrue(selectivePlan.canFallbackToGlobalTrim(capsFallbackPossible))
+        assertFalse(globalPlan.canFallbackToGlobalTrim(capsFallbackPossible)) // already global
+
+        // Both supported -> no fallback needed
+        val capsBothSupported = CleanerCapabilities(
+            shizukuAvailable = true,
+            shizukuAuthorized = true,
+            privilegedUid = 2000,
+            supportsSelectiveCacheClear = true,
+            supportsGlobalTrim = true
+        )
+        assertFalse(selectivePlan.canFallbackToGlobalTrim(capsBothSupported))
+
+        // Neither supported -> cannot fallback
+        val capsNeither = CleanerCapabilities(
+            shizukuAvailable = true,
+            shizukuAuthorized = true,
+            privilegedUid = 2000,
+            supportsSelectiveCacheClear = false,
+            supportsGlobalTrim = false
+        )
+        assertFalse(selectivePlan.canFallbackToGlobalTrim(capsNeither))
+    }
+
+    @Test
+    fun `toGlobalTrimFallback requires explicit user consent and converts plan`() {
+        val storage = DeviceStorageInfo(
+            totalBytes = 100L * 1024L * 1024L * 1024L,
+            availableBytes = 10L * 1024L * 1024L * 1024L
+        )
+        val selectivePlan = CleanupPlan.selective(
+            packages = listOf("com.android.chrome", "org.mozilla.firefox"),
+            estimatedCacheBytes = 2L * 1024L * 1024L * 1024L
+        )
+
+        // Consent given -> converts successfully
+        val fallbackPlan = selectivePlan.toGlobalTrimFallback(storage, userConsentConfirmed = true)
+        assertEquals(CleanupMode.GLOBAL_TRIM, fallbackPlan.mode)
+        assertTrue(fallbackPlan.isGlobalTrim)
+        assertEquals(12L * 1024L * 1024L * 1024L, fallbackPlan.desiredFreeBytes)
+        assertEquals(2L * 1024L * 1024L * 1024L, fallbackPlan.estimatedCacheBytes)
+        assertTrue(fallbackPlan.selectedPackages.isEmpty())
+
+        // Consent NOT given -> throws IllegalArgumentException
+        try {
+            selectivePlan.toGlobalTrimFallback(storage, userConsentConfirmed = false)
+            org.junit.Assert.fail("Expected IllegalArgumentException without user consent")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("consent is strictly required") == true)
+        }
+    }
 }

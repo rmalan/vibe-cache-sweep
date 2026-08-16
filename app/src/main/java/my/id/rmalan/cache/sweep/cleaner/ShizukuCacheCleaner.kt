@@ -198,6 +198,24 @@ class ShizukuCacheCleaner(
                 )
 
                 val capabilities = shizukuManager.fetchCapabilities()
+                if (!capabilities.shizukuAvailable) {
+                    return@withContext CleanerBatchResult(
+                        totalAttempted = 1,
+                        successfulPackages = emptyList(),
+                        failedPackages = listOf("global_trim"),
+                        errors = mapOf("global_trim" to CleanerError.ShizukuUnavailable)
+                    )
+                }
+
+                if (!capabilities.shizukuAuthorized) {
+                    return@withContext CleanerBatchResult(
+                        totalAttempted = 1,
+                        successfulPackages = emptyList(),
+                        failedPackages = listOf("global_trim"),
+                        errors = mapOf("global_trim" to CleanerError.PermissionDenied)
+                    )
+                }
+
                 if (!capabilities.supportsGlobalTrim) {
                     return@withContext CleanerBatchResult(
                         totalAttempted = 1,
@@ -207,21 +225,39 @@ class ShizukuCacheCleaner(
                     )
                 }
 
-                val success = trimGlobally(targetBytes)
-                if (success) {
-                    CleanerBatchResult(
+                val service = shizukuManager.getOrAwaitService()
+                if (service == null) {
+                    return@withContext CleanerBatchResult(
                         totalAttempted = 1,
-                        successfulPackages = listOf("global_trim"),
-                        failedPackages = emptyList()
+                        successfulPackages = emptyList(),
+                        failedPackages = listOf("global_trim"),
+                        errors = mapOf("global_trim" to CleanerError.ShizukuUnavailable)
                     )
-                } else {
-                    val service = shizukuManager.getService()
-                    val lastError = try { service?.lastError ?: "" } catch (e: Exception) { "" }
+                }
+
+                try {
+                    val exitCode = service.trimCaches(targetBytes)
+                    if (exitCode == 0) {
+                        CleanerBatchResult(
+                            totalAttempted = 1,
+                            successfulPackages = listOf("global_trim"),
+                            failedPackages = emptyList()
+                        )
+                    } else {
+                        val lastError = try { service.lastError } catch (e: Exception) { "" }
+                        CleanerBatchResult(
+                            totalAttempted = 1,
+                            successfulPackages = emptyList(),
+                            failedPackages = listOf("global_trim"),
+                            errors = mapOf("global_trim" to CleanerError.CommandFailed(exitCode, lastError))
+                        )
+                    }
+                } catch (e: Exception) {
                     CleanerBatchResult(
                         totalAttempted = 1,
                         successfulPackages = emptyList(),
                         failedPackages = listOf("global_trim"),
-                        errors = mapOf("global_trim" to CleanerError.CommandFailed(-1, lastError))
+                        errors = mapOf("global_trim" to CleanerError.Unexpected(e))
                     )
                 }
             }
