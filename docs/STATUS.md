@@ -2,15 +2,15 @@
 
 **Last updated:** 2026-08-16
 **Overall status:** In progress
-**Current phase:** Phase 0 Complete — Phase 1 Ready
-**Current task:** P1-01 through P1-05 — Production Package Discovery & Enumeration
+**Current phase:** Phase 1 — Production Cache Scanner
+**Current task:** P1-06 through P1-09 — StorageStats Repository & Per-Package Storage Model
 
 ---
 
 # At a Glance
 
 * [x] Phase 0 — Technical Feasibility
-* [ ] Phase 1 — Production Cache Scanner
+* [ ] Phase 1 — Production Cache Scanner (P1-01 to P1-05 Complete)
 * [ ] Phase 2 — Production Cleaner
 * [ ] Phase 3 — Cleanup Coordinator & Results
 * [ ] Phase 4 — Product UI & Persistence
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P1-01 through P1-05 — Production Package Discovery & Enumeration
+## P1-06 through P1-09 — Production StorageStats Repository & Per-Package Storage Model
 
 **Status:** Ready to start
 
 ### Objective
 
-Implement production package discovery with display names, application icons, system vs. user app classification, and filtering out CacheSweep's self-package where appropriate.
+Implement production `StorageStatsRepository` handling internal/default storage volumes, resilient fallback for packages whose stats cannot be queried, and per-package cache/app/data storage modeling.
 
 ### Expected outcome
 
-Robust package discovery feeding into `StorageStatsRepository` and `CacheScanner` models.
+Robust `StorageStatsRepository` integrated with `DiscoveredPackage` and `AndroidCacheScanner`.
 
 ---
 
@@ -118,49 +118,18 @@ Robust package discovery feeding into `StorageStatsRepository` and `CacheScanner
 * [x] P0-48 Reported cache before/after recorded and verified with `freeStorageAndNotify` in `PackageManagerService`
 * [x] P0-49 Validated global trim fallback behavior when selective cleaning is unavailable, proving it as the reliable reclamation mechanism on Android 16 non-root
 
+## Package Discovery & Metadata (P1-01 to P1-05)
+
+* [x] P1-01 Production package enumeration implemented via `PackageRepository` / `AndroidPackageRepository`
+* [x] P1-02 Application display name loading implemented with safe trimming and fallback to package name
+* [x] P1-03 Application icon loading implemented with memory-bounded `LruCache` (150 entries) and Compose thumbnail generation
+* [x] P1-04 User vs system application classification implemented evaluating `FLAG_SYSTEM` and `FLAG_UPDATED_SYSTEM_APP`
+* [x] P1-05 CacheSweep self-package filtering implemented (`includeSelf = false` by default)
+* [x] Comprehensive unit tests added in `DiscoveredPackageTest`, `AndroidPackageRepositoryTest`, and `AndroidCacheScannerTest`
+
 ---
 
-# Phase 0 Progress
-
-## Foundation
-
-* [x] P0-01 Create Android Studio project
-* [x] P0-02 Configure Kotlin + Jetpack Compose
-* [x] P0-03 Configure SDK/Gradle
-* [x] P0-04 Add dependencies
-* [x] P0-05 Create project structure
-* [x] P0-06 Diagnostic Compose screen
-* [x] P0-07 Verify debug build
-
-## Usage Access
-
-* [x] P0-08 through P0-11
-
-## Storage statistics
-
-* [x] P0-12 through P0-16
-
-## Shizuku
-
-* [x] P0-17 through P0-24
-
-## Privileged backend
-
-* [x] P0-25 through P0-29
-
-## Capability detection
-
-* [x] P0-30 through P0-34
-
-## Cache safety test
-
-* [x] P0-35 through P0-44
-
-## Global trimming
-
-* [x] P0-45 through P0-49
-
-## Phase 0 Gate: PASSED
+# Phase 0 Gate: PASSED
 
 * [x] Project builds cleanly (`./gradlew assembleDebug`)
 * [x] Usage Access works on physical device
@@ -187,7 +156,9 @@ ViewModels
     |
 Domain / Coordinator
     |
-    +---- StorageStats scanner
+    +---- PackageRepository (Package discovery, icons, system classification)
+    |
+    +---- StorageStatsRepository (Per-app cache & storage stats)
     |
     +---- CacheCleaner
               |
@@ -251,7 +222,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (36/36 unit tests passed across 9 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (46/46 unit tests passed across 12 test suites).
 ```
 
 ---
@@ -300,7 +271,14 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P0-35 through P0-49 & Phase 0 Gate — Cache Clearing Safety Test, Fixture App, Global Cache Trimming, and Feasibility Verification**
+**P1-01 through P1-05 — Package Discovery & Enumeration (Phase 1 — Production Cache Scanner)**
+
+* Created `DiscoveredPackage` model
+* Implemented `PackageRepository` and `AndroidPackageRepository`
+* Integrated memory-bounded LRU icon caching and thumbnail loading
+* Implemented system app classification and self-package filtering
+* Updated `AndroidCacheScanner` and `AppContainer`
+* Added comprehensive unit tests (46/46 tests passing)
 
 ---
 
@@ -308,10 +286,9 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P1-01 through P1-05 — Package Discovery & Enumeration (Phase 1 — Production Cache Scanner)**
+**P1-06 through P1-09 — StorageStats Repository & Per-Package Storage Model (Phase 1 — Production Cache Scanner)**
 
-* Implement production package enumeration (`P1-01`)
-* Load application display names (`P1-02`)
-* Load application icons (`P1-03`)
-* Classify user vs system apps (`P1-04`)
-* Exclude CacheSweep where appropriate (`P1-05`)
+* Implement production `StorageStatsRepository` (`P1-06`)
+* Handle default/internal storage volume resolution (`P1-07`)
+* Handle packages whose stats cannot be queried (`P1-08`)
+* Implement per-package cache/app/data model refinement (`P1-09`)

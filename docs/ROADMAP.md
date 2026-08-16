@@ -134,15 +134,15 @@ Phase 0 is complete only when:
 
 **Depends on:** Phase 0
 
-**Phase status:** Blocked by Phase 0
+**Phase status:** In progress
 
 ## Package discovery
 
-* [ ] **P1-01** Implement production package enumeration
-* [ ] **P1-02** Load application display names
-* [ ] **P1-03** Load application icons
-* [ ] **P1-04** Classify user/system apps
-* [ ] **P1-05** Exclude CacheSweep where appropriate
+* [x] **P1-01** Implement production package enumeration
+* [x] **P1-02** Load application display names
+* [x] **P1-03** Load application icons
+* [x] **P1-04** Classify user/system apps
+* [x] **P1-05** Exclude CacheSweep where appropriate
 
 ## StorageStats repository
 
