@@ -3,7 +3,7 @@
 **Last updated:** 2026-08-16
 **Overall status:** In progress
 **Current phase:** Phase 0 — Technical Feasibility
-**Current task:** P0-08 — Usage Access Verification (P0-08 to P0-11)
+**Current task:** P0-12 — Storage Statistics Validation (P0-12 to P0-16)
 
 ---
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P0-08 through P0-11 — Usage Access Verification
+## P0-12 through P0-16 — Storage Statistics Validation
 
 **Status:** Ready to start
 
 ### Objective
 
-Verify Usage Access flow (`PACKAGE_USAGE_STATS` declaration, permission detection, settings intent, and display on diagnostic screen) on target device.
+Implement and verify device storage snapshots (`StatFs`), package enumeration, and `StorageStatsManager` cache querying on target device.
 
 ### Expected outcome
 
-Usage Access status is cleanly checked, settings screen can be launched, and state updates dynamically.
+Per-package app/cache/data statistics are queryable and displayed on the diagnostic screen.
 
 ---
 
@@ -54,6 +54,13 @@ Usage Access status is cleanly checked, settings screen can be launched, and sta
 * [x] P0-06 Diagnostic Compose screen implemented displaying system info, storage, Usage Access status, Shizuku state, detected capabilities, and cache scanner actions
 * [x] P0-07 Debug APK builds cleanly (`app-debug.apk`) and all unit tests pass with safety invariant enforcement
 
+## Usage Access (P0-08 to P0-11)
+
+* [x] P0-08 `PACKAGE_USAGE_STATS` declared in `AndroidManifest.xml`
+* [x] P0-09 Usage Access detection implemented via `AppOpsManager` in `AndroidUsageAccessManager`
+* [x] P0-10 Usage Access settings intent implemented (`Settings.ACTION_USAGE_ACCESS_SETTINGS`)
+* [x] P0-11 Usage Access state displayed on diagnostic screen with `LifecycleResumeEffect` auto-refresh and unit tests
+
 ---
 
 # Phase 0 Progress
@@ -70,7 +77,7 @@ Usage Access status is cleanly checked, settings screen can be launched, and sta
 
 ## Usage Access
 
-* [ ] P0-08 through P0-11
+* [x] P0-08 through P0-11
 
 ## Storage statistics
 
@@ -221,7 +228,7 @@ Current implementation follows `TECH_SPEC.md`.
 
 # Most Recent Completed Task
 
-**P0-05 through P0-07 — Package Structure, Diagnostic Screen & Feasibility Foundation**
+**P0-08 through P0-11 — Usage Access Verification**
 
 ---
 
@@ -229,9 +236,9 @@ Current implementation follows `TECH_SPEC.md`.
 
 Implement / Verify:
 
-**P0-08 through P0-11 — Usage Access Verification**
+**P0-12 through P0-16 — Storage statistics validation**
 
 Then continue with:
 
-* P0-12 through P0-16: Storage statistics validation
 * P0-17 through P0-24: Shizuku connection and privileged UID validation
+* P0-25 through P0-29: Privileged backend verification

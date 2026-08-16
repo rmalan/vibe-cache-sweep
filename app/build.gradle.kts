@@ -30,6 +30,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"

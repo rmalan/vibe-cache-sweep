@@ -44,6 +44,8 @@ import my.id.rmalan.cache.sweep.model.ScanResult
 import my.id.rmalan.cache.sweep.model.ShizukuState
 import my.id.rmalan.cache.sweep.util.ByteFormatter
 
+import androidx.lifecycle.compose.LifecycleResumeEffect
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiagnosticScreen(
@@ -68,8 +70,9 @@ fun DiagnosticScreen(
         capabilities = container.shizukuManager.getCapabilities()
     }
 
-    LaunchedEffect(Unit) {
+    LifecycleResumeEffect(Unit) {
         refreshAll()
+        onPauseOrDispose { }
     }
 
     Scaffold(

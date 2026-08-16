@@ -48,10 +48,10 @@ Do not mark an entire phase complete until its phase gate passes.
 
 ## Usage Access
 
-* [ ] **P0-08** Add `PACKAGE_USAGE_STATS` declaration
-* [ ] **P0-09** Implement Usage Access detection
-* [ ] **P0-10** Implement Usage Access settings intent
-* [ ] **P0-11** Display Usage Access state on diagnostic screen
+* [x] **P0-08** Add `PACKAGE_USAGE_STATS` declaration
+* [x] **P0-09** Implement Usage Access detection
+* [x] **P0-10** Implement Usage Access settings intent
+* [x] **P0-11** Display Usage Access state on diagnostic screen
 
 ## Storage statistics
 
