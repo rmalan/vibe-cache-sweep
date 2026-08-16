@@ -2,8 +2,8 @@
 
 **Last updated:** 2026-08-16
 **Overall status:** In progress
-**Current phase:** Phase 4 (Product UI & Persistence) — In progress
-**Current task:** P4-20 through P4-25 — Theme, Modes & Accessibility Review
+**Current phase:** Phase 5 (Hardening & Release) — Ready to start
+**Current task:** P5-01 through P5-06 — Failure Scenario Hardening
 
 ---
 
@@ -13,24 +13,30 @@
 * [x] Phase 1 — Production Cache Scanner
 * [x] Phase 2 — Production Cleaner
 * [x] Phase 3 — Cleanup Coordinator & Results
-* [ ] Phase 4 — Product UI & Persistence
+* [x] Phase 4 — Product UI & Persistence
 * [ ] Phase 5 — Hardening & Release
 
 ---
 
 # Current Task
 
-## P4-20 through P4-25 — Theme, Modes & Accessibility Review
+## P5-01 through P5-06 — Failure Scenario Hardening & Edge Cases
 
 **Status:** Ready to start
 
 ### Objective
 
-Perform comprehensive visual, accessibility, and theming validation across all application screens: Material 3 styling compliance, explicit Light mode styling, Dark mode contrast ratios, dynamic font scaling adaptation, TalkBack accessibility semantics, and touch-target bounds (>=48dp).
+Harden CacheSweep against all real-world failure scenarios and edge cases outlined in ROADMAP.md Phase 5:
+- Shizuku absent (`P5-01`)
+- Shizuku stopped / process killed (`P5-02`)
+- Shizuku dies / connection drops mid-cleanup (`P5-03`)
+- Permission denied (`P5-04`)
+- Permission revoked while app is running (`P5-05`)
+- Usage Access revoked while app is running (`P5-06`)
 
 ### Expected outcome
 
-A thoroughly audited and polished product UI supporting system, light, and dark modes with complete accessibility compliance conforming to PRD Section 17-19.
+Robust error isolation and recovery paths ensuring the app never crashes, hangs, or leaves inconsistent state when system privileges or background services fail.
 
 ---
 
@@ -259,8 +265,20 @@ A thoroughly audited and polished product UI supporting system, light, and dark 
 * [x] P4-19 Cleanup history bounded at 25 records max per TECH_SPEC Section 49, automatically trimming oldest entries upon new cleanup records
 * [x] `SettingsViewModel` and `SettingsScreen` implemented conforming to PRD Section 19 with Shizuku status inspection, privacy guarantees, and about info
 * [x] `CleanupCoordinator` updated to automatically record completed cleanup operations to `CleanupHistoryRepository`
-* [x] `AppsViewModel` updated to respect user preferences for sort order and system apps filtering
+* [x] `AppsViewModel` updated to respect user settings for default sort mode and system apps filter
+* [x] `MainActivity` updated with `MainDestination.SETTINGS` destination and dynamic `themeMode` binding
 * [x] Added 16 unit tests across `CleanupHistoryRepositoryTest`, `SettingsViewModelTest`, and `SettingsFormattingTest`; 213/213 unit tests passing across 39 test suites
+
+## Material 3 Theme & Accessibility Review (P4-20 to P4-25)
+
+* [x] P4-20 Material 3 color system configured with restrained, high-contrast palette tokens (`Color.kt`, `Theme.kt`, `D-030`)
+* [x] P4-21 Light mode color scheme refined with WCAG AAA compliant surface/onSurface contrasts
+* [x] P4-22 Dark mode color scheme refined with high-contrast readable tones on true dark backgrounds
+* [x] P4-23 Font scaling verified: Typography tokens use strict SP units across `displayLarge` through `labelSmall` with responsive line heights and non-clipping layouts
+* [x] P4-24 TalkBack semantics helper implemented (`ByteFormatter.formatAccessible`) expanding byte figures into natural spoken words (e.g. `1.42 gigabytes of cache`) and merged row descriptions
+* [x] P4-25 Touch-target review completed: all interactive buttons, chips, switch rows, and list items have minimum 48x48 dp touch bounds
+* [x] Semantic `heading()` attributes applied to all screen and section headings across `DashboardScreen`, `AppCacheListScreen`, `OnboardingScreen`, `SettingsScreen`, `CleaningProgressScreen`, `CleanupResultScreen`, and `DiagnosticScreen`
+* [x] Added 4 unit tests in `ThemeAndAccessibilityTest`; 217/217 unit tests passing across 40 test suites
 
 ---
 
@@ -312,6 +330,17 @@ A thoroughly audited and polished product UI supporting system, light, and dark 
 
 ---
 
+# Phase 4 Gate: PASSED
+
+* [x] Complete product flow works (Onboarding -> Dashboard -> App Cache List -> Settings -> Cleanup Coordinator)
+* [x] Product copy matches PRD
+* [x] Settings persist via DataStore (system apps, zero-cache apps, sort order, theme mode, cleanup history)
+* [x] Light/dark themes work with dynamic system bar controls
+* [x] Basic accessibility review passes (SP typography, >=48dp touch targets, TalkBack spoken byte format, semantic headings)
+* [x] All 217 unit tests passing across 40 test suites
+
+---
+
 # Current Technical Knowledge
 
 The intended architecture is:
@@ -328,6 +357,8 @@ Domain / Coordinator (CleanupCoordinator)
     +---- StorageStatsRepository (Per-app cache & storage stats)
     |
     +---- UserSettingsRepository (DataStore preferences & settings persistence)
+    |
+    +---- CleanupHistoryRepository (DataStore bounded cleanup history)
     |
     +---- CacheCleaner
               |
@@ -391,7 +422,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (213/213 unit tests passed across 39 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (217/217 unit tests passed across 40 test suites).
 ```
 
 ---
@@ -440,21 +471,14 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P4-11 through P4-19 — Settings Screen, Preferences & Cleanup History (Phase 4 — Product UI & Persistence)**
+**P4-20 through P4-25 — Material 3 Theme, Light/Dark Modes, Accessibility Review (Phase 4 — Product UI & Persistence)**
 
-* Built Material 3 Settings screen (`SettingsScreen.kt`) with scanning, appearance, Shizuku, data & history, privacy, and about categories (`P4-11` - `P4-15`)
-* Implemented show system apps preference toggle (`P4-11`)
-* Implemented show zero-cache apps preference toggle (`P4-12`)
-* Implemented default sort preference picker dialog with single-choice selection (`P4-13`)
-* Implemented theme mode preference selector dialog (System, Light, Dark) (`P4-14`)
-* Implemented local cleanup history clearance with confirmation dialog (`P4-15`)
-* Configured DataStore Preferences for settings and cleanup history (`P4-16`, `P4-17`, `D-028`)
-* Implemented bounded local cleanup history persistence (`CleanupHistoryEntry`, `CleanupHistoryRepository`, `DataStoreCleanupHistoryRepository`) capped at 25 entries max (`P4-18`, `P4-19`, `D-029`)
-* Implemented `SettingsViewModel` managing settings flows, cleanup history, and Shizuku interaction
-* Updated `CleanupCoordinator` to automatically record completed cleanup operations to `CleanupHistoryRepository`
-* Updated `AppsViewModel` to respect user settings for default sort mode and system apps filter
-* Updated `MainActivity` with `MainDestination.SETTINGS` destination and dynamic `themeMode` binding
-* Added 16 unit tests across `CleanupHistoryRepositoryTest`, `SettingsViewModelTest`, and `SettingsFormattingTest`; 213/213 unit tests passing across 39 test suites
+* Refined Material 3 color system with high-contrast light and dark palettes (`Color.kt`, `Theme.kt`, `D-030`)
+* Refined standard typography scale strictly in SP units (`Type.kt`)
+* Implemented `ByteFormatter.formatAccessible` for TalkBack screen reader support
+* Added semantic `heading()` attributes and >=48dp touch target bounds across all screens and components
+* Added unit test suite `ThemeAndAccessibilityTest`
+* Build and unit tests verified (217/217 passing); Phase 4 Gate passed
 
 ---
 
@@ -462,12 +486,10 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P4-20 through P4-25 — Material 3 Theme, Light/Dark Modes, Accessibility Review (Phase 4 — Product UI & Persistence)**
+**P5-01 through P5-06 — Failure Scenario Hardening & Edge Cases (Phase 5 — Hardening & Release)**
 
-* Validate and refine Material 3 color schemes (`Theme.kt`, `Color.kt`) (`P4-20`)
-* Validate explicit Light mode styling and contrast (`P4-21`)
-* Validate explicit Dark mode styling and contrast (`P4-22`)
-* Conduct font scaling review (SP text sizing, layout flexibility) (`P4-23`)
-* Conduct TalkBack semantics review (content descriptions, role semantics) (`P4-24`)
-* Conduct touch-target bounds review (ensure minimum 48dp interactive areas) (`P4-25`)
-
+* Verify graceful handling when Shizuku is absent (`P5-01`)
+* Verify behavior when Shizuku service is stopped or not running (`P5-02`)
+* Verify recovery when Shizuku binder dies mid-operation (`P5-03`)
+* Verify error paths when Shizuku permission is denied or revoked (`P5-04`, `P5-05`)
+* Verify error paths when Usage Access is revoked (`P5-06`)

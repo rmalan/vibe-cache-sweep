@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -58,6 +59,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -99,7 +102,8 @@ fun OnboardingScreen(
                 title = {
                     Text(
                         text = "Step ${state.currentStep.stepNumber} of ${state.currentStep.totalSteps}",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.semantics { heading() }
                     )
                 },
                 navigationIcon = {
@@ -114,7 +118,10 @@ fun OnboardingScreen(
                 },
                 actions = {
                     if (onSkipToDiagnostic != null) {
-                        TextButton(onClick = onSkipToDiagnostic) {
+                        TextButton(
+                            onClick = onSkipToDiagnostic,
+                            modifier = Modifier.heightIn(min = 48.dp)
+                        ) {
                             Text("Diagnostics")
                         }
                     }
@@ -241,7 +248,8 @@ private fun WelcomeStepContent(
             text = "CacheSweep",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.semantics { heading() }
         )
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -284,7 +292,7 @@ private fun WelcomeStepContent(
             onClick = onGetStarted,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp),
+                .heightIn(min = 52.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
             Text("Get Started", style = MaterialTheme.typography.titleMedium)
@@ -333,7 +341,8 @@ private fun UsageAccessStepContent(
             text = "Usage Access",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.semantics { heading() }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -422,7 +431,7 @@ private fun UsageAccessStepContent(
                 onClick = onGrantAccess,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
+                    .heightIn(min = 48.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Grant Usage Access")
@@ -434,7 +443,7 @@ private fun UsageAccessStepContent(
             onClick = onContinue,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp),
+                .heightIn(min = 48.dp),
             colors = if (hasAccess) {
                 ButtonDefaults.buttonColors()
             } else {
@@ -487,7 +496,8 @@ private fun ShizukuStepContent(
             text = "Shizuku Privileged Bridge",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.semantics { heading() }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -603,7 +613,7 @@ private fun ShizukuStepContent(
                     onClick = onRequestPermission,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp),
+                        .heightIn(min = 48.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("Grant Shizuku Permission")
@@ -621,7 +631,7 @@ private fun ShizukuStepContent(
                             onClick = onOpenShizuku,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(48.dp),
+                                .heightIn(min = 48.dp),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text("Open Shizuku")
@@ -631,7 +641,7 @@ private fun ShizukuStepContent(
                         onClick = onRefresh,
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp),
+                            .heightIn(min = 48.dp),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Icon(imageVector = Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -649,7 +659,7 @@ private fun ShizukuStepContent(
             onClick = onContinue,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp),
+                .heightIn(min = 48.dp),
             colors = if (isReady) {
                 ButtonDefaults.buttonColors()
             } else {
@@ -696,7 +706,8 @@ private fun FirstScanStepContent(
             text = "Ready to Scan",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.semantics { heading() }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -719,7 +730,8 @@ private fun FirstScanStepContent(
                 Text(
                     text = "Setup Summary",
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.semantics { heading() }
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -781,7 +793,7 @@ private fun FirstScanStepContent(
             enabled = !state.isCompleting,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp),
+                .heightIn(min = 52.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
             if (state.isCompleting) {

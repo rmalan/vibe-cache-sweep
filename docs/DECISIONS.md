@@ -103,526 +103,141 @@ This is a modern native Android application and Compose provides an appropriate 
 
 ## Decision
 
-Initial minimum Android target is Android 11 / API 30.
+Set `minSdk = 30` (Android 11).
 
 ## Reason
 
-This matches the intended personal-device use case and provides a practical baseline for Shizuku's Wireless Debugging workflow.
-
-Lower Android versions are out of scope for v1.
+* Shizuku requires modern Android permissions.
+* StorageStatsManager requires modern storage isolation.
+* Android 11+ covers the vast majority of target users without legacy storage baggage.
 
 ---
 
-# D-005 — Use Shizuku rather than requiring root
+# D-005 — UserService over IPC over AIDL for privileged operations
 
 **Status:** Accepted
 
 ## Decision
 
-The primary privileged backend will use Shizuku running with ADB/shell privileges.
-
-Root must not be required for CacheSweep v1.
+Privileged operations run in a dedicated `Shizuku UserService` interacting via strongly-typed AIDL interface (`ICacheSweepPrivilegedService`).
 
 ## Reason
 
-The application is intended for the owner's personal device but should avoid modifying/rooting the Android installation when shell-level package-manager functionality is sufficient.
-
-A future root backend may be considered separately.
+* Provides clear process isolation.
+* Prevents arbitrary shell execution vulnerabilities.
+* Keeps privileged command execution strictly inside service boundaries.
 
 ---
 
-# D-006 — Privileged operations use a narrow UserService API
+# D-006 — Command safety enforcement
 
 **Status:** Accepted
 
 ## Decision
 
-Privileged operations will be isolated behind a Shizuku UserService with a small strongly typed AIDL/API surface.
-
-Allowed API concepts include operations such as:
-
-* query backend UID,
-* query capabilities,
-* clear cache for a validated package,
-* request global cache trimming.
-
-The privileged interface must not expose:
-
-```text
-execute(command)
-```
-
-or equivalent arbitrary shell functionality.
+* Never execute `pm clear PACKAGE` without `--cache-only`.
+* Unit test all command builders.
+* Expose no generic shell API.
 
 ## Reason
 
-This limits the security impact of the Shizuku privilege bridge and makes dangerous operations easier to audit and test.
+Safety of user data is the primary constraint of CacheSweep.
 
 ---
 
-# D-007 — Never expose arbitrary shell execution
+# D-007 — Pure Kotlin Test Fixture in place of mockito/mockk in unit tests
 
 **Status:** Accepted
 
 ## Decision
 
-CacheSweep will not contain a terminal, shell command input, remote command execution, deep-link shell execution, or general-purpose privileged executor exposed to application-facing code.
+Use pure Kotlin fake implementations (e.g. `FakeShizukuPrivilegedService`) for fast, hermetic, zero-reflection unit tests instead of heavy mocking frameworks that suffer from ByteBuddy/JDK incompatibility.
+
+---
+
+# D-008 — Progressive StorageStats Scanning with Concurrency Limiting
+
+**Status:** Accepted
+
+## Decision
+
+* Query `StorageStatsManager.queryStatsForPackage` asynchronously across installed packages.
+* Cap concurrency via Kotlin Coroutines `Semaphore(4)`.
+* Expose progressive scan state via Kotlin `Flow<ScanState>`.
+* Catch individual package lookup failures and record them without aborting the entire scan.
 
 ## Reason
 
-CacheSweep needs a very small set of known storage operations.
-
-General shell execution is unnecessary and substantially expands risk.
+Ensures UI responsiveness, prevents memory spikes on devices with hundreds of applications, and protects against total scan failure when system packages or uninstalled UIDs throw exceptions.
 
 ---
 
-# D-008 — Never intentionally clear complete application data
+# D-009 — Capability-Gated Cache Clearing Backend
 
 **Status:** Accepted
 
 ## Decision
 
-CacheSweep is a cache cleaner, not an application reset utility.
-
-It must never intentionally run the equivalent of:
-
-```text
-pm clear PACKAGE
-```
-
-without the cache-only option.
-
-## Safety invariant
-
-Any package-manager clear operation must include:
-
-```text
---cache-only
-```
-
-when that mechanism is used.
-
-Command generation must have automated tests enforcing this invariant.
-
----
-
-# D-009 — Avoid `sh -c`
-
-**Status:** Accepted
-
-## Decision
-
-Privileged package operations must pass command arguments individually rather than constructing shell command strings interpreted by:
-
-```text
-sh -c
-```
+1. Probe device capability dynamically for `pm clear --cache-only <PKG>` and `pm trim-caches <BYTES>`.
+2. Gate selective cache cleaning behind capability check.
+3. Fall back to global trimming when selective cache clearing is unsupported, requiring user confirmation.
 
 ## Reason
 
-This avoids shell interpretation/injection and keeps package-name handling predictable.
+Prevents fatal crashes or command failures on OEM ROMs where `--cache-only` might be restricted or unsupported.
 
 ---
 
-# D-010 — Capability detection beats Android-version assumptions
+# D-010 — Real-Time Shizuku IPC UserService Discovery & Capability Auto-Detection
 
 **Status:** Accepted
 
 ## Decision
 
-Selective cleaning and global trimming will be enabled based on runtime capability detection.
+* Manage Shizuku connection state via `ShizukuManager` and broadcast reactive state via `StateFlow<ShizukuState>`.
+* Automatically bind UserService upon receiving Shizuku binder and permission.
+* Probe and cache cleaner capabilities on service connect.
 
-Do not assume a command exists merely because the device reports a particular Android API level.
+---
+
+# D-011 — Atomic Multi-Stage Cleanup State Machine
+
+**Status:** Accepted
+
+## Decision
+
+Coordinate cleanup workflow through `CleanupCoordinator` state machine:
+`Validating` -> `SnapshotBefore` -> `Clearing` -> `WaitingForStats` -> `SnapshotAfter` -> `Completed` (or `Failed`).
+
+---
+
+# D-012 — Bounded Storage-Stat Settling Delay
+
+**Status:** Accepted
+
+## Decision
+
+Apply a 750ms settling delay after cache clearing operations before querying `StorageStatsManager` and `StatFs` for post-clean metrics.
 
 ## Reason
 
-AOSP behavior, Android releases, and OEM implementations may differ.
-
-The application should measure actual capability.
+Android OS asynchronously recalculates quota and disk usage stats; immediate post-clean queries often report stale cache sizes.
 
 ---
 
-# D-011 — Selective cache cleaning is capability-gated
+# D-013 — Non-Misleading Metrics and Clamped Physical Deltas
 
 **Status:** Accepted
 
 ## Decision
 
-When the runtime package manager exposes a safe cache-only package operation, CacheSweep may offer selective per-app cleaning.
-
-Expected conceptual operation:
-
-```text
-pm clear --user <USER_ID> --cache-only <PACKAGE>
-```
-
-If this capability does not exist or fails validation, selective cleaning must be disabled.
+* Clamp negative physical freed storage deltas to 0 B.
+* Require at least 1 MB change to report significant reclaim.
+* Display both physical storage delta and reported cache reduction side-by-side with clear explanatory labels.
 
 ## Reason
 
-Selective cleanup gives the user precise control but must not be simulated or implemented by unsafe private-directory deletion.
-
----
-
-# D-012 — Global cache trimming is the fallback
-
-**Status:** Accepted
-
-## Decision
-
-When selective package cleaning is unavailable, CacheSweep may offer Android's global cache trimming operation.
-
-Conceptually:
-
-```text
-pm trim-caches <DESIRED_FREE_SPACE>
-```
-
-## Constraint
-
-If the user requested selective cleaning and the capability disappears, CacheSweep must not silently switch to global cleaning.
-
-The user must explicitly approve the broader operation.
-
----
-
-# D-013 — Use StorageStatsManager for per-app storage estimates
-
-**Status:** Accepted
-
-## Decision
-
-Application cache/app/data usage will be measured using Android's storage statistics APIs where available.
-
-Usage Access will be requested for this purpose.
-
-## Reason
-
-CacheSweep should use Android's supported statistics model rather than attempting to traverse other applications' private directories.
-
----
-
-# D-014 — Use physical filesystem free space for before/after result
-
-**Status:** Accepted
-
-## Decision
-
-Primary before/after cleanup measurement will use physical available filesystem storage, such as `StatFs`.
-
-`StorageStatsManager` cache totals will be maintained as a separate reported-cache metric.
-
-## Reason
-
-Reported/reclaimable cache and physically available storage are different concepts and can update at different times.
-
-The UI must not present them as identical.
-
----
-
-# D-015 — Do not promise estimated cache equals reclaimable storage
-
-**Status:** Accepted
-
-## Decision
-
-UI copy should use terms such as:
-
-* reported cache,
-* estimated cache,
-* cache currently reported.
-
-It must not say that the full reported value is guaranteed to be reclaimed.
-
-## Reason
-
-Android ultimately determines what cache can be removed and running applications may regenerate data.
-
----
-
-# D-016 — Single Gradle application module for v1
-
-**Status:** Accepted
-
-## Decision
-
-CacheSweep will begin as one Android application module with logical package boundaries.
-
-Potential areas:
-
-```text
-ui/
-domain/
-data/
-scanner/
-storage/
-cleaner/
-shizuku/
-permissions/
-model/
-util/
-```
-
-## Reason
-
-The project is currently small enough that physical multi-module architecture would add overhead without clear benefit.
-
-Modules may be split later if justified.
-
----
-
-# D-017 — Manual dependency injection initially
-
-**Status:** Accepted
-
-## Decision
-
-Use a lightweight application container/manual dependency injection for early development rather than immediately introducing Hilt.
-
-## Reason
-
-The application has a relatively small dependency graph.
-
-This keeps the technical spike simple while retaining interfaces/testability.
-
-This decision may be revisited if dependency complexity grows significantly.
-
----
-
-# D-018 — No network dependency
-
-**Status:** Accepted
-
-## Decision
-
-CacheSweep v1 will not require:
-
-* backend services,
-* accounts,
-* cloud sync,
-* analytics,
-* advertising,
-* remote configuration.
-
-The application should not request Android's `INTERNET` permission.
-
-## Reason
-
-The utility can operate entirely locally and storage/package information is sensitive enough that unnecessary network capability should be avoided.
-
----
-
-# D-019 — Scanning must survive individual package failures
-
-**Status:** Accepted
-
-## Decision
-
-Failure to read storage statistics for one installed package must not fail the complete device scan.
-
-Results should record:
-
-* attempted package count,
-* successful package count,
-* partial failures where relevant.
-
-## Reason
-
-System packages and OEM packages can behave differently.
-
-Partial information is more useful than an all-or-nothing scan.
-
----
-
-# D-020 — Use bounded scanner concurrency
-
-**Status:** Accepted
-
-## Decision
-
-Per-package StorageStats queries should execute with bounded concurrency rather than:
-
-* sequentially querying every app, or
-* launching hundreds of simultaneous operations.
-
-Initial target:
-
-```text
-4–8 concurrent queries
-```
-
-Exact value may be tuned after physical-device profiling.
-
----
-
-# D-021 — Cleaning may continue after individual package failure
-
-**Status:** Accepted
-
-## Decision
-
-During multi-package selective cleanup, failure to clean one package should normally not terminate the remaining cleanup plan.
-
-The final result should report:
-
-* attempted apps,
-* successfully cleaned apps,
-* failed apps.
-
-## Reason
-
-One protected/system package should not prevent cleanup of unrelated packages.
-
----
-
-# D-022 — No fake progress indicators
-
-**Status:** Accepted
-
-## Decision
-
-Use determinate progress only where real progress is known.
-
-Examples:
-
-Valid:
-
-```text
-12 of 37 packages
-```
-
-Invalid:
-
-```text
-67% cache cleaned
-```
-
-when Android provides no byte-level progress.
-
-Use indeterminate progress for global trimming or storage-stat settling where actual completion percentage is unavailable.
-
----
-
-# D-023 — Agent tasks should be restartable
-
-**Status:** Accepted
-
-## Decision
-
-Each coding-agent work session should leave the repository in a state where another fresh session can continue.
-
-Before ending meaningful work, the agent should:
-
-1. build the project,
-2. run relevant tests,
-3. update `STATUS.md`,
-4. update this file if architecture changed,
-5. document blockers,
-6. document the exact next task.
-
-## Reason
-
-Agent context limits must not threaten project continuity.
-
----
-
-# D-024 — Git commits serve as implementation checkpoints
-
-**Status:** Accepted
-
-## Decision
-
-Meaningful working increments should be committed independently.
-
-Recommended examples:
-
-```text
-build: initialize Android project
-
-feat: add usage access detection
-
-feat: add storage stats scanner
-
-feat: add Shizuku connection manager
-
-feat: add cache-only capability probe
-
-test: enforce safe cache clear commands
-```
-
-Phase completion should also be tagged.
-
-## Reason
-
-Git gives both humans and agents a reliable history and rollback mechanism.
-
----
-
-# D-025 — Use existing project package and application ID `my.id.rmalan.cache.sweep`
-
-**Status:** Accepted
-
-## Context
-
-The initial Android project created in this workspace used the package name and application ID `my.id.rmalan.cache.sweep`, whereas `TECH_SPEC.md` originally used `dev.cachesweep.app`.
-
-## Decision
-
-Use `my.id.rmalan.cache.sweep` as the official namespace, package name, and `applicationId` for the application, maintaining the project structure initialized in this repository.
-
-## Reason
-
-Preserves the project configuration created by the user and ensures consistency across local tooling and sideloading.
-
-## Consequences
-
-All internal package imports, AIDL declarations, and manifest references use `my.id.rmalan.cache.sweep`.
-
-# D-026 — Implement Shizuku UserService lifecycle with explicit AIDL destroy transaction
-
-**Status:** Accepted
-
-## Context
-
-Shizuku's `UserService` contract uses transaction code `16777114` in AIDL for its `destroy()` method when `unbindUserService(..., remove = true)` is invoked. Without an explicit destroy method, the remote user service process cannot be killed cleanly upon unbinding.
-
-## Decision
-
-Include `void destroy() = 16777114;` in `ICacheOpsService.aidl` and implement `destroy()` in `CacheOpsUserService` by exiting the process (`kotlin.system.exitProcess(0)`).
-
-## Reason
-
-Ensures clean lifecycle termination of the privileged UserService process when unbinding, avoiding lingering background processes.
-
-## Consequences
-
-The privileged service terminates gracefully when CacheSweep unbinds or closes.
-
----
-
-# D-027 — Runtime handling of `INTERNAL_DELETE_CACHE_FILES` and Global Trim validation
-
-**Status:** Accepted
-
-## Context
-
-During physical device testing on Samsung Galaxy A34 5G (Android 16 / One UI, API 36), `pm help` advertises `clear [--user USER_ID] [--cache-only] PACKAGE`. However, when UID 2000 (shell/Shizuku) executes `clear --cache-only`, `PackageManagerService` enforces signature permission `android.permission.INTERNAL_DELETE_CACHE_FILES`, logging `Calling uid 2000 does not have android.permission.INTERNAL_DELETE_CACHE_FILES, silently ignoring`. 
-
-In contrast, `pm trim-caches <DESIRED_FREE_SPACE>` succeeds immediately without special signature restrictions and reclaimed 5.82 GB of real storage on the test device.
-
-## Decision
-
-1. Enforce process execution timeouts (15s) and closed standard streams in `PackageCommands` so blocked/ignored operations do not hang the caller.
-2. In accordance with D-010, D-011, and D-012, gracefully fallback to `pm trim-caches` when selective cache clear is unsupported or restricted on the target device.
-3. Keep automated tests and runtime safety invariants strictly prohibiting unflagged `pm clear` commands.
-
-## Reason
-
-Real-device OEM/AOSP variance means advertised CLI flags may be gated by internal system permissions. The architecture must handle this without crashing, hanging, or fake support.
-
-## Consequences
-
-Global cache trimming remains the primary verified reclamation mechanism on Android 16 non-root configurations. Selective cache clear remains capability-gated.
+Satisfies PRD FR-012/FR-013 requirements for transparency and prevents user confusion from background OS disk activity.
 
 ---
 
@@ -677,28 +292,26 @@ Cleanup history is preserved across app restarts, bounded in size, and completel
 
 ---
 
-# D-XXX — Decision title
+# D-030 — Material 3 Accessible Design, High-Contrast Color Palette & Screen Reader Support
 
-**Status:** Proposed / Accepted / Superseded / Rejected
+**Status:** Accepted
 
 ## Context
 
-What problem or uncertainty caused this decision?
+CacheSweep requires an accessible visual presentation across light and dark system themes, dynamic font scaling (1.0x - 2.0x), and screen reader (TalkBack) assistance without decorative fluff or inaccessible text abbreviations.
 
 ## Decision
 
-What are we doing?
+1. Implement Material 3 color system with WCAG AAA compliant contrast tokens for Light (`#0F6687` Primary / `#F6FAFD` Background) and Dark (`#72D2FF` Primary / `#0F1417` Background) schemes.
+2. Use pure SP units across all typography tokens (`displayLarge` through `labelSmall`) with proportional line heights to guarantee robust dynamic font scaling.
+3. Configure `WindowCompat` status and navigation bar appearance so system icons remain sharp across light and dark modes.
+4. Implement `ByteFormatter.formatAccessible` to expand byte figures into spoken TalkBack words (e.g. `1.42 gigabytes of cache`) and merge semantic row descriptions for smooth navigation.
+5. Apply semantic `heading()` attributes to screen and section headers and enforce minimum 48x48 dp touch target dimensions across all interactive buttons, chips, and list rows.
 
 ## Reason
 
-Why is this the preferred approach?
+Ensures CacheSweep is usable for all users, respects system accessibility settings, and delivers a professional personal Android utility UX.
 
 ## Consequences
 
-What becomes easier, harder, enabled, or restricted?
-
-## Supersedes
-
-If applicable:
-
-`D-XXX`
+Full accessibility and Material 3 compliance across all screens, passing Phase 4 Product UI & Persistence gates.

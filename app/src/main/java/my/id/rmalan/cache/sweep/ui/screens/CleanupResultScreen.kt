@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -28,6 +29,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,7 +57,9 @@ fun CleanupResultScreen(
             ) {
                 Button(
                     onClick = onDone,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
                 ) {
                     Text("Done")
                 }
@@ -92,17 +98,20 @@ fun CleanupResultScreen(
                 Text(
                     text = if (result.isSignificantReclaim) "Cleanup complete" else "Cleanup finished",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.semantics { heading() }
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
                 if (result.isSignificantReclaim) {
+                    val accessibleFreedText = "${ByteFormatter.formatAccessible(result.measuredFreedBytes)} freed"
                     Text(
                         text = "${ByteFormatter.format(result.measuredFreedBytes)} freed",
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.semantics { contentDescription = accessibleFreedText }
                     )
                 } else {
                     Text(
@@ -142,7 +151,8 @@ fun CleanupResultScreen(
                             Text(
                                 text = "Available Storage (Physical)",
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.semantics { heading() }
                             )
                         }
 
@@ -170,7 +180,8 @@ fun CleanupResultScreen(
                         Text(
                             text = "Reported Cache",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { heading() }
                         )
                         MetricComparisonRow(
                             label = "Before",

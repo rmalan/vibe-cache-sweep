@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -37,6 +39,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -96,12 +101,19 @@ fun DiagnosticScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("CacheSweep Diagnostic Spike") },
+                title = {
+                    Text(
+                        text = "CacheSweep Diagnostic Spike",
+                        modifier = Modifier.semantics { heading() }
+                    )
+                },
                 actions = {
                     if (onOpenOnboarding != null) {
                         TextButton(
                             onClick = onOpenOnboarding,
-                            modifier = Modifier.padding(end = 4.dp)
+                            modifier = Modifier
+                                .padding(end = 4.dp)
+                                .heightIn(min = 48.dp)
                         ) {
                             Text("Onboarding")
                         }
@@ -109,7 +121,9 @@ fun DiagnosticScreen(
                     if (onOpenAppList != null) {
                         Button(
                             onClick = onOpenAppList,
-                            modifier = Modifier.padding(end = 8.dp)
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .heightIn(min = 48.dp)
                         ) {
                             Text("App List")
                         }
@@ -133,7 +147,12 @@ fun DiagnosticScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("System & Storage (StatFs)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "System & Storage (StatFs)",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() }
+                    )
                     HorizontalDivider()
                     DiagnosticRow("Android Version", "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
                     DiagnosticRow("Device Model", "${Build.MANUFACTURER} ${Build.MODEL}")
@@ -151,7 +170,12 @@ fun DiagnosticScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Usage Access Permission", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Usage Access Permission",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() }
+                    )
                     HorizontalDivider()
                     DiagnosticRow("Status", if (hasUsageAccess) "GRANTED" else "NOT GRANTED")
                     if (!hasUsageAccess) {
@@ -159,7 +183,9 @@ fun DiagnosticScreen(
                             onClick = {
                                 context.startActivity(container.usageAccessManager.createSettingsIntent())
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
                         ) {
                             Text("Open Usage Access Settings")
                         }
@@ -173,7 +199,12 @@ fun DiagnosticScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Package StorageStats Inspector", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Package StorageStats Inspector",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() }
+                    )
                     HorizontalDivider()
 
                     OutlinedTextField(
@@ -196,7 +227,9 @@ fun DiagnosticScreen(
                                 testPackageInput = context.packageName
                                 inspectError = null
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
                         ) {
                             Text("Self App")
                         }
@@ -225,7 +258,9 @@ fun DiagnosticScreen(
                                 }
                             },
                             enabled = hasUsageAccess && !isInspectingPackage,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
                         ) {
                             Text(if (isInspectingPackage) "Inspecting..." else "Inspect Stats")
                         }
@@ -259,7 +294,12 @@ fun DiagnosticScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Shizuku & Privileged Backend (AIDL)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Shizuku & Privileged Backend (AIDL)",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() }
+                    )
                     HorizontalDivider()
                     val stateText = when (val s = shizukuState) {
                         is ShizukuState.Ready -> "Ready (UID ${s.uid})"
@@ -279,7 +319,9 @@ fun DiagnosticScreen(
                     if (shizukuState is ShizukuState.PermissionRequired) {
                         Button(
                             onClick = { container.shizukuManager.requestPermission() },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
                         ) {
                             Text("Request Shizuku Permission")
                         }
@@ -299,7 +341,9 @@ fun DiagnosticScreen(
                                 }
                             },
                             enabled = !isPingingBackend,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
                         ) {
                             Text(if (isPingingBackend) "Pinging UserService..." else "Ping Privileged AIDL Service")
                         }
@@ -309,7 +353,8 @@ fun DiagnosticScreen(
                             Text(
                                 text = "AIDL IPC Ping Verification:",
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.semantics { heading() }
                             )
                             DiagnosticRow("IPC Connected", if (info.connected) "SUCCESS (Alive)" else "FAILED")
                             info.protocolVersion?.let { DiagnosticRow("AIDL Protocol Version", "$it") }
@@ -328,7 +373,12 @@ fun DiagnosticScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Full StorageStats Scanner", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Full StorageStats Scanner",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() }
+                    )
                     HorizontalDivider()
 
                     if (isScanning) {
@@ -386,7 +436,8 @@ fun DiagnosticScreen(
                                 Text(
                                     text = "Top Scanned Apps (Cache Size):",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.semantics { heading() }
                                 )
 
                                 val topApps = res.apps
@@ -398,10 +449,14 @@ fun DiagnosticScreen(
                                     Column(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clickable {
-                                                testPackageInput = app.packageName
-                                                inspectedAppInfo = app
-                                            }
+                                            .defaultMinSize(minHeight = 48.dp)
+                                            .clickable(
+                                                role = Role.Button,
+                                                onClick = {
+                                                    testPackageInput = app.packageName
+                                                    inspectedAppInfo = app
+                                                }
+                                            )
                                             .padding(vertical = 4.dp)
                                     ) {
                                         Row(
@@ -466,7 +521,9 @@ fun DiagnosticScreen(
                                 }
                             },
                             enabled = hasUsageAccess && !isScanning,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
                         ) {
                             Text("Run Full Cache Scan")
                         }
@@ -474,7 +531,9 @@ fun DiagnosticScreen(
                         if (onOpenAppList != null) {
                             OutlinedButton(
                                 onClick = onOpenAppList,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 48.dp)
                             ) {
                                 Text("Open Full App Cache List (Search & Sort)")
                             }
@@ -493,7 +552,12 @@ fun DiagnosticScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Selective Cache Clearing Safety Test (P0-35 - P0-44)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Selective Cache Clearing Safety Test (P0-35 - P0-44)",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() }
+                    )
                     HorizontalDivider()
                     Text(
                         text = "Verifies that executing selective cache clearing using --cache-only safely removes cache files while keeping SharedPreferences, SQLite databases, and app files 100% intact.",
@@ -523,7 +587,9 @@ fun DiagnosticScreen(
                                     fixtureStatus = container.safetyTestManager.populateFixture()
                                 }
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
                         ) {
                             Text("Populate Fixture")
                         }
@@ -546,7 +612,9 @@ fun DiagnosticScreen(
                                 }
                             },
                             enabled = shizukuState is ShizukuState.Ready && !isRunningSafetyTest,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
                         ) {
                             Text(if (isRunningSafetyTest) "Testing..." else "Run Safety Pipeline")
                         }
@@ -558,7 +626,8 @@ fun DiagnosticScreen(
                             text = if (report.passed) "SAFETY VERIFICATION PASSED" else "SAFETY VERIFICATION FAILED",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = if (report.passed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                            color = if (report.passed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                            modifier = Modifier.semantics { heading() }
                         )
                         DiagnosticRow("Command Executed", report.clearCommand)
                         DiagnosticRow("Exit Code Success", if (report.clearSuccess) "YES (0)" else "NO")
@@ -584,7 +653,12 @@ fun DiagnosticScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Global Cache Trimming (P0-45 - P0-49)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Global Cache Trimming (P0-45 - P0-49)",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() }
+                    )
                     HorizontalDivider()
                     Text(
                         text = "Tests the fallback global cache trimming operation ('pm trim-caches <DESIRED_FREE_SPACE>') and measures physical storage deltas.",
@@ -637,7 +711,9 @@ fun DiagnosticScreen(
                             }
                         },
                         enabled = shizukuState is ShizukuState.Ready && !isTrimmingGlobally,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
                     ) {
                         Text(if (isTrimmingGlobally) "Trimming Caches..." else "Execute Global Cache Trim (pm trim-caches)")
                     }
@@ -669,7 +745,9 @@ fun DiagnosticScreen(
 
             OutlinedButton(
                 onClick = { refreshAll() },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
             ) {
                 Text("Refresh Diagnostic Info")
             }

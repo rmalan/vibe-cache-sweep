@@ -22,6 +22,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import my.id.rmalan.cache.sweep.model.CleanupMode
@@ -35,6 +38,8 @@ fun CleanupConfirmationDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val accessibleEstimatedCache = ByteFormatter.formatAccessible(plan.estimatedCacheBytes, "of cache")
+
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = {
@@ -52,7 +57,8 @@ fun CleanupConfirmationDialog(
                     "Run Global Cache Trim?"
                 },
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() }
             )
         },
         text = {
@@ -95,7 +101,8 @@ fun CleanupConfirmationDialog(
                             text = ByteFormatter.format(plan.estimatedCacheBytes),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.semantics { contentDescription = accessibleEstimatedCache }
                         )
                         if (plan.mode == CleanupMode.SELECTIVE) {
                             Text(

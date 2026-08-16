@@ -31,7 +31,8 @@ fun AppIcon(
     packageName: String,
     packageRepository: PackageRepository?,
     modifier: Modifier = Modifier,
-    size: Dp = 44.dp
+    size: Dp = 44.dp,
+    contentDescription: String? = null
 ) {
     var iconBitmap by remember(packageName) { mutableStateOf<Bitmap?>(null) }
 
@@ -55,13 +56,13 @@ fun AppIcon(
         if (bitmap != null) {
             Image(
                 bitmap = bitmap.asImageBitmap(),
-                contentDescription = null,
+                contentDescription = contentDescription,
                 modifier = Modifier.size(size)
             )
         } else {
             Icon(
                 imageVector = Icons.Default.Info,
-                contentDescription = null,
+                contentDescription = contentDescription,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(size * 0.55f)
             )

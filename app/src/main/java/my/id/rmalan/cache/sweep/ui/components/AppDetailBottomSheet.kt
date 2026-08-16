@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
@@ -24,6 +24,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import my.id.rmalan.cache.sweep.model.AppCacheInfo
@@ -77,7 +79,8 @@ fun AppDetailBottomSheet(
                         Text(
                             text = app.appName,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { heading() }
                         )
 
                         Surface(
@@ -119,7 +122,8 @@ fun AppDetailBottomSheet(
                     Text(
                         text = "Storage Breakdown",
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.semantics { heading() }
                     )
 
                     StorageMetricRow(
@@ -163,7 +167,9 @@ fun AppDetailBottomSheet(
                 if (supportsSelectiveCleaning && onClearCacheClick != null) {
                     Button(
                         onClick = onClearCacheClick,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
                     ) {
                         Text("Clear Cache")
                     }
@@ -174,14 +180,18 @@ fun AppDetailBottomSheet(
                     onClick = {
                         PackageShortcuts.openStorageSettings(context, app.packageName)
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
                 ) {
                     Text("Open Android Storage Settings")
                 }
 
                 OutlinedButton(
                     onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
                 ) {
                     Text("Close")
                 }
@@ -206,8 +216,11 @@ private fun StorageMetricRow(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             color = if (isEmphasized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-            fontWeight = if (isBold || isEmphasized) FontWeight.SemiBold else FontWeight.Normal
+            fontWeight = if (isBold || isEmphasized) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.weight(1f, fill = false)
         )
+
+        Spacer(modifier = Modifier.width(8.dp))
 
         Text(
             text = value,

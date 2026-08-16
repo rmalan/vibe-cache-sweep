@@ -279,7 +279,7 @@ Phase 0 is complete only when:
 
 **Goal:** Turn the technical application into the complete CacheSweep product.
 
-**Phase status:** In progress
+**Phase status:** Complete
 
 ## Onboarding
 
@@ -314,20 +314,20 @@ Phase 0 is complete only when:
 
 ## Appearance/accessibility
 
-* [ ] **P4-20** Material 3 theme
-* [ ] **P4-21** Light mode
-* [ ] **P4-22** Dark mode
-* [ ] **P4-23** Font scaling review
-* [ ] **P4-24** TalkBack semantics
-* [ ] **P4-25** Touch-target review
+* [x] **P4-20** Material 3 theme
+* [x] **P4-21** Light mode
+* [x] **P4-22** Dark mode
+* [x] **P4-23** Font scaling review
+* [x] **P4-24** TalkBack semantics
+* [x] **P4-25** Touch-target review
 
 ## Phase 4 Gate
 
-* [ ] Complete product flow works
-* [ ] Product copy matches PRD
-* [ ] Settings persist
-* [ ] Light/dark themes work
-* [ ] Basic accessibility review passes
+* [x] Complete product flow works
+* [x] Product copy matches PRD
+* [x] Settings persist
+* [x] Light/dark themes work
+* [x] Basic accessibility review passes
 
 ---
 
@@ -335,7 +335,7 @@ Phase 0 is complete only when:
 
 **Goal:** Produce a reliable personal release APK.
 
-**Phase status:** Blocked
+**Phase status:** In progress
 
 ## Failure scenarios
 

@@ -18,4 +18,24 @@ object ByteFormatter {
             else -> "$bytes B"
         }
     }
+
+    /**
+     * Accessible string representation of byte sizes suitable for screen readers (TalkBack),
+     * expanding abbreviations (e.g. 1.42 GB -> "1.42 gigabytes of cache").
+     */
+    fun formatAccessible(bytes: Long, suffix: String? = null): String {
+        val base = if (bytes <= 0) {
+            "0 bytes"
+        } else {
+            when {
+                bytes >= TB -> String.format(Locale.US, "%.2f terabytes", bytes.toDouble() / TB)
+                bytes >= GB -> String.format(Locale.US, "%.2f gigabytes", bytes.toDouble() / GB)
+                bytes >= MB -> String.format(Locale.US, "%.1f megabytes", bytes.toDouble() / MB)
+                bytes >= KB -> String.format(Locale.US, "%.1f kilobytes", bytes.toDouble() / KB)
+                bytes == 1L -> "1 byte"
+                else -> "$bytes bytes"
+            }
+        }
+        return if (suffix != null) "$base $suffix" else base
+    }
 }

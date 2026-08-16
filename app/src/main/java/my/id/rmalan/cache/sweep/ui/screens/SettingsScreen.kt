@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -64,6 +66,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -109,7 +114,8 @@ fun SettingsScreen(
                 title = {
                     Text(
                         text = "Settings",
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() }
                     )
                 },
                 navigationIcon = {
@@ -276,7 +282,9 @@ fun SettingsScreen(
                         if (state.shizukuState == ShizukuState.PermissionRequired) {
                             Button(
                                 onClick = { viewModel.onEvent(SettingsEvent.RequestShizukuPermission) },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 48.dp)
                             ) {
                                 Text("Grant Permission")
                             }
@@ -288,7 +296,9 @@ fun SettingsScreen(
                                         context.startActivity(launchIntent)
                                     }
                                 },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 48.dp)
                             ) {
                                 Text("Open Shizuku")
                             }
@@ -296,7 +306,8 @@ fun SettingsScreen(
 
                         OutlinedButton(
                             onClick = { viewModel.onEvent(SettingsEvent.RefreshShizuku) },
-                            modifier = if (state.shizukuState is ShizukuState.Ready) Modifier.fillMaxWidth() else Modifier.weight(1f)
+                            modifier = (if (state.shizukuState is ShizukuState.Ready) Modifier.fillMaxWidth() else Modifier.weight(1f))
+                                .heightIn(min = 48.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Refresh,
@@ -360,7 +371,9 @@ fun SettingsScreen(
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = MaterialTheme.colorScheme.error
                         ),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.DeleteOutline,
@@ -449,17 +462,26 @@ fun SettingsScreen(
     if (showSortDialog) {
         AlertDialog(
             onDismissRequest = { showSortDialog = false },
-            title = { Text("Default Sort Order") },
+            title = {
+                Text(
+                    text = "Default Sort Order",
+                    modifier = Modifier.semantics { heading() }
+                )
+            },
             text = {
                 Column {
-                    AppSort.values().forEach { sort ->
+                    AppSort.entries.forEach { sort ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                                    viewModel.onEvent(SettingsEvent.SetSortMode(sort))
-                                    showSortDialog = false
-                                }
+                                .defaultMinSize(minHeight = 48.dp)
+                                .clickable(
+                                    role = Role.RadioButton,
+                                    onClick = {
+                                        viewModel.onEvent(SettingsEvent.SetSortMode(sort))
+                                        showSortDialog = false
+                                    }
+                                )
                                 .padding(vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -488,7 +510,10 @@ fun SettingsScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showSortDialog = false }) {
+                TextButton(
+                    onClick = { showSortDialog = false },
+                    modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                ) {
                     Text("Close")
                 }
             }
@@ -499,17 +524,26 @@ fun SettingsScreen(
     if (showThemeDialog) {
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
-            title = { Text("App Theme") },
+            title = {
+                Text(
+                    text = "App Theme",
+                    modifier = Modifier.semantics { heading() }
+                )
+            },
             text = {
                 Column {
-                    ThemeMode.values().forEach { theme ->
+                    ThemeMode.entries.forEach { theme ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                                    viewModel.onEvent(SettingsEvent.SetThemeMode(theme))
-                                    showThemeDialog = false
-                                }
+                                .defaultMinSize(minHeight = 48.dp)
+                                .clickable(
+                                    role = Role.RadioButton,
+                                    onClick = {
+                                        viewModel.onEvent(SettingsEvent.SetThemeMode(theme))
+                                        showThemeDialog = false
+                                    }
+                                )
                                 .padding(vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -538,7 +572,10 @@ fun SettingsScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showThemeDialog = false }) {
+                TextButton(
+                    onClick = { showThemeDialog = false },
+                    modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                ) {
                     Text("Close")
                 }
             }
@@ -556,7 +593,12 @@ fun SettingsScreen(
                     tint = MaterialTheme.colorScheme.error
                 )
             },
-            title = { Text("Clear Cleanup History?") },
+            title = {
+                Text(
+                    text = "Clear Cleanup History?",
+                    modifier = Modifier.semantics { heading() }
+                )
+            },
             text = {
                 Text(
                     "This will delete all ${state.historyCount} locally saved cleanup history records. This action cannot be undone."
@@ -570,13 +612,17 @@ fun SettingsScreen(
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
-                    )
+                    ),
+                    modifier = Modifier.defaultMinSize(minHeight = 48.dp)
                 ) {
                     Text("Clear History")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showClearHistoryDialog = false }) {
+                TextButton(
+                    onClick = { showClearHistoryDialog = false },
+                    modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                ) {
                     Text("Cancel")
                 }
             }
@@ -607,7 +653,8 @@ private fun SettingsSectionHeader(
             text = title,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.semantics { heading() }
         )
     }
 }
@@ -623,7 +670,11 @@ private fun SettingsSwitchRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
+            .defaultMinSize(minHeight = 56.dp)
+            .clickable(
+                role = Role.Switch,
+                onClick = { onCheckedChange(!checked) }
+            )
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -659,7 +710,11 @@ private fun SettingsClickableRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .defaultMinSize(minHeight = 56.dp)
+            .clickable(
+                role = Role.Button,
+                onClick = onClick
+            )
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,6 +51,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import my.id.rmalan.cache.sweep.model.AppSort
@@ -114,7 +117,10 @@ fun AppCacheListScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(if (isSelectionMode) "${state.selectedPackages.size} Selected" else "Application Cache")
+                        Text(
+                            text = if (isSelectionMode) "${state.selectedPackages.size} Selected" else "Application Cache",
+                            modifier = Modifier.semantics { heading() }
+                        )
                         if (state.displayedApps.isNotEmpty()) {
                             val subtitle = if (isSelectionMode) {
                                 "${ByteFormatter.format(state.selectedCacheBytes)} estimated cache"
@@ -145,13 +151,16 @@ fun AppCacheListScreen(
                 },
                 actions = {
                     if (isSelectionMode) {
-                        TextButton(onClick = {
-                            if (state.selectedPackages.size == state.displayedApps.size) {
-                                viewModel.onEvent(AppsEvent.ClearSelection)
-                            } else {
-                                viewModel.onEvent(AppsEvent.SelectAll)
-                            }
-                        }) {
+                        TextButton(
+                            onClick = {
+                                if (state.selectedPackages.size == state.displayedApps.size) {
+                                    viewModel.onEvent(AppsEvent.ClearSelection)
+                                } else {
+                                    viewModel.onEvent(AppsEvent.SelectAll)
+                                }
+                            },
+                            modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                        ) {
                             Text(
                                 text = if (state.selectedPackages.size == state.displayedApps.size) "Deselect All" else "Select All"
                             )
@@ -213,7 +222,8 @@ fun AppCacheListScreen(
                         },
                         text = {
                             Text("$label • ${ByteFormatter.format(totalCache)}")
-                        }
+                        },
+                        modifier = Modifier.defaultMinSize(minHeight = 48.dp)
                     )
                 }
             }
@@ -342,7 +352,8 @@ fun AppCacheListScreen(
                                 Text(
                                     text = "No applications found",
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.semantics { heading() }
                                 )
                                 Text(
                                     text = if (state.query.isNotBlank()) {
@@ -428,7 +439,7 @@ fun AppCacheListScreen(
     if (cleanerState != null && cleanerState.isFailed && cleanerState.errorMessage != null) {
         AlertDialog(
             onDismissRequest = { cleanerViewModel.onEvent(CleanerEvent.DismissResult) },
-            title = { Text("Cleanup Failed") },
+            title = { Text("Cleanup Failed", modifier = Modifier.semantics { heading() }) },
             text = { Text(cleanerState.errorMessage) },
             confirmButton = {
                 Button(onClick = { cleanerViewModel.onEvent(CleanerEvent.DismissResult) }) {

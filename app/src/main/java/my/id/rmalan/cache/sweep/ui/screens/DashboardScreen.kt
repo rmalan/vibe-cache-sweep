@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -57,6 +59,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -128,7 +134,8 @@ fun DashboardScreen(
                 title = {
                     Text(
                         text = "CacheSweep",
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() }
                     )
                 },
                 actions = {
@@ -297,7 +304,7 @@ fun DashboardScreen(
     if (cleanerState.isFailed && cleanerErrorMsg != null) {
         AlertDialog(
             onDismissRequest = { cleanerViewModel.onEvent(CleanerEvent.DismissResult) },
-            title = { Text("Cleanup Failed") },
+            title = { Text("Cleanup Failed", modifier = Modifier.semantics { heading() }) },
             text = { Text(cleanerErrorMsg) },
             confirmButton = {
                 Button(onClick = { cleanerViewModel.onEvent(CleanerEvent.DismissResult) }) {
@@ -421,17 +428,24 @@ fun DeviceStorageCard(
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    letterSpacing = MaterialTheme.typography.labelMedium.letterSpacing
+                    letterSpacing = MaterialTheme.typography.labelMedium.letterSpacing,
+                    modifier = Modifier.semantics { heading() }
                 )
             }
 
             if (storageInfo != null) {
+                val accessibleStorageSummary = "${ByteFormatter.formatAccessible(storageInfo.usedBytes)} used, ${ByteFormatter.formatAccessible(storageInfo.availableBytes)} available of ${ByteFormatter.formatAccessible(storageInfo.totalBytes)}"
+
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics(mergeDescendants = true) {
+                            contentDescription = accessibleStorageSummary
+                        },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f, fill = false)) {
                         Text(
                             text = "${ByteFormatter.format(storageInfo.usedBytes)} used",
                             style = MaterialTheme.typography.titleLarge,
@@ -494,6 +508,8 @@ fun ApplicationCacheCard(
     lastScanTimeMillis: Long,
     modifier: Modifier = Modifier
 ) {
+    val accessibleCacheText = ByteFormatter.formatAccessible(totalCacheBytes, "of cache reported")
+
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
@@ -519,7 +535,8 @@ fun ApplicationCacheCard(
                     text = "APPLICATION CACHE",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.semantics { heading() }
                 )
             }
 
@@ -533,7 +550,8 @@ fun ApplicationCacheCard(
                 text = ByteFormatter.format(totalCacheBytes),
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.semantics { contentDescription = accessibleCacheText }
             )
 
             Row(
@@ -671,7 +689,8 @@ fun ShizukuStatusCard(
                         Text(
                             text = "Shizuku Permission Required",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { heading() }
                         )
                     }
 
@@ -683,7 +702,9 @@ fun ShizukuStatusCard(
 
                     Button(
                         onClick = onGrantPermission,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
                     ) {
                         Text("Grant Permission")
                     }
@@ -738,7 +759,8 @@ fun ShizukuStatusCard(
                         Text(
                             text = "Shizuku Isn't Running",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { heading() }
                         )
                     }
 
@@ -754,14 +776,18 @@ fun ShizukuStatusCard(
                     ) {
                         OutlinedButton(
                             onClick = onOpenShizuku,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
                         ) {
                             Text("Open Shizuku")
                         }
 
                         FilledTonalButton(
                             onClick = onCheckAgain,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
                         ) {
                             Text("Check Again")
                         }
@@ -795,7 +821,8 @@ fun ShizukuStatusCard(
                         Text(
                             text = "Privileged Service Disconnected",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { heading() }
                         )
                     }
 
@@ -807,7 +834,9 @@ fun ShizukuStatusCard(
 
                     FilledTonalButton(
                         onClick = onCheckAgain,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
                     ) {
                         Text("Reconnect")
                     }
@@ -831,6 +860,12 @@ fun PrimaryCleanupHero(
 ) {
     val enabled = !isScanning && (totalCacheBytes > 0L || !isShizukuReady)
 
+    val heroAccessibilityLabel = if (isShizukuReady) {
+        "Clean cache, ask Android to reclaim ${ByteFormatter.formatAccessible(totalCacheBytes, "of disposable cache")}"
+    } else {
+        "Setup Shizuku to clean cache"
+    }
+
     Button(
         onClick = onCleanClick,
         enabled = enabled,
@@ -841,14 +876,20 @@ fun PrimaryCleanupHero(
         ),
         modifier = modifier
             .fillMaxWidth()
-            .height(72.dp)
+            .defaultMinSize(minHeight = 72.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = heroAccessibilityLabel
+            }
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
+                modifier = Modifier.weight(1f, fill = false),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -876,6 +917,7 @@ fun PrimaryCleanupHero(
             }
 
             if (totalCacheBytes > 0L) {
+                Spacer(modifier = Modifier.width(8.dp))
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
@@ -917,11 +959,15 @@ fun LargestCachesCard(
             Text(
                 text = "Largest caches",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() }
             )
 
             if (scannedAppsCount > 0) {
-                TextButton(onClick = onViewAllClick) {
+                TextButton(
+                    onClick = onViewAllClick,
+                    modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                ) {
                     Text("View all ($scannedAppsCount) →")
                 }
             }
@@ -958,11 +1004,20 @@ fun LargestCachesCard(
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     largestApps.forEachIndexed { index, app ->
+                        val accessibleAppItemLabel = "${app.appName}, ${ByteFormatter.formatAccessible(app.cacheBytes, "of cache")}"
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onAppClick(app) }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                .defaultMinSize(minHeight = 56.dp)
+                                .clickable(
+                                    role = Role.Button,
+                                    onClick = { onAppClick(app) }
+                                )
+                                .semantics(mergeDescendants = true) {
+                                    contentDescription = accessibleAppItemLabel
+                                }
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             AppIcon(
@@ -1024,7 +1079,11 @@ fun LargestCachesCard(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onViewAllClick() }
+                            .defaultMinSize(minHeight = 48.dp)
+                            .clickable(
+                                role = Role.Button,
+                                onClick = onViewAllClick
+                            )
                             .padding(12.dp),
                         contentAlignment = Alignment.Center
                     ) {

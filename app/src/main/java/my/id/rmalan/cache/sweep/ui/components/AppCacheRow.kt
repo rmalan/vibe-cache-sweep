@@ -5,9 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -34,10 +36,29 @@ fun AppCacheRow(
     showCheckbox: Boolean = false,
     onToggleSelect: ((Boolean) -> Unit)? = null
 ) {
+    val accessibleRowLabel = buildString {
+        append(app.appName)
+        if (app.isSystemApp) append(", system application")
+        append(", ")
+        append(ByteFormatter.formatAccessible(app.cacheBytes, "of cache"))
+        append(", total storage ")
+        append(ByteFormatter.formatAccessible(app.totalBytes))
+        if (showCheckbox) {
+            append(if (isSelected) ", selected" else ", not selected")
+        }
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(role = Role.Button, onClick = onClick)
+            .defaultMinSize(minHeight = 56.dp)
+            .clickable(
+                role = if (showCheckbox) Role.Checkbox else Role.Button,
+                onClick = onClick
+            )
+            .semantics(mergeDescendants = true) {
+                contentDescription = accessibleRowLabel
+            }
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
