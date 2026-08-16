@@ -2,8 +2,8 @@
 
 **Last updated:** 2026-08-16
 **Overall status:** In progress
-**Current phase:** Phase 1 Complete (Gate Passed) — Ready for Phase 2 (Production Cleaner)
-**Current task:** P2-01 through P2-04 — Cleaner Abstraction & Typed Plan Engine
+**Current phase:** Phase 2 (Production Cleaner) — In progress
+**Current task:** P2-05 through P2-11 — Production Selective Cleaning & Multi-Package Engine
 
 ---
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P2-01 through P2-04 — Cleaner Abstraction & Typed Plan Engine
+## P2-05 through P2-11 — Production Selective Cleaning & Multi-Package Engine
 
 **Status:** Ready to start
 
 ### Objective
 
-Build the production `CacheCleaner` abstraction, typed `CleanerCapabilities` model, selective & global `CleanupPlan` models, and structured `CleanerError` types.
+Productionize multi-package selective cache clear operations with package validation, CacheSweep self-cleaning prohibition, progressive package-count feedback, individual failure isolation, and structured failed-package reporting.
 
 ### Expected outcome
 
-Clean, strongly typed privileged cleaning API isolating Shizuku/UserService operations behind verified safe domain boundaries.
+Robust multi-package selective cleaning engine that safely executes cache-only clears, isolates errors per app, and reports granular batch results.
 
 ---
 
@@ -160,6 +160,16 @@ Clean, strongly typed privileged cleaning API isolating Shizuku/UserService oper
 * [x] P1-28 Search and filtering unit tests added in `AppFilterTest`
 * [x] P1-29 350+ application high-capacity scan performance test verified in `AndroidCacheScannerTest`
 
+## Cleaner Abstraction & Typed Plan Engine (P2-01 to P2-04)
+
+* [x] P2-01 Production `CacheCleaner` interface defined with capabilities query, single-package clear, multi-package batch clear with progressive feedback, global trim, and typed `CleanupPlan` execution
+* [x] P2-02 `CleanerCapabilities` model implemented with readiness helpers (`isReady`, `canCleanSelective`, `canCleanGlobal`, `canCleanAny`) and `UNAVAILABLE` fallback constant
+* [x] P2-03 `CleanupPlan` engine implemented supporting `SELECTIVE` and `GLOBAL_TRIM` modes with package validation, self-clean exclusion, and factory methods
+* [x] P2-04 Structured `CleanerError` hierarchy, `CleaningProgress`, and `CleanerBatchResult` models implemented with error attribution
+* [x] `PackageValidator` enhanced with `isValidFormat` and `isSelfPackage` classification
+* [x] Production `ShizukuCacheCleaner` updated with capability gating, robust error handling, progressive feedback, and plan execution
+* [x] Comprehensive unit tests added in `CleanerCapabilitiesTest`, `CleanupPlanTest`, `CleanerErrorTest`, and `ShizukuCacheCleanerTest`
+
 ---
 
 # Phase 0 Gate: PASSED
@@ -265,7 +275,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (83/83 unit tests passed across 19 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (109/109 unit tests passed across 23 test suites).
 ```
 
 ---
@@ -314,19 +324,16 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P1-17 through P1-24 & P1-27 through P1-29 — Cache Application List UI, Search, Sorting, Detail & Shortcuts (Phase 1 — Production Cache Scanner)**
+**P2-01 through P2-04 — Cleaner Abstraction & Typed Plan Engine (Phase 2 — Production Cleaner)**
 
-* Implemented `AppSort` enum (`CACHE_DESC`, `TOTAL_DESC`, `NAME_ASC`) with robust multi-field comparators (`P1-18`, `P1-19`, `P1-20`)
-* Implemented `AppFilter` search and visibility engine (`P1-21`)
-* Created `AppsViewModel` with reactive state flow, search, sort, selection, and scan lifecycle coordination
-* Built `AppIcon` with memory-bounded thumbnail caching and fallback (`P1-03`, `P1-17`)
-* Built `AppCacheRow` presenting display name, package, cache size, total footprint, and system app badge (`P1-17`)
-* Built `AppDetailBottomSheet` showing full storage breakdown and educational cache explanation (`P1-23`)
-* Implemented native Android storage settings shortcut in `PackageShortcuts` (`P1-24`)
-* Built `AppCacheListScreen` with pull-to-refresh (`PullToRefreshBox`), live search, sort chips, and scan progress (`P1-17`, `P1-22`)
-* Added unit tests in `AppSortTest`, `AppFilterTest`, `PackageShortcutsTest`, `AppsViewModelTest`, and high-capacity 350+ app scan test in `AndroidCacheScannerTest` (`P1-27`, `P1-28`, `P1-29`)
-* All 83 unit tests passing across 19 suites; debug APKs assemble cleanly
-* Phase 1 Gate PASSED
+* Defined production `CacheCleaner` interface with typed capabilities query, single-package clear, multi-package batch clear with progressive feedback, global trim, and `CleanupPlan` execution (`P2-01`)
+* Implemented `CleanerCapabilities` model with readiness helpers (`isReady`, `canCleanSelective`, `canCleanGlobal`, `canCleanAny`) and `UNAVAILABLE` fallback constant (`P2-02`)
+* Implemented typed `CleanupPlan` engine supporting `SELECTIVE` and `GLOBAL_TRIM` modes with package validation, self-clean exclusion, and factory methods (`P2-03`)
+* Implemented structured `CleanerError` hierarchy, `CleaningProgress`, and `CleanerBatchResult` models with error attribution (`P2-04`)
+* Enhanced `PackageValidator` with `isValidFormat` and `isSelfPackage` classification
+* Implemented production `ShizukuCacheCleaner` with capability gating, robust error handling, progressive feedback, and plan execution
+* Added unit tests in `CleanerCapabilitiesTest`, `CleanupPlanTest`, `CleanerErrorTest`, and `ShizukuCacheCleanerTest`
+* All 109 unit tests passing across 23 test suites; debug APKs assemble cleanly
 
 ---
 
@@ -334,9 +341,11 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P2-01 through P2-04 — Cleaner Abstraction & Typed Plan Engine (Phase 2 — Production Cleaner)**
+**P2-05 through P2-11 — Production Selective Cleaning & Multi-Package Engine (Phase 2 — Production Cleaner)**
 
-* Implement production `CacheCleaner` abstraction (`P2-01`)
-* Implement `CleanerCapabilities` model and validation (`P2-02`)
-* Implement typed `CleanupPlan` model supporting selective and global trim modes (`P2-03`)
-* Implement typed `CleanerError` error hierarchy (`P2-04`)
+* Productionize package cache clear with full validation against scanned package set (`P2-05`, `P2-06`)
+* Enforce CacheSweep self-cleaning prohibition across all workflows (`P2-07`)
+* Coordinate multi-package cleaning with progressive package-count updates (`P2-08`, `P2-09`)
+* Ensure individual package failure isolation and continue remaining batch (`P2-10`)
+* Structure detailed failed-package reporting (`P2-11`)
+

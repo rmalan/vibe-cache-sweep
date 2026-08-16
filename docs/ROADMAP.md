@@ -200,10 +200,10 @@ Phase 0 is complete only when:
 
 ## Cleaner abstraction
 
-* [ ] **P2-01** Implement `CacheCleaner`
-* [ ] **P2-02** Implement `CleanerCapabilities`
-* [ ] **P2-03** Implement typed cleanup plans
-* [ ] **P2-04** Implement typed cleaner errors
+* [x] **P2-01** Implement `CacheCleaner`
+* [x] **P2-02** Implement `CleanerCapabilities`
+* [x] **P2-03** Implement typed cleanup plans
+* [x] **P2-04** Implement typed cleaner errors
 
 ## Selective cleaning
 

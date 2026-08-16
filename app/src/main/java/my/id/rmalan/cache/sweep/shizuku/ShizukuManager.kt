@@ -25,7 +25,7 @@ data class PrivilegedBackendInfo(
     val lastError: String? = null
 )
 
-class ShizukuManager(
+open class ShizukuManager(
     private val context: Context
 ) {
     companion object {
@@ -97,7 +97,7 @@ class ShizukuManager(
         }
     }
 
-    fun updateState() {
+    open fun updateState() {
         if (!Shizuku.pingBinder()) {
             _state.value = ShizukuState.NotRunning
             return
@@ -116,7 +116,7 @@ class ShizukuManager(
         }
     }
 
-    fun requestPermission() {
+    open fun requestPermission() {
         if (Shizuku.pingBinder()) {
             if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                 Shizuku.requestPermission(SHIZUKU_PERMISSION_REQUEST_CODE)
@@ -134,14 +134,14 @@ class ShizukuManager(
         }
     }
 
-    fun getService(): ICacheOpsService? {
+    open fun getService(): ICacheOpsService? {
         if (cacheOpsService == null) {
             ensureServiceBound()
         }
         return cacheOpsService
     }
 
-    suspend fun getOrAwaitService(timeoutMs: Long = 3000): ICacheOpsService? {
+    open suspend fun getOrAwaitService(timeoutMs: Long = 3000): ICacheOpsService? {
         if (cacheOpsService != null) return cacheOpsService
         ensureServiceBound()
         if (cacheOpsService != null) return cacheOpsService
@@ -153,7 +153,7 @@ class ShizukuManager(
         return cacheOpsService
     }
 
-    suspend fun fetchCapabilities(timeoutMs: Long = 3000): CleanerCapabilities = withContext(Dispatchers.IO) {
+    open suspend fun fetchCapabilities(timeoutMs: Long = 3000): CleanerCapabilities = withContext(Dispatchers.IO) {
         val isPing = try { Shizuku.pingBinder() } catch (e: Exception) { false }
         val isGranted = isPing && try { Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED } catch (e: Exception) { false }
         val uid = if (isGranted) {
@@ -173,7 +173,7 @@ class ShizukuManager(
         )
     }
 
-    suspend fun pingPrivilegedBackend(timeoutMs: Long = 3000): PrivilegedBackendInfo = withContext(Dispatchers.IO) {
+    open suspend fun pingPrivilegedBackend(timeoutMs: Long = 3000): PrivilegedBackendInfo = withContext(Dispatchers.IO) {
         val service = getOrAwaitService(timeoutMs)
         if (service == null) {
             PrivilegedBackendInfo(connected = false, lastError = "UserService not bound or not responding")
@@ -196,7 +196,7 @@ class ShizukuManager(
         }
     }
 
-    fun getCapabilities(): CleanerCapabilities {
+    open fun getCapabilities(): CleanerCapabilities {
         val isPing = try { Shizuku.pingBinder() } catch (e: Exception) { false }
         val isGranted = isPing && try { Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED } catch (e: Exception) { false }
         val uid = if (isGranted) {
@@ -216,7 +216,7 @@ class ShizukuManager(
         )
     }
 
-    fun cleanup() {
+    open fun cleanup() {
         try {
             Shizuku.removeBinderReceivedListener(binderReceivedListener)
             Shizuku.removeBinderDeadListener(binderDeadListener)
