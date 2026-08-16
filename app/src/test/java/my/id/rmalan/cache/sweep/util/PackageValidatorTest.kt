@@ -12,6 +12,7 @@ class PackageValidatorTest {
         assertTrue(PackageValidator.isValid("org.videolan.vlc"))
         assertTrue(PackageValidator.isValid("com.google.android.youtube"))
         assertTrue(PackageValidator.isValid("a.b"))
+        assertTrue(PackageValidator.isValid("android"))
     }
 
     @Test

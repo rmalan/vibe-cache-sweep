@@ -7,7 +7,7 @@ object PackageValidator {
     fun isValidFormat(packageName: String?): Boolean {
         if (packageName.isNullOrBlank()) return false
         if (packageName.length > 256) return false
-        return PACKAGE_REGEX.matches(packageName)
+        return packageName == "android" || PACKAGE_REGEX.matches(packageName)
     }
 
     fun isSelfPackage(packageName: String?): Boolean {

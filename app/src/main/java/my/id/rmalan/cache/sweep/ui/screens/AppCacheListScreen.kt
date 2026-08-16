@@ -191,10 +191,14 @@ fun AppCacheListScreen(
 
                     ExtendedFloatingActionButton(
                         onClick = {
-                            val plan = CleanupPlan.selective(
-                                packages = targetApps.map { it.packageName },
-                                estimatedCacheBytes = totalCache
-                            )
+                            val plan = if (!hasSelected && !state.supportsSelectiveCleaning) {
+                                CleanupPlan.globalTrim(
+                                    desiredFreeBytes = 0L,
+                                    estimatedCacheBytes = totalCache
+                                )
+                            } else {
+                                CleanupPlan.fromApps(targetApps)
+                            }
                             cleanerViewModel.onEvent(CleanerEvent.RequestClean(plan))
                         },
                         icon = {

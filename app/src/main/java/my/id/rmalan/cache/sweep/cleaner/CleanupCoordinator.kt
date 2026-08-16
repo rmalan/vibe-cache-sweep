@@ -146,10 +146,21 @@ class CleanupCoordinator(
             }
         }
 
+        val effectivePlan = if (plan.mode == CleanupMode.GLOBAL_TRIM && (plan.desiredFreeBytes == null || plan.desiredFreeBytes == 0L)) {
+            val targetBytes = GlobalTrimCalculator.calculateDesiredFreeBytes(
+                availableBytes = physicalFreeBefore,
+                totalBytes = storageBefore.totalBytes,
+                estimatedCacheBytes = plan.estimatedCacheBytes
+            )
+            plan.copy(desiredFreeBytes = targetBytes)
+        } else {
+            plan
+        }
+
         // 3. Perform Cleaning
         val batchResult: CleanerBatchResult = try {
             cleaner.executePlan(
-                plan = plan,
+                plan = effectivePlan,
                 userId = userId,
                 scannedPackageSet = scannedPackageSet,
                 onProgress = { progress ->

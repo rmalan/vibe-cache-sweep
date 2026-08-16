@@ -16,10 +16,10 @@
       </SelectionState>
       <SelectionState runConfigName="main">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-08-16T09:38:19.597441510Z">
+        <DropdownSelection timestamp="2026-08-16T09:49:30.179092951Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/home/rmalan/.android/avd/Medium_Phone.avd" />
+              <DeviceId pluginId="Wireless" identifier="serviceName=adb-RRCW3048XGL-K8EZNo" />
             </handle>
           </Target>
         </DropdownSelection>
