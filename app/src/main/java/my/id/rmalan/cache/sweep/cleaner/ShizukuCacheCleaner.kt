@@ -11,19 +11,19 @@ class ShizukuCacheCleaner(
 ) : CacheCleaner {
 
     override suspend fun capabilities(): CleanerCapabilities = withContext(Dispatchers.IO) {
-        shizukuManager.getCapabilities()
+        shizukuManager.fetchCapabilities()
     }
 
     override suspend fun clearPackage(packageName: String, userId: Int): Boolean = withContext(Dispatchers.IO) {
         if (!PackageValidator.isValid(packageName)) return@withContext false
-        val service = shizukuManager.getService() ?: return@withContext false
+        val service = shizukuManager.getOrAwaitService() ?: return@withContext false
         val result = service.clearPackageCache(packageName, userId)
         result == 0
     }
 
     override suspend fun clearPackages(packages: List<String>, userId: Int): List<String> = withContext(Dispatchers.IO) {
         val failed = mutableListOf<String>()
-        val service = shizukuManager.getService()
+        val service = shizukuManager.getOrAwaitService()
         if (service == null) {
             return@withContext packages
         }
@@ -41,7 +41,7 @@ class ShizukuCacheCleaner(
     }
 
     override suspend fun trimGlobally(desiredFreeBytes: Long): Boolean = withContext(Dispatchers.IO) {
-        val service = shizukuManager.getService() ?: return@withContext false
+        val service = shizukuManager.getOrAwaitService() ?: return@withContext false
         val result = service.trimCaches(desiredFreeBytes)
         result == 0
     }

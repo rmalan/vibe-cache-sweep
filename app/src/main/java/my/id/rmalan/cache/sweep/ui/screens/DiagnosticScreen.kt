@@ -45,6 +45,7 @@ import my.id.rmalan.cache.sweep.model.CleanerCapabilities
 import my.id.rmalan.cache.sweep.model.DeviceStorageInfo
 import my.id.rmalan.cache.sweep.model.ScanResult
 import my.id.rmalan.cache.sweep.model.ShizukuState
+import my.id.rmalan.cache.sweep.shizuku.PrivilegedBackendInfo
 import my.id.rmalan.cache.sweep.util.ByteFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,6 +57,7 @@ fun DiagnosticScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val shizukuState by container.shizukuManager.state.collectAsState()
+    val isUserServiceConnected by container.shizukuManager.userServiceConnected.collectAsState()
 
     var hasUsageAccess by remember { mutableStateOf(container.usageAccessManager.hasAccess()) }
     var storageInfo by remember { mutableStateOf<DeviceStorageInfo?>(null) }
@@ -63,6 +65,10 @@ fun DiagnosticScreen(
     var scanResult by remember { mutableStateOf<ScanResult?>(null) }
     var isScanning by remember { mutableStateOf(false) }
     var statusMessage by remember { mutableStateOf<String?>(null) }
+
+    // Privileged Backend state (P0-25 to P0-34)
+    var privilegedBackendInfo by remember { mutableStateOf<PrivilegedBackendInfo?>(null) }
+    var isPingingBackend by remember { mutableStateOf(false) }
 
     // Test package storage inspector state (P0-15)
     var testPackageInput by remember { mutableStateOf(context.packageName) }
@@ -74,7 +80,9 @@ fun DiagnosticScreen(
         hasUsageAccess = container.usageAccessManager.hasAccess()
         storageInfo = container.deviceStorageRepository.snapshot()
         container.shizukuManager.updateState()
-        capabilities = container.shizukuManager.getCapabilities()
+        scope.launch {
+            capabilities = container.shizukuManager.fetchCapabilities()
+        }
     }
 
     LifecycleResumeEffect(Unit) {
@@ -224,13 +232,13 @@ fun DiagnosticScreen(
                 }
             }
 
-            // Shizuku Card
+            // Shizuku & Privileged Backend Card (P0-17 to P0-34)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Shizuku & Privileges", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Shizuku & Privileged Backend (AIDL)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     HorizontalDivider()
                     val stateText = when (val s = shizukuState) {
                         is ShizukuState.Ready -> "Ready (UID ${s.uid})"
@@ -240,6 +248,7 @@ fun DiagnosticScreen(
                         is ShizukuState.Error -> "Error: ${s.reason}"
                     }
                     DiagnosticRow("Shizuku State", stateText)
+                    DiagnosticRow("UserService Binder", if (isUserServiceConnected) "BOUND & CONNECTED" else "DISCONNECTED")
 
                     capabilities?.let { cap ->
                         DiagnosticRow("Selective Clear (--cache-only)", if (cap.supportsSelectiveCacheClear) "SUPPORTED" else "UNSUPPORTED")
@@ -252,6 +261,41 @@ fun DiagnosticScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Request Shizuku Permission")
+                        }
+                    }
+
+                    if (shizukuState is ShizukuState.Ready) {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    isPingingBackend = true
+                                    try {
+                                        privilegedBackendInfo = container.shizukuManager.pingPrivilegedBackend()
+                                        capabilities = container.shizukuManager.fetchCapabilities()
+                                    } finally {
+                                        isPingingBackend = false
+                                    }
+                                }
+                            },
+                            enabled = !isPingingBackend,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (isPingingBackend) "Pinging UserService..." else "Ping Privileged AIDL Service")
+                        }
+
+                        privilegedBackendInfo?.let { info ->
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                            Text(
+                                text = "AIDL IPC Ping Verification:",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            DiagnosticRow("IPC Connected", if (info.connected) "SUCCESS (Alive)" else "FAILED")
+                            info.protocolVersion?.let { DiagnosticRow("AIDL Protocol Version", "$it") }
+                            info.privilegedUid?.let { DiagnosticRow("AIDL Privileged UID", "$it (shell/adb)") }
+                            DiagnosticRow("Probe Selective Clear", if (info.selectiveClearSupported) "SUPPORTED" else "UNSUPPORTED")
+                            DiagnosticRow("Probe Global Trim", if (info.globalTrimSupported) "SUPPORTED" else "UNSUPPORTED")
+                            info.lastError?.let { DiagnosticRow("Backend Last Error", it) }
                         }
                     }
                 }

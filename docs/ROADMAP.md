@@ -74,19 +74,19 @@ Do not mark an entire phase complete until its phase gate passes.
 
 ## Privileged backend
 
-* [ ] **P0-25** Define minimal AIDL interface
-* [ ] **P0-26** Implement Shizuku UserService
-* [ ] **P0-27** Bind application to UserService
-* [ ] **P0-28** Verify typed privileged call from app process
-* [ ] **P0-29** Ensure no arbitrary shell API is exposed
+* [x] **P0-25** Define minimal AIDL interface
+* [x] **P0-26** Implement Shizuku UserService
+* [x] **P0-27** Bind application to UserService
+* [x] **P0-28** Verify typed privileged call from app process
+* [x] **P0-29** Ensure no arbitrary shell API is exposed
 
 ## Capability detection
 
-* [ ] **P0-30** Implement package-manager capability probe
-* [ ] **P0-31** Detect `clear --cache-only`
-* [ ] **P0-32** Detect `trim-caches`
-* [ ] **P0-33** Display capability results on diagnostic screen
-* [ ] **P0-34** Cache capabilities for current Shizuku session
+* [x] **P0-30** Implement package-manager capability probe
+* [x] **P0-31** Detect `clear --cache-only`
+* [x] **P0-32** Detect `trim-caches`
+* [x] **P0-33** Display capability results on diagnostic screen
+* [x] **P0-34** Cache capabilities for current Shizuku session
 
 ## Cache clearing safety test
 

@@ -13,6 +13,10 @@ class CacheOpsUserService : ICacheOpsService.Stub() {
         CapabilityProbe.probeRuntimeCapabilities()
     }
 
+    override fun destroy() {
+        kotlin.system.exitProcess(0)
+    }
+
     override fun getProtocolVersion(): Int = 1
 
     override fun getPrivilegedUid(): Int = Process.myUid()

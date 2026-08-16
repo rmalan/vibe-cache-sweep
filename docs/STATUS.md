@@ -3,7 +3,7 @@
 **Last updated:** 2026-08-16
 **Overall status:** In progress
 **Current phase:** Phase 0 — Technical Feasibility
-**Current task:** P0-25 through P0-29 — Privileged Backend Verification (AIDL & UserService)
+**Current task:** P0-35 through P0-44 — Cache Clearing Safety Test
 
 ---
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P0-25 through P0-29 — Privileged Backend Verification (AIDL & UserService)
+## P0-35 through P0-44 — Cache Clearing Safety Test
 
 **Status:** Ready to start
 
 ### Objective
 
-Verify typed privileged AIDL communication between the application process and `CacheOpsUserService`, ensuring no arbitrary shell APIs are exposed and privileged operations are strictly typed.
+Verify that executing selective cache clearing using `--cache-only` via the privileged UserService safely reduces application cache without deleting or corrupting application data, SharedPreferences, or SQLite databases.
 
 ### Expected outcome
 
-Application successfully communicates with `CacheOpsUserService` over AIDL, invokes typed methods, and handles errors safely.
+A test package with populated cache and data files is targeted with `clearPackageCache`, resulting in cache deletion while verifying user data and database entries remain completely intact.
 
 ---
 
@@ -80,6 +80,22 @@ Application successfully communicates with `CacheOpsUserService` over AIDL, invo
 * [x] P0-23 Privileged UID retrieval implemented (`Shizuku.getUid()` and `ICacheOpsService.getPrivilegedUid()`)
 * [x] P0-24 Shizuku connection and shell UID verified on physical device (Samsung SM-A346E): Shizuku server running, permission requested and granted, State = `Ready (UID 2000)`
 
+## Privileged Backend (AIDL & UserService) (P0-25 to P0-29)
+
+* [x] P0-25 Minimal typed AIDL interface defined (`ICacheOpsService.aidl`) with `destroy() = 16777114`, `getProtocolVersion()`, `getPrivilegedUid()`, `supportsSelectiveCacheClear()`, `supportsGlobalTrim()`, `clearPackageCache()`, `trimCaches()`, `getLastError()`
+* [x] P0-26 Shizuku `CacheOpsUserService` implemented running under privileged shell process with clean process termination on destroy (D-026) and input validation
+* [x] P0-27 Application bound to UserService via `ShizukuManager.bindUserService` with reactive `userServiceConnected` state flow and async helper `getOrAwaitService`
+* [x] P0-28 Typed privileged IPC calls verified live on physical device: IPC connected successfully, returning protocol version `1` and privileged UID `2000 (shell/adb)`
+* [x] P0-29 Arbitrary shell execution strictly prohibited and verified with reflection security audit unit test (`CacheOpsUserServiceSecurityTest`)
+
+## Capability Detection (P0-30 to P0-34)
+
+* [x] P0-30 Package-manager capability probe implemented (`CapabilityProbe.probeRuntimeCapabilities()`) parsing runtime `pm help`
+* [x] P0-31 `clear --cache-only` support detected and verified on physical Android 16 device (SUPPORTED)
+* [x] P0-32 `trim-caches` support detected and verified on physical Android 16 device (SUPPORTED)
+* [x] P0-33 Capability results displayed in real-time on diagnostic Compose screen
+* [x] P0-34 Capabilities cached per session in `CacheOpsUserService` and `ShizukuManager`
+
 ---
 
 # Phase 0 Progress
@@ -108,11 +124,11 @@ Application successfully communicates with `CacheOpsUserService` over AIDL, invo
 
 ## Privileged backend
 
-* [ ] P0-25 through P0-29
+* [x] P0-25 through P0-29
 
 ## Capability detection
 
-* [ ] P0-30 through P0-34
+* [x] P0-30 through P0-34
 
 ## Cache safety test
 
@@ -145,7 +161,7 @@ Domain / Coordinator
               |
          UserService
               |
-       Android package manager
+        Android package manager
 ```
 
 Expected cleaning capabilities:
@@ -168,7 +184,7 @@ Global Android cache trimming:
 pm trim-caches <DESIRED_FREE_SPACE>
 ```
 
-These capabilities still require validation on the target physical device.
+Both capabilities were confirmed **SUPPORTED** on physical Android 16 test device.
 
 ---
 
@@ -201,7 +217,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk generated
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (28/28 unit tests passed across 7 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (34/34 unit tests passed across 8 test suites).
 ```
 
 ---
@@ -217,13 +233,15 @@ Validation items:
 * [x] StatFs storage snapshot verified (Total, Used, Free accurately reported)
 * [x] StorageStats returns useful package cache information (542 apps scanned in 840ms, 15.99 GB total reported cache)
 * [x] Single package StorageStats inspector verified with app/cache/data/total size breakdown
-* [x] Shizuku starts successfully (PID 10529)
+* [x] Shizuku starts successfully (PID 17372)
 * [x] CacheSweep Shizuku permission works (Requested and granted in Shizuku UI)
 * [x] Shizuku privileged UID identified (UID 2000 confirmed, state `Ready (UID 2000)`)
-* [ ] `clear --cache-only` capability detected
-* [ ] Selective cache clearing tested safely
+* [x] Privileged UserService bound and connected over AIDL (`BOUND & CONNECTED`)
+* [x] Typed privileged AIDL IPC ping verified (Protocol 1, UID 2000)
+* [x] `clear --cache-only` capability detected (SUPPORTED)
+* [x] `trim-caches` capability detected (SUPPORTED)
+* [ ] Selective cache clearing tested safely (app data preserved)
 * [ ] App data verified intact
-* [ ] `trim-caches` capability detected
 * [ ] Global trimming tested
 
 ---
@@ -250,7 +268,7 @@ Current implementation follows `TECH_SPEC.md`.
 
 # Most Recent Completed Task
 
-**P0-17 through P0-24 — Shizuku Connection and Privileged UID Validation**
+**P0-25 through P0-34 — Privileged Backend (AIDL & UserService) & Capability Detection Verification**
 
 ---
 
@@ -258,9 +276,9 @@ Current implementation follows `TECH_SPEC.md`.
 
 Implement / Verify:
 
-**P0-25 through P0-29 — Privileged backend verification (AIDL & UserService)**
+**P0-35 through P0-44 — Cache clearing safety test (disposable test fixture, cache generation, data preservation verification)**
 
 Then continue with:
 
-* P0-30 through P0-34: Capability detection
-* P0-35 through P0-44: Cache clearing safety test
+* P0-45 through P0-49: Global cache trimming
+* Phase 0 Gate verification

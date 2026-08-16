@@ -5,13 +5,25 @@ import android.content.Context
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 import my.id.rmalan.cache.sweep.BuildConfig
 import my.id.rmalan.cache.sweep.model.CleanerCapabilities
 import my.id.rmalan.cache.sweep.model.ShizukuState
 import rikka.shizuku.Shizuku
+
+data class PrivilegedBackendInfo(
+    val connected: Boolean,
+    val protocolVersion: Int? = null,
+    val privilegedUid: Int? = null,
+    val selectiveClearSupported: Boolean = false,
+    val globalTrimSupported: Boolean = false,
+    val lastError: String? = null
+)
 
 class ShizukuManager(
     private val context: Context
@@ -23,6 +35,9 @@ class ShizukuManager(
     private val _state = MutableStateFlow<ShizukuState>(ShizukuState.NotRunning)
     val state: StateFlow<ShizukuState> = _state.asStateFlow()
 
+    private val _userServiceConnected = MutableStateFlow(false)
+    val userServiceConnected: StateFlow<Boolean> = _userServiceConnected.asStateFlow()
+
     @Volatile
     private var cacheOpsService: ICacheOpsService? = null
 
@@ -32,6 +47,7 @@ class ShizukuManager(
 
     private val binderDeadListener = Shizuku.OnBinderDeadListener {
         cacheOpsService = null
+        _userServiceConnected.value = false
         _state.value = ShizukuState.NotRunning
     }
 
@@ -50,11 +66,13 @@ class ShizukuManager(
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             if (service != null) {
                 cacheOpsService = ICacheOpsService.Stub.asInterface(service)
+                _userServiceConnected.value = true
             }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             cacheOpsService = null
+            _userServiceConnected.value = false
         }
     }
 
@@ -123,6 +141,61 @@ class ShizukuManager(
         return cacheOpsService
     }
 
+    suspend fun getOrAwaitService(timeoutMs: Long = 3000): ICacheOpsService? {
+        if (cacheOpsService != null) return cacheOpsService
+        ensureServiceBound()
+        if (cacheOpsService != null) return cacheOpsService
+
+        val start = System.currentTimeMillis()
+        while (cacheOpsService == null && (System.currentTimeMillis() - start) < timeoutMs) {
+            delay(50)
+        }
+        return cacheOpsService
+    }
+
+    suspend fun fetchCapabilities(timeoutMs: Long = 3000): CleanerCapabilities = withContext(Dispatchers.IO) {
+        val isPing = try { Shizuku.pingBinder() } catch (e: Exception) { false }
+        val isGranted = isPing && try { Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED } catch (e: Exception) { false }
+        val uid = if (isGranted) {
+            try { Shizuku.getUid() } catch (e: Exception) { null }
+        } else null
+
+        val service = if (isGranted) getOrAwaitService(timeoutMs) else null
+        val supportsSelective = try { service?.supportsSelectiveCacheClear() ?: false } catch (e: Exception) { false }
+        val supportsTrim = try { service?.supportsGlobalTrim() ?: false } catch (e: Exception) { false }
+
+        CleanerCapabilities(
+            shizukuAvailable = isPing,
+            shizukuAuthorized = isGranted,
+            privilegedUid = uid,
+            supportsSelectiveCacheClear = supportsSelective,
+            supportsGlobalTrim = supportsTrim
+        )
+    }
+
+    suspend fun pingPrivilegedBackend(timeoutMs: Long = 3000): PrivilegedBackendInfo = withContext(Dispatchers.IO) {
+        val service = getOrAwaitService(timeoutMs)
+        if (service == null) {
+            PrivilegedBackendInfo(connected = false, lastError = "UserService not bound or not responding")
+        } else {
+            try {
+                PrivilegedBackendInfo(
+                    connected = true,
+                    protocolVersion = service.protocolVersion,
+                    privilegedUid = service.privilegedUid,
+                    selectiveClearSupported = service.supportsSelectiveCacheClear(),
+                    globalTrimSupported = service.supportsGlobalTrim(),
+                    lastError = service.lastError.ifBlank { null }
+                )
+            } catch (e: Exception) {
+                PrivilegedBackendInfo(
+                    connected = false,
+                    lastError = e.message ?: "IPC call failed"
+                )
+            }
+        }
+    }
+
     fun getCapabilities(): CleanerCapabilities {
         val isPing = try { Shizuku.pingBinder() } catch (e: Exception) { false }
         val isGranted = isPing && try { Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED } catch (e: Exception) { false }
@@ -156,3 +229,4 @@ class ShizukuManager(
         }
     }
 }
+

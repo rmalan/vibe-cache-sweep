@@ -578,6 +578,26 @@ Preserves the project configuration created by the user and ensures consistency 
 
 All internal package imports, AIDL declarations, and manifest references use `my.id.rmalan.cache.sweep`.
 
+# D-026 — Implement Shizuku UserService lifecycle with explicit AIDL destroy transaction
+
+**Status:** Accepted
+
+## Context
+
+Shizuku's `UserService` contract uses transaction code `16777114` in AIDL for its `destroy()` method when `unbindUserService(..., remove = true)` is invoked. Without an explicit destroy method, the remote user service process cannot be killed cleanly upon unbinding.
+
+## Decision
+
+Include `void destroy() = 16777114;` in `ICacheOpsService.aidl` and implement `destroy()` in `CacheOpsUserService` by exiting the process (`kotlin.system.exitProcess(0)`).
+
+## Reason
+
+Ensures clean lifecycle termination of the privileged UserService process when unbinding, avoiding lingering background processes.
+
+## Consequences
+
+The privileged service terminates gracefully when CacheSweep unbinds or closes.
+
 ---
 
 # New Decision Template
@@ -611,4 +631,5 @@ What becomes easier, harder, enabled, or restricted?
 If applicable:
 
 `D-XXX`
+
 
