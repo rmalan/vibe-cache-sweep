@@ -79,8 +79,7 @@ fun OnboardingScreen(
     usageAccessManager: UsageAccessManager,
     shizukuManager: ShizukuManager,
     onFinishOnboarding: () -> Unit,
-    modifier: Modifier = Modifier,
-    onSkipToDiagnostic: (() -> Unit)? = null
+    modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -113,16 +112,6 @@ fun OnboardingScreen(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Previous step"
                             )
-                        }
-                    }
-                },
-                actions = {
-                    if (onSkipToDiagnostic != null) {
-                        TextButton(
-                            onClick = onSkipToDiagnostic,
-                            modifier = Modifier.heightIn(min = 48.dp)
-                        ) {
-                            Text("Diagnostics")
                         }
                     }
                 }

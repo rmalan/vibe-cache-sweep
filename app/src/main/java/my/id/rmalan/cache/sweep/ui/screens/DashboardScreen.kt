@@ -23,7 +23,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Security
@@ -93,7 +92,6 @@ fun DashboardScreen(
     shizukuManager: ShizukuManager,
     packageRepository: PackageRepository? = null,
     onOpenAppList: () -> Unit,
-    onOpenDiagnostic: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -139,12 +137,6 @@ fun DashboardScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = onOpenDiagnostic) {
-                        Icon(
-                            imageVector = Icons.Outlined.BugReport,
-                            contentDescription = "Diagnostics"
-                        )
-                    }
                     IconButton(onClick = onOpenSettings) {
                         Icon(
                             imageVector = Icons.Outlined.Settings,

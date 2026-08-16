@@ -21,7 +21,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import my.id.rmalan.cache.sweep.model.ThemeMode
 import my.id.rmalan.cache.sweep.ui.screens.AppCacheListScreen
 import my.id.rmalan.cache.sweep.ui.screens.DashboardScreen
-import my.id.rmalan.cache.sweep.ui.screens.DiagnosticScreen
 import my.id.rmalan.cache.sweep.ui.screens.OnboardingScreen
 import my.id.rmalan.cache.sweep.ui.screens.SettingsScreen
 import my.id.rmalan.cache.sweep.ui.theme.CacheSweepTheme
@@ -34,7 +33,6 @@ import my.id.rmalan.cache.sweep.ui.viewmodel.SettingsViewModel
 enum class MainDestination {
     ONBOARDING,
     DASHBOARD,
-    DIAGNOSTIC,
     APP_CACHE_LIST,
     SETTINGS
 }
@@ -94,9 +92,6 @@ class MainActivity : ComponentActivity() {
                                 shizukuManager = app.container.shizukuManager,
                                 onFinishOnboarding = {
                                     currentDestination = MainDestination.DASHBOARD
-                                },
-                                onSkipToDiagnostic = {
-                                    currentDestination = MainDestination.DIAGNOSTIC
                                 }
                             )
                         }
@@ -123,26 +118,8 @@ class MainActivity : ComponentActivity() {
                                 onOpenAppList = {
                                     currentDestination = MainDestination.APP_CACHE_LIST
                                 },
-                                onOpenDiagnostic = {
-                                    currentDestination = MainDestination.DIAGNOSTIC
-                                },
                                 onOpenSettings = {
                                     currentDestination = MainDestination.SETTINGS
-                                }
-                            )
-                        }
-
-                        MainDestination.DIAGNOSTIC -> {
-                            BackHandler {
-                                currentDestination = MainDestination.DASHBOARD
-                            }
-                            DiagnosticScreen(
-                                container = app.container,
-                                onOpenAppList = {
-                                    currentDestination = MainDestination.APP_CACHE_LIST
-                                },
-                                onOpenOnboarding = {
-                                    currentDestination = MainDestination.ONBOARDING
                                 }
                             )
                         }

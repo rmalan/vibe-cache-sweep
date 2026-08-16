@@ -169,25 +169,4 @@ class AndroidManifestSecurityAuditTest {
         assertEquals("android.permission.INTERACT_ACROSS_USERS_FULL", permission)
         assertEquals("false", multiprocess)
     }
-
-    @Test
-    fun fixtureManifest_doesNotRequestInternetAndDisablesBackup() {
-        val root = getProjectRoot()
-        val manifestFile = File(root, "fixture/src/main/AndroidManifest.xml")
-        val doc = parseManifest(manifestFile)
-
-        val permissionNodes = doc.getElementsByTagName("uses-permission")
-        for (i in 0 until permissionNodes.length) {
-            val element = permissionNodes.item(i) as Element
-            val permName = element.getAttribute("android:name")
-            assertFalse(
-                "Fixture must not request INTERNET permission",
-                permName.equals("android.permission.INTERNET", ignoreCase = true)
-            )
-        }
-
-        val appNodes = doc.getElementsByTagName("application")
-        val appElement = appNodes.item(0) as Element
-        assertEquals("false", appElement.getAttribute("android:allowBackup"))
-    }
 }

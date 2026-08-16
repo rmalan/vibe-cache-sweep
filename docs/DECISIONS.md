@@ -339,3 +339,30 @@ Prevents command timeouts and failed cleanup attempts on Android non-root device
 ## Consequences
 
 CacheSweep operates reliably on non-root Shizuku configurations with instantaneous global cache trimming, while selective single/multi-app cleaning is safely capability-gated.
+
+---
+
+# D-032 — Retirement of Phase 0 Fixture Subproject & Diagnostic Spike Screen
+
+**Status:** Accepted
+
+## Context
+
+During Phase 0 (Technical Feasibility), a secondary Gradle subproject `:fixture` (`my.id.rmalan.cache.fixture`) and a developer `DiagnosticScreen` workbench were implemented to validate Shizuku Binder communication, measure storage with `StorageStatsManager`, probe `pm` capabilities, and execute disposable safety tests against dummy test cache without endangering real app data.
+
+Now that Phase 0 through Phase 4 are completed and the full production UI (Onboarding, Dashboard, App Cache List, Cleaning Progress, Cleanup Result, Settings) is in place and verified, the test fixture subproject and diagnostic screen are no longer needed.
+
+## Decision
+
+1. Remove `:fixture` subproject from `settings.gradle.kts` and delete the `fixture/` directory.
+2. Remove `DiagnosticScreen.kt`, `SafetyTestManager.kt`, and `SafetyTestManagerTest.kt`.
+3. Simplify `MainActivity` destinations and remove diagnostic debug action triggers from `DashboardScreen` and `OnboardingScreen`.
+4. Update codebase security audits and command tests to audit the single production `:app` module.
+
+## Reason
+
+Adheres to simplicity guidelines ("stupid simple code"), eliminates dead spike code and developer bypass buttons from production UI, reduces APK bundle size, and streamlines the Gradle project into a single `:app` module.
+
+## Consequences
+
+Single-module project structure with faster build times, cleaner UI navigation, and zero dead code while retaining all strict safety and security invariants.

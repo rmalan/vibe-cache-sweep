@@ -38,7 +38,7 @@ class PackageCommandsTest {
             Pair("com.google.android.youtube", 0),
             Pair("org.mozilla.firefox", 10),
             Pair("a.b.c", 999),
-            Pair("my.id.rmalan.cache.fixture", 0),
+            Pair("com.example.app", 0),
             Pair("com.test_app.foo_bar", Int.MAX_VALUE)
         )
 

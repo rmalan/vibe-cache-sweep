@@ -414,7 +414,7 @@ These must not be violated.
 # Build Status
 
 ```text
-SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixture-debug.apk generated).
+SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk generated).
 ```
 
 ---
@@ -422,7 +422,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (218/218 unit tests passed across 40 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (214/214 unit tests passed across 39 test suites).
 ```
 
 ---
@@ -460,18 +460,19 @@ None.
 
 # Architecture Deviations
 
-None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (including D-027 and D-031).
+None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (including D-027, D-031, and D-032).
 
 ---
 
 # Most Recent Completed Task
 
-**Capability Probe Gating & Live Device Verification on Android 16 (Samsung SM-A346E)**
+**Retirement of Phase 0 Fixture & Diagnostic Spike (D-032)**
 
-* Fixed `CapabilityProbe` to gate `supportsSelectiveCacheClear` strictly behind root privilege (`Process.myUid() == 0`), preventing UID 2000 timeouts from PMS `INTERNAL_DELETE_CACHE_FILES` checks.
-* Updated `AppCacheListScreen` and `DashboardScreen` to seamlessly default to Global Cache Trimming on non-root Shizuku sessions while preserving per-app storage inspection and native Settings shortcuts.
-* Verified all unit tests passing (218/218 across 40 test suites).
-* Verified end-to-end on physical Android 16 device over ADB wireless: scanning 543 apps, executing global cache trim, and viewing application details.
+* Removed `:fixture` standalone test subproject and deleted `fixture/` directory.
+* Removed `DiagnosticScreen.kt`, `SafetyTestManager.kt`, and `SafetyTestManagerTest.kt`.
+* Cleaned `MainActivity` destination routing, `DashboardScreen` top bar, and `OnboardingScreen` header.
+* Streamlined Gradle project into a single `:app` module.
+* Verified clean build and 214/214 unit tests passing across 39 test suites.
 
 ---
 

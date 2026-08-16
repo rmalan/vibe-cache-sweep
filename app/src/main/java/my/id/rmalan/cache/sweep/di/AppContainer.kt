@@ -59,7 +59,4 @@ class AppContainer(
             packageRepository = packageRepository,
             historyRepository = cleanupHistoryRepository
         )
-
-    val safetyTestManager =
-        my.id.rmalan.cache.sweep.cleaner.SafetyTestManager(context)
 }

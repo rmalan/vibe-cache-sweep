@@ -36,8 +36,7 @@ class CodebaseSecurityAuditTest {
         assertTrue("Project root should exist", root.exists())
 
         val sourceDirs = listOf(
-            File(root, "app/src/main"),
-            File(root, "fixture/src/main")
+            File(root, "app/src/main")
         )
 
         val forbiddenShellPatterns = listOf(
@@ -73,8 +72,7 @@ class CodebaseSecurityAuditTest {
     fun codebase_hasNoRuntimeExecInProductionCode() {
         val root = getProjectRoot()
         val sourceDirs = listOf(
-            File(root, "app/src/main"),
-            File(root, "fixture/src/main")
+            File(root, "app/src/main")
         )
 
         val violations = mutableListOf<String>()
