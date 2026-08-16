@@ -16,6 +16,17 @@
       </SelectionState>
       <SelectionState runConfigName="main">
         <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-08-16T10:25:03.940505854Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=RRCW3048XGL" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="fixture">
+        <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-08-16T09:49:30.179092951Z">
           <Target type="DEFAULT_BOOT">
             <handle>

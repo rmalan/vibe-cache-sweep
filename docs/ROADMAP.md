@@ -290,12 +290,12 @@ Phase 0 is complete only when:
 
 ## Dashboard
 
-* [ ] **P4-05** Device storage visualization
-* [ ] **P4-06** Aggregate cache summary
-* [ ] **P4-07** Largest cache consumers
-* [ ] **P4-08** Shizuku status
-* [ ] **P4-09** Last scan information
-* [ ] **P4-10** Primary cleanup action
+* [x] **P4-05** Device storage visualization
+* [x] **P4-06** Aggregate cache summary
+* [x] **P4-07** Largest cache consumers
+* [x] **P4-08** Shizuku status
+* [x] **P4-09** Last scan information
+* [x] **P4-10** Primary cleanup action
 
 ## Settings
 

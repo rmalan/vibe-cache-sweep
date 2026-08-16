@@ -3,7 +3,7 @@
 **Last updated:** 2026-08-16
 **Overall status:** In progress
 **Current phase:** Phase 4 (Product UI & Persistence) — In progress
-**Current task:** P4-05 through P4-10 — Dashboard Screen & Storage Visualizations
+**Current task:** P4-11 through P4-15 — Settings Screen & Preferences
 
 ---
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P4-05 through P4-10 — Dashboard Screen & Storage Visualizations
+## P4-11 through P4-15 — Settings Screen & Preferences
 
 **Status:** Ready to start
 
 ### Objective
 
-Implement the primary product dashboard screen: device storage visualization (total, used, free bar), aggregate application cache summary, largest cache consumers list, live Shizuku status indicator, last scan metadata, and primary one-tap cache cleanup action trigger.
+Implement the product settings screen: show system apps preference toggle, show zero-cache apps preference toggle, default sort preference picker, theme mode selector (System, Light, Dark), local history management, and integration with `UserSettingsRepository`.
 
 ### Expected outcome
 
-A clean, transparent Material 3 dashboard screen fulfilling PRD FR-001, FR-008, FR-009, and providing effortless navigation to detailed app cache lists and settings.
+A clean Material 3 Settings screen bound to DataStore preferences allowing users to configure scanner filters, sorting defaults, and theme appearance.
 
 ---
 
@@ -221,7 +221,7 @@ A clean, transparent Material 3 dashboard screen fulfilling PRD FR-001, FR-008, 
 * [x] P3-16 Cleanup result screen implemented (`CleanupResultScreen`) displaying physical storage before/after metrics, reported cache before/after metrics, significance evaluation, duration, and educational disclaimer
 * [x] P3-17 Expandable partial failures section implemented (`PartialFailuresSection`) displaying failed packages with app icons, display names, and attributed failure reasons
 * [x] `CleanerViewModel` implemented and wired to `AppCacheListScreen` with multi-select cleaning, single-app clearing from bottom sheet, and result dismissal refresh
-* [x] Comprehensive unit tests added in `CleanerViewModelTest` and `CleanupScreensFormattingTest` (12 new tests)
+* [x] Comprehensive unit tests added in `CleanerViewModelTest` and `CleanupScreensFormattingTest`
 
 ## Onboarding Flow & First Launch Experience (P4-01 to P4-04)
 
@@ -233,6 +233,18 @@ A clean, transparent Material 3 dashboard screen fulfilling PRD FR-001, FR-008, 
 * [x] `OnboardingViewModel` implemented with multi-step progression, bounds protection, live status checks, and completion event handling
 * [x] Dynamic destination routing configured in `MainActivity` defaulting to Onboarding on first launch and transitioning to `AppCacheListScreen` upon completion
 * [x] Comprehensive unit tests added in `UserSettingsRepositoryTest`, `OnboardingViewModelTest`, and `OnboardingFormattingTest` (17 new tests); 188/188 tests passing across 34 test suites
+
+## Dashboard Screen & Storage Visualizations (P4-05 to P4-10)
+
+* [x] P4-05 Device storage visualization implemented (`DeviceStorageCard` in `DashboardScreen.kt`) with used/available values, storage bar, and percentage calculation conforming to PRD FR-001
+* [x] P4-06 Aggregate cache summary implemented (`ApplicationCacheCard`) with estimated cache headline, scanned vs measured apps count, and educational disclaimer
+* [x] P4-07 Largest cache consumers preview implemented (`LargestCachesCard`) displaying top 5 cache consumers with app icons, names, cache sizes, bottom sheet inspection, and "View all apps →" navigation
+* [x] P4-08 Live Shizuku connection status card implemented (`ShizukuStatusCard`) handling Ready (UID 2000), Permission Required (with grant action), Not Running (with open/check actions), Connecting, and Error states conforming to PRD FR-008
+* [x] P4-09 Last scan metadata display implemented with relative time ("Just now", "X minutes ago", "Yesterday") and scan duration formatting (`DashboardTimeFormatter`)
+* [x] P4-10 Primary hero cleanup action implemented (`PrimaryCleanupHero`) with one-tap trigger initiating CleanupCoordinator workflow (Confirmation dialog -> Progress -> Result screen)
+* [x] `DashboardViewModel` implemented with immediate device storage snapshotting (sub-500ms initial render), reactive Shizuku state observation, and progressive scan flow
+* [x] `MainActivity` updated with `MainDestination.DASHBOARD` as default post-onboarding screen with seamless navigation between Dashboard, App Cache List, Diagnostics, and Onboarding
+* [x] Added 9 unit tests across `DashboardViewModelTest` and `DashboardFormattingTest`; 197/197 unit tests passing across 36 test suites
 
 ---
 
@@ -289,15 +301,17 @@ A clean, transparent Material 3 dashboard screen fulfilling PRD FR-001, FR-008, 
 The intended architecture is:
 
 ```text
-Compose UI (AppCacheListScreen / DiagnosticScreen / CleaningProgressScreen / CleanupResultScreen)
+Compose UI (DashboardScreen / AppCacheListScreen / DiagnosticScreen / CleaningProgressScreen / CleanupResultScreen / SettingsScreen)
     |
-ViewModels (AppsViewModel / CleanerViewModel)
+ViewModels (DashboardViewModel / AppsViewModel / CleanerViewModel / OnboardingViewModel / SettingsViewModel)
     |
 Domain / Coordinator (CleanupCoordinator)
     |
     +---- PackageRepository (Package discovery, icons, system classification)
     |
     +---- StorageStatsRepository (Per-app cache & storage stats)
+    |
+    +---- UserSettingsRepository (DataStore preferences & settings persistence)
     |
     +---- CacheCleaner
               |
@@ -361,7 +375,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (188/188 unit tests passed across 34 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (197/197 unit tests passed across 36 test suites).
 ```
 
 ---
@@ -410,16 +424,17 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P4-01 through P4-04 — Onboarding Flow & First Launch Experience (Phase 4 — Product UI & Persistence)**
+**P4-05 through P4-10 — Dashboard Screen & Storage Visualizations (Phase 4 — Product UI & Persistence)**
 
-* Built welcome screen `WelcomeStepContent` conforming to PRD with transparent branding and value proposition cards (`P4-01`)
-* Built Usage Access onboarding screen `UsageAccessStepContent` with educational explanation, privacy guarantee, status indicator, and direct settings intent with `LifecycleResumeEffect` auto-refresh (`P4-02`)
-* Built Shizuku onboarding screen `ShizukuStepContent` with live connection monitoring, permission requests, launch intent, and manual inspection fallback explanation (`P4-03`)
-* Built first scan flow `FirstScanStepContent` with readiness summary, initiating scan, and persisting completion state in DataStore (`P4-04`)
-* Implemented `UserSettings` model, `UserSettingsRepository`, and `DataStoreUserSettingsRepository` backed by AndroidX DataStore (D-028)
-* Implemented `OnboardingViewModel` with multi-step progression, bounds protection, live status checks, and completion event handling
-* Wired dynamic destination routing in `MainActivity` based on persistent onboarding completion state
-* Added 17 unit tests across `UserSettingsRepositoryTest`, `OnboardingViewModelTest`, and `OnboardingFormattingTest`; 188/188 tests passing across 34 test suites
+* Built device storage visualization bar and metrics (`DeviceStorageCard`) fulfilling PRD FR-001 (`P4-05`)
+* Built aggregate application cache summary (`ApplicationCacheCard`) with estimated cache headline, scanned/measured metrics, and educational notice (`P4-06`)
+* Built largest cache consumers preview list (`LargestCachesCard`) with app icons, cache sizes, bottom sheet inspection, and "View all apps →" navigation (`P4-07`)
+* Built live Shizuku connection status card (`ShizukuStatusCard`) handling Ready (UID 2000), Permission Required (with grant action), Not Running (with open/check actions), Connecting, and Error states conforming to PRD FR-008 (`P4-08`)
+* Built last scan metadata display with relative time formatting ("Just now", "X minutes ago", "Yesterday") and scan duration (`DashboardTimeFormatter`) (`P4-09`)
+* Implemented primary one-tap cache cleanup action trigger (`PrimaryCleanupHero`) integrating with `CleanupCoordinator` workflow (Confirmation dialog -> Progress -> Result screen) (`P4-10`)
+* Implemented `DashboardViewModel` with immediate storage snapshotting for sub-500ms initial render, reactive Shizuku observation, and progressive scan flow
+* Updated `MainActivity` with `MainDestination.DASHBOARD` as default post-onboarding destination with hierarchical navigation
+* Added 9 unit tests across `DashboardViewModelTest` and `DashboardFormattingTest`; 197/197 unit tests passing across 36 test suites
 
 ---
 
@@ -427,12 +442,11 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P4-05 through P4-10 — Dashboard Screen & Storage Visualizations (Phase 4 — Product UI & Persistence)**
+**P4-11 through P4-15 — Settings Screen & Preferences (Phase 4 — Product UI & Persistence)**
 
-* Build device storage visualization bar and stats (`P4-05`)
-* Build aggregate cache summary section (`P4-06`)
-* Build top/largest cache consumers preview list (`P4-07`)
-* Build Shizuku connection status card (`P4-08`)
-* Build last scan metadata display (`P4-09`)
-* Implement primary one-tap cache cleanup action trigger (`P4-10`)
-
+* Build Settings screen UI (`SettingsScreen.kt`) (`P4-11` - `P4-15`)
+* Implement show system apps preference toggle (`P4-11`)
+* Implement show zero-cache apps preference toggle (`P4-12`)
+* Implement default sort preference picker (`P4-13`)
+* Implement theme mode preference selector (`P4-14`)
+* Implement local history / cache reset option (`P4-15`)

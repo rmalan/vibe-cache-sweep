@@ -18,15 +18,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import my.id.rmalan.cache.sweep.ui.screens.AppCacheListScreen
+import my.id.rmalan.cache.sweep.ui.screens.DashboardScreen
 import my.id.rmalan.cache.sweep.ui.screens.DiagnosticScreen
 import my.id.rmalan.cache.sweep.ui.screens.OnboardingScreen
 import my.id.rmalan.cache.sweep.ui.theme.CacheSweepTheme
 import my.id.rmalan.cache.sweep.ui.viewmodel.AppsViewModel
 import my.id.rmalan.cache.sweep.ui.viewmodel.CleanerViewModel
+import my.id.rmalan.cache.sweep.ui.viewmodel.DashboardViewModel
 import my.id.rmalan.cache.sweep.ui.viewmodel.OnboardingViewModel
 
 enum class MainDestination {
     ONBOARDING,
+    DASHBOARD,
     DIAGNOSTIC,
     APP_CACHE_LIST
 }
@@ -56,7 +59,7 @@ class MainActivity : ComponentActivity() {
                     var currentDestination by remember(initialSettings.onboardingCompleted) {
                         mutableStateOf(
                             if (initialSettings.onboardingCompleted) {
-                                MainDestination.APP_CACHE_LIST
+                                MainDestination.DASHBOARD
                             } else {
                                 MainDestination.ONBOARDING
                             }
@@ -77,7 +80,7 @@ class MainActivity : ComponentActivity() {
                                 usageAccessManager = app.container.usageAccessManager,
                                 shizukuManager = app.container.shizukuManager,
                                 onFinishOnboarding = {
-                                    currentDestination = MainDestination.APP_CACHE_LIST
+                                    currentDestination = MainDestination.DASHBOARD
                                 },
                                 onSkipToDiagnostic = {
                                     currentDestination = MainDestination.DIAGNOSTIC
@@ -85,7 +88,38 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        MainDestination.DASHBOARD -> {
+                            val dashboardViewModel: DashboardViewModel = viewModel(
+                                factory = DashboardViewModel.Factory(
+                                    deviceStorageRepository = app.container.deviceStorageRepository,
+                                    cacheScanner = app.container.cacheScanner,
+                                    shizukuManager = app.container.shizukuManager
+                                )
+                            )
+                            val cleanerViewModel: CleanerViewModel = viewModel(
+                                factory = CleanerViewModel.Factory(
+                                    coordinator = app.container.cleanupCoordinator,
+                                    shizukuManager = app.container.shizukuManager
+                                )
+                            )
+                            DashboardScreen(
+                                viewModel = dashboardViewModel,
+                                cleanerViewModel = cleanerViewModel,
+                                shizukuManager = app.container.shizukuManager,
+                                packageRepository = app.container.packageRepository,
+                                onOpenAppList = {
+                                    currentDestination = MainDestination.APP_CACHE_LIST
+                                },
+                                onOpenDiagnostic = {
+                                    currentDestination = MainDestination.DIAGNOSTIC
+                                }
+                            )
+                        }
+
                         MainDestination.DIAGNOSTIC -> {
+                            BackHandler {
+                                currentDestination = MainDestination.DASHBOARD
+                            }
                             DiagnosticScreen(
                                 container = app.container,
                                 onOpenAppList = {
@@ -99,7 +133,7 @@ class MainActivity : ComponentActivity() {
 
                         MainDestination.APP_CACHE_LIST -> {
                             BackHandler {
-                                currentDestination = MainDestination.DIAGNOSTIC
+                                currentDestination = MainDestination.DASHBOARD
                             }
                             val appsViewModel: AppsViewModel = viewModel(
                                 factory = AppsViewModel.Factory(
@@ -118,7 +152,7 @@ class MainActivity : ComponentActivity() {
                                 cleanerViewModel = cleanerViewModel,
                                 packageRepository = app.container.packageRepository,
                                 onNavigateBack = {
-                                    currentDestination = MainDestination.DIAGNOSTIC
+                                    currentDestination = MainDestination.DASHBOARD
                                 }
                             )
                         }
