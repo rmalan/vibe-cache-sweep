@@ -25,6 +25,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -55,7 +56,8 @@ import my.id.rmalan.cache.sweep.util.ByteFormatter
 fun DiagnosticScreen(
     container: AppContainer,
     modifier: Modifier = Modifier,
-    onOpenAppList: (() -> Unit)? = null
+    onOpenAppList: (() -> Unit)? = null,
+    onOpenOnboarding: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -83,10 +85,7 @@ fun DiagnosticScreen(
     fun refreshAll() {
         hasUsageAccess = container.usageAccessManager.hasAccess()
         storageInfo = container.deviceStorageRepository.snapshot()
-        container.shizukuManager.updateState()
-        scope.launch {
-            capabilities = container.shizukuManager.fetchCapabilities()
-        }
+        capabilities = container.shizukuManager.getCapabilities()
     }
 
     LifecycleResumeEffect(Unit) {
@@ -99,6 +98,14 @@ fun DiagnosticScreen(
             TopAppBar(
                 title = { Text("CacheSweep Diagnostic Spike") },
                 actions = {
+                    if (onOpenOnboarding != null) {
+                        TextButton(
+                            onClick = onOpenOnboarding,
+                            modifier = Modifier.padding(end = 4.dp)
+                        ) {
+                            Text("Onboarding")
+                        }
+                    }
                     if (onOpenAppList != null) {
                         Button(
                             onClick = onOpenAppList,

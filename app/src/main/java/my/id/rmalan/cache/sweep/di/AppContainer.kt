@@ -55,4 +55,7 @@ class AppContainer(
 
     val safetyTestManager =
         my.id.rmalan.cache.sweep.cleaner.SafetyTestManager(context)
+
+    val userSettingsRepository: my.id.rmalan.cache.sweep.storage.UserSettingsRepository =
+        my.id.rmalan.cache.sweep.storage.DataStoreUserSettingsRepository(context)
 }

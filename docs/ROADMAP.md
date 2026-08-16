@@ -279,14 +279,14 @@ Phase 0 is complete only when:
 
 **Goal:** Turn the technical application into the complete CacheSweep product.
 
-**Phase status:** Blocked
+**Phase status:** In progress
 
 ## Onboarding
 
-* [ ] **P4-01** Welcome screen
-* [ ] **P4-02** Usage Access onboarding
-* [ ] **P4-03** Shizuku onboarding
-* [ ] **P4-04** First scan flow
+* [x] **P4-01** Welcome screen
+* [x] **P4-02** Usage Access onboarding
+* [x] **P4-03** Shizuku onboarding
+* [x] **P4-04** First scan flow
 
 ## Dashboard
 

@@ -2,8 +2,8 @@
 
 **Last updated:** 2026-08-16
 **Overall status:** In progress
-**Current phase:** Phase 4 (Product UI & Persistence) — Ready to start
-**Current task:** P4-01 through P4-04 — Onboarding Flow & First Launch Experience
+**Current phase:** Phase 4 (Product UI & Persistence) — In progress
+**Current task:** P4-05 through P4-10 — Dashboard Screen & Storage Visualizations
 
 ---
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P4-01 through P4-04 — Onboarding Flow & First Launch Experience
+## P4-05 through P4-10 — Dashboard Screen & Storage Visualizations
 
 **Status:** Ready to start
 
 ### Objective
 
-Implement the complete user onboarding and initial capability acquisition workflow: welcome screen with value proposition, contextual Usage Access authorization screen, Shizuku discovery and connection screen, and first scan flow initiation.
+Implement the primary product dashboard screen: device storage visualization (total, used, free bar), aggregate application cache summary, largest cache consumers list, live Shizuku status indicator, last scan metadata, and primary one-tap cache cleanup action trigger.
 
 ### Expected outcome
 
-Smooth first launch user experience introducing storage capabilities, transparent permission requests, and transitioning to dashboard.
+A clean, transparent Material 3 dashboard screen fulfilling PRD FR-001, FR-008, FR-009, and providing effortless navigation to detailed app cache lists and settings.
 
 ---
 
@@ -223,6 +223,17 @@ Smooth first launch user experience introducing storage capabilities, transparen
 * [x] `CleanerViewModel` implemented and wired to `AppCacheListScreen` with multi-select cleaning, single-app clearing from bottom sheet, and result dismissal refresh
 * [x] Comprehensive unit tests added in `CleanerViewModelTest` and `CleanupScreensFormattingTest` (12 new tests)
 
+## Onboarding Flow & First Launch Experience (P4-01 to P4-04)
+
+* [x] P4-01 Welcome screen implemented (`WelcomeStepContent` in `OnboardingScreen.kt`) with transparent branding, value proposition cards (Storage Visibility, Safe & Controlled, 100% Private & Local), and "Get Started" CTA
+* [x] P4-02 Usage Access onboarding implemented (`UsageAccessStepContent`) with educational explanation, privacy guarantee (no tracking or uploading), live granted/required state badge, and direct Android Settings intent with `LifecycleResumeEffect` auto-refresh
+* [x] P4-03 Shizuku onboarding implemented (`ShizukuStepContent`) explaining system-level cache trimming without root, live status monitoring (Ready, Permission Required, Connecting, Not Running, Error), "Grant Shizuku Permission" / "Open Shizuku" intents, and manual fallback clarification
+* [x] P4-04 First scan flow and setup summary implemented (`FirstScanStepContent`) reviewing permissions, initiating scan, and persisting completion state in DataStore
+* [x] UserSettings model (`UserSettings`, `ThemeMode`) and `UserSettingsRepository` / `DataStoreUserSettingsRepository` implemented for non-blocking preferences persistence (D-028)
+* [x] `OnboardingViewModel` implemented with multi-step progression, bounds protection, live status checks, and completion event handling
+* [x] Dynamic destination routing configured in `MainActivity` defaulting to Onboarding on first launch and transitioning to `AppCacheListScreen` upon completion
+* [x] Comprehensive unit tests added in `UserSettingsRepositoryTest`, `OnboardingViewModelTest`, and `OnboardingFormattingTest` (17 new tests); 188/188 tests passing across 34 test suites
+
 ---
 
 # Phase 0 Gate: PASSED
@@ -350,7 +361,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (171/171 unit tests passed across 31 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (188/188 unit tests passed across 34 test suites).
 ```
 
 ---
@@ -399,15 +410,16 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P3-14 through P3-17 — Cleanup Confirmation, Progress, Result Screens, and Partial Failures UI (Phase 3 — Cleanup Coordinator & Results)**
+**P4-01 through P4-04 — Onboarding Flow & First Launch Experience (Phase 4 — Product UI & Persistence)**
 
-* Built cleanup confirmation dialog `CleanupConfirmationDialog` conforming to PRD FR-009 with clear educational expectations and reported cache estimates (`P3-14`)
-* Built cleaning progress screen `CleaningProgressScreen` conforming to PRD FR-011 with real-time state machine progression (`Validating`, `SnapshotBefore`, `Clearing` with live package counts and app names, `WaitingForStats`, `SnapshotAfter`) without fake percentages (`P3-15`)
-* Built cleanup result screen `CleanupResultScreen` displaying physical storage before/after metrics, reported cache before/after metrics, significance evaluation, duration, and educational disclaimer (`P3-16`)
-* Built expandable partial failures section `PartialFailuresSection` displaying failed packages with app icons, display names, and attributed failure reasons (`P3-17`)
-* Implemented `CleanerViewModel` managing cleaning flow, confirmation, execution, and results
-* Wired `CleanerViewModel` to `AppCacheListScreen` with multi-select cleaning, single-app clearing from bottom sheet, and result dismissal refresh
-* Added 12 unit tests across `CleanerViewModelTest` and `CleanupScreensFormattingTest`; 171/171 tests passing across 31 test suites
+* Built welcome screen `WelcomeStepContent` conforming to PRD with transparent branding and value proposition cards (`P4-01`)
+* Built Usage Access onboarding screen `UsageAccessStepContent` with educational explanation, privacy guarantee, status indicator, and direct settings intent with `LifecycleResumeEffect` auto-refresh (`P4-02`)
+* Built Shizuku onboarding screen `ShizukuStepContent` with live connection monitoring, permission requests, launch intent, and manual inspection fallback explanation (`P4-03`)
+* Built first scan flow `FirstScanStepContent` with readiness summary, initiating scan, and persisting completion state in DataStore (`P4-04`)
+* Implemented `UserSettings` model, `UserSettingsRepository`, and `DataStoreUserSettingsRepository` backed by AndroidX DataStore (D-028)
+* Implemented `OnboardingViewModel` with multi-step progression, bounds protection, live status checks, and completion event handling
+* Wired dynamic destination routing in `MainActivity` based on persistent onboarding completion state
+* Added 17 unit tests across `UserSettingsRepositoryTest`, `OnboardingViewModelTest`, and `OnboardingFormattingTest`; 188/188 tests passing across 34 test suites
 
 ---
 
@@ -415,9 +427,12 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P4-01 through P4-04 — Onboarding Flow & First Launch Experience (Phase 4 — Product UI & Persistence)**
+**P4-05 through P4-10 — Dashboard Screen & Storage Visualizations (Phase 4 — Product UI & Persistence)**
 
-* Build welcome screen with value proposition (`P4-01`)
-* Build Usage Access onboarding screen with permission intent (`P4-02`)
-* Build Shizuku onboarding screen with connection status (`P4-03`)
-* Implement first scan flow and state transitions (`P4-04`)
+* Build device storage visualization bar and stats (`P4-05`)
+* Build aggregate cache summary section (`P4-06`)
+* Build top/largest cache consumers preview list (`P4-07`)
+* Build Shizuku connection status card (`P4-08`)
+* Build last scan metadata display (`P4-09`)
+* Implement primary one-tap cache cleanup action trigger (`P4-10`)
+

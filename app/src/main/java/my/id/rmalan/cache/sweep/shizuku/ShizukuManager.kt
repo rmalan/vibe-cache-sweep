@@ -2,6 +2,7 @@ package my.id.rmalan.cache.sweep.shizuku
 
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
@@ -29,14 +30,15 @@ open class ShizukuManager(
     private val context: Context
 ) {
     companion object {
+        const val SHIZUKU_PACKAGE_NAME = "moe.shizuku.privileged.api"
         const val SHIZUKU_PERMISSION_REQUEST_CODE = 1001
     }
 
-    private val _state = MutableStateFlow<ShizukuState>(ShizukuState.NotRunning)
-    val state: StateFlow<ShizukuState> = _state.asStateFlow()
+    protected val _state = MutableStateFlow<ShizukuState>(ShizukuState.NotRunning)
+    open val state: StateFlow<ShizukuState> = _state.asStateFlow()
 
-    private val _userServiceConnected = MutableStateFlow(false)
-    val userServiceConnected: StateFlow<Boolean> = _userServiceConnected.asStateFlow()
+    protected val _userServiceConnected = MutableStateFlow(false)
+    open val userServiceConnected: StateFlow<Boolean> = _userServiceConnected.asStateFlow()
 
     @Volatile
     private var cacheOpsService: ICacheOpsService? = null
@@ -122,6 +124,19 @@ open class ShizukuManager(
                 Shizuku.requestPermission(SHIZUKU_PERMISSION_REQUEST_CODE)
             }
         }
+    }
+
+    open fun isShizukuInstalled(): Boolean {
+        return try {
+            context.packageManager.getPackageInfo(SHIZUKU_PACKAGE_NAME, 0)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    open fun createShizukuLaunchIntent(): Intent? {
+        return context.packageManager.getLaunchIntentForPackage(SHIZUKU_PACKAGE_NAME)
     }
 
     private fun ensureServiceBound() {

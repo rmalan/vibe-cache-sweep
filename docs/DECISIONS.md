@@ -626,6 +626,28 @@ Global cache trimming remains the primary verified reclamation mechanism on Andr
 
 ---
 
+# D-028 — DataStore Preferences for Onboarding and Settings Persistence
+
+**Status:** Accepted
+
+## Context
+
+CacheSweep needs to persist user preferences (such as showing system apps, zero-cache filtering, sort order, and theme) and track whether the initial onboarding wizard has been completed.
+
+## Decision
+
+1. Use AndroidX DataStore Preferences (`user_settings.preferences_pb`) via a dedicated `UserSettingsRepository` interface and `DataStoreUserSettingsRepository` implementation.
+2. Model user preferences in a typed `UserSettings` data class with safe defaults (`onboardingCompleted = false`, `showSystemApps = false`, `showZeroCacheApps = true`, `sortMode = CACHE_DESC`, `themeMode = SYSTEM`).
+3. Handle corrupted/missing preference files gracefully with `IOException` catching emitting default preferences.
+4. Drive top-level navigation destination in `MainActivity` reactively from `UserSettings.onboardingCompleted`.
+
+## Reason
+
+Provides type-safe, non-blocking asynchronous persistence with reactive `Flow` emissions, eliminating main-thread disk I/O while maintaining testability without requiring a full SQLite/Room database for basic settings.
+
+## Consequences
+
+UI state and settings are synchronized reactively across all screens.
 
 ---
 
@@ -654,5 +676,3 @@ What becomes easier, harder, enabled, or restricted?
 If applicable:
 
 `D-XXX`
-
-
