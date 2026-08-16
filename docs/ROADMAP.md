@@ -153,13 +153,13 @@ Phase 0 is complete only when:
 
 ## Scanner
 
-* [ ] **P1-10** Implement `CacheScanner` interface
-* [ ] **P1-11** Add bounded concurrency
-* [ ] **P1-12** Add progressive scan state
-* [ ] **P1-13** Add partial-failure handling
-* [ ] **P1-14** Calculate aggregate reported cache
-* [ ] **P1-15** Track successful vs attempted measurements
-* [ ] **P1-16** Measure scan duration
+* [x] **P1-10** Implement `CacheScanner` interface
+* [x] **P1-11** Add bounded concurrency
+* [x] **P1-12** Add progressive scan state
+* [x] **P1-13** Add partial-failure handling
+* [x] **P1-14** Calculate aggregate reported cache
+* [x] **P1-15** Track successful vs attempted measurements
+* [x] **P1-16** Measure scan duration
 
 ## User experience
 
@@ -174,8 +174,8 @@ Phase 0 is complete only when:
 
 ## Tests
 
-* [ ] **P1-25** Scanner unit tests
-* [ ] **P1-26** Partial failure tests
+* [x] **P1-25** Scanner unit tests
+* [x] **P1-26** Partial failure tests
 * [ ] **P1-27** Sorting tests
 * [ ] **P1-28** Search tests
 * [ ] **P1-29** Test 300+ application scan if possible

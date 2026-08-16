@@ -6,4 +6,14 @@ data class ScanResult(
     val successfulApps: Int,
     val totalReportedCacheBytes: Long,
     val durationMillis: Long
-)
+) {
+    companion object {
+        val EMPTY = ScanResult(
+            apps = emptyList(),
+            attemptedApps = 0,
+            successfulApps = 0,
+            totalReportedCacheBytes = 0L,
+            durationMillis = 0L
+        )
+    }
+}

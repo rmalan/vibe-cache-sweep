@@ -19,6 +19,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -44,6 +45,7 @@ import my.id.rmalan.cache.sweep.model.AppCacheInfo
 import my.id.rmalan.cache.sweep.model.CleanerCapabilities
 import my.id.rmalan.cache.sweep.model.DeviceStorageInfo
 import my.id.rmalan.cache.sweep.model.ScanResult
+import my.id.rmalan.cache.sweep.model.ScanState
 import my.id.rmalan.cache.sweep.model.ShizukuState
 import my.id.rmalan.cache.sweep.shizuku.PrivilegedBackendInfo
 import my.id.rmalan.cache.sweep.util.ByteFormatter
@@ -63,6 +65,7 @@ fun DiagnosticScreen(
     var storageInfo by remember { mutableStateOf<DeviceStorageInfo?>(null) }
     var capabilities by remember { mutableStateOf<CleanerCapabilities?>(null) }
     var scanResult by remember { mutableStateOf<ScanResult?>(null) }
+    var currentScanState by remember { mutableStateOf<ScanState?>(null) }
     var isScanning by remember { mutableStateOf(false) }
     var statusMessage by remember { mutableStateOf<String?>(null) }
 
@@ -318,15 +321,40 @@ fun DiagnosticScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(32.dp),
-                                strokeWidth = 3.dp
-                            )
-                            Text(
-                                text = "Scanning installed applications...",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            val scanState = currentScanState
+                            if (scanState is ScanState.Scanning) {
+                                LinearProgressIndicator(
+                                    progress = { scanState.progressFraction },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Text(
+                                    text = "Scanning applications: ${scanState.scannedCount} of ${scanState.totalCount}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                scanState.currentAppName?.let { appName ->
+                                    Text(
+                                        text = appName,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Text(
+                                    text = "Reported Cache: ${ByteFormatter.format(scanState.runningReportedCacheBytes)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            } else {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(32.dp),
+                                    strokeWidth = 3.dp
+                                )
+                                Text(
+                                    text = "Discovering installed applications...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     } else {
                         scanResult?.let { res ->
@@ -399,8 +427,19 @@ fun DiagnosticScreen(
                                 scope.launch {
                                     isScanning = true
                                     try {
-                                        scanResult = container.cacheScanner.scan()
-                                        refreshAll()
+                                        container.cacheScanner.scanFlow().collect { state ->
+                                            currentScanState = state
+                                            when (state) {
+                                                is ScanState.Complete -> {
+                                                    scanResult = state.result
+                                                    refreshAll()
+                                                }
+                                                is ScanState.Failed -> {
+                                                    statusMessage = "Scan error: ${state.message}"
+                                                }
+                                                else -> Unit
+                                            }
+                                        }
                                     } catch (e: Exception) {
                                         statusMessage = "Scan error: ${e.message}"
                                     } finally {

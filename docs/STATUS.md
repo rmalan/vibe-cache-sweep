@@ -3,14 +3,14 @@
 **Last updated:** 2026-08-16
 **Overall status:** In progress
 **Current phase:** Phase 1 — Production Cache Scanner
-**Current task:** P1-10 through P1-16 — Production CacheScanner Engine (Progressive State, Metrics, Aggregation)
+**Current task:** P1-17 through P1-24 & P1-27 through P1-28 — Cache Application List UI, Search, Sorting, Detail & Shortcuts
 
 ---
 
 # At a Glance
 
 * [x] Phase 0 — Technical Feasibility
-* [ ] Phase 1 — Production Cache Scanner (P1-01 to P1-09 Complete)
+* [ ] Phase 1 — Production Cache Scanner (P1-01 to P1-16 Complete)
 * [ ] Phase 2 — Production Cleaner
 * [ ] Phase 3 — Cleanup Coordinator & Results
 * [ ] Phase 4 — Product UI & Persistence
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P1-10 through P1-16 — Production CacheScanner Engine
+## P1-17 through P1-24 & P1-27 through P1-28 — Cache Application List UI, Search, Sorting, Detail & Shortcuts
 
 **Status:** Ready to start
 
 ### Objective
 
-Implement production `CacheScanner` with progressive scan state emission (`Flow`), bounded concurrency, duration measurement, aggregate reported cache calculations, and attempted vs successful measurement tracking.
+Build the user-facing cache application list with sorting (cache size, total size, alphabetical), search filtering, pull-to-refresh, application detail view, and native Android storage settings shortcut.
 
 ### Expected outcome
 
-Robust reactive scanner interface and implementation ready to power the user-facing cache list UI.
+Interactive, responsive production UI for browsing and inspecting application cache footprints.
 
 ---
 
@@ -135,6 +135,17 @@ Robust reactive scanner interface and implementation ready to power the user-fac
 * [x] P1-09 Dedicated `PackageStorageStats` model created with `ZERO` / `failed(...)` factories, non-negative value coercion, and `AppCacheInfo.fromPackageAndStats` mapping
 * [x] Comprehensive unit tests added in `PackageStorageStatsTest`, `AndroidStorageStatsRepositoryTest`, `StorageModelsTest`, and updated `AndroidCacheScannerTest`
 
+## Scanner Engine & Progressive State (P1-10 to P1-16)
+
+* [x] P1-10 Production `CacheScanner` interface refined supporting both one-shot `scan` and reactive `scanFlow` with `includeSelf` and `includeSystem` parameters
+* [x] P1-11 Bounded concurrency implemented using `Semaphore(6)` (configurable) with channel-based coroutine coordination
+* [x] P1-12 Progressive `ScanState` flow modeled (`Idle`, `Discovering`, `Scanning` with progress fraction / running cache, `Complete`, `Failed`) and wired to UI
+* [x] P1-13 Robust partial-failure isolation implemented: individual package query failures never abort device scan
+* [x] P1-14 Aggregate reported cache accurately computed across all successfully measured packages
+* [x] P1-15 Attempted vs successful package measurement metrics tracked in `ScanResult`
+* [x] P1-16 Accurate scan duration measurement recorded in milliseconds
+* [x] Comprehensive unit tests added in `ScanStateTest` and `AndroidCacheScannerTest` (P1-25, P1-26)
+
 ---
 
 # Phase 0 Gate: PASSED
@@ -230,7 +241,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (51/51 unit tests passed across 14 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (61/61 unit tests passed across 16 test suites).
 ```
 
 ---
@@ -279,14 +290,17 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P1-06 through P1-09 — StorageStats Repository & Per-Package Storage Model (Phase 1 — Production Cache Scanner)**
+**P1-10 through P1-16 — Production CacheScanner Engine (Phase 1 — Production Cache Scanner)**
 
-* Created `PackageStorageStats` domain model with zero/failed factories and computed `totalBytes`
-* Defined `StorageStatsRepository` interface with `DiscoveredPackage` and `UUID` overloads
-* Implemented `AndroidStorageStatsRepository` handling default internal storage volume resolution and exception isolation
-* Refined `AppCacheInfo` with `fromPackageAndStats` factory and error message tracking
-* Integrated with `AndroidCacheScanner` and `AppContainer`
-* Added comprehensive unit test suites (`PackageStorageStatsTest`, `AndroidStorageStatsRepositoryTest`, updated `StorageModelsTest` and `AndroidCacheScannerTest` — 51/51 tests passing)
+* Refined `CacheScanner` interface with one-shot `scan` and progressive `scanFlow` (`P1-10`, `P1-12`)
+* Created `ScanState` sealed interface (`Idle`, `Discovering`, `Scanning` with progress fraction, `Complete`, `Failed`)
+* Implemented bounded concurrency with `Semaphore(6)` and channel coroutine coordination in `AndroidCacheScanner` (`P1-11`)
+* Implemented robust exception isolation protecting whole-scan execution from individual package query failures (`P1-13`)
+* Implemented accurate aggregate reported cache sum (`P1-14`)
+* Implemented attempted vs successful package measurement counting (`P1-15`)
+* Implemented scan duration tracking in milliseconds (`P1-16`)
+* Integrated progressive scanning and `LinearProgressIndicator` into diagnostic screen
+* Added comprehensive unit test suites in `ScanStateTest` and `AndroidCacheScannerTest` (61/61 tests passing across 16 suites) (`P1-25`, `P1-26`)
 
 ---
 
@@ -294,11 +308,11 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P1-10 through P1-16 — Production CacheScanner Engine (Phase 1 — Production Cache Scanner)**
+**P1-17 through P1-24 & P1-27 through P1-28 — Cache Application List UI, Search, Sorting, Detail & Shortcuts (Phase 1 — Production Cache Scanner)**
 
-* Refine `CacheScanner` interface with progressive scan flow (`Flow<ScanState>`) (`P1-10`, `P1-12`)
-* Configure bounded concurrency (`Semaphore(6)`) (`P1-11`)
-* Implement partial failure accounting and error tracking (`P1-13`)
-* Compute aggregate reported cache bytes (`P1-14`)
-* Track attempted vs successful package measurement metrics (`P1-15`)
-* Record scan duration (`P1-16`)
+* Implement cache application list presentation with sorting (Cache Size, Total Storage, Alphabetical) (`P1-17`, `P1-18`, `P1-19`, `P1-20`, `P1-27`)
+* Implement real-time application search filtering (`P1-21`, `P1-28`)
+* Implement pull-to-refresh scanner trigger (`P1-22`)
+* Implement application detail view with storage breakdown (`P1-23`)
+* Add native Android per-app storage settings shortcut intent (`P1-24`)
+
