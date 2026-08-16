@@ -1,6 +1,7 @@
 package my.id.rmalan.cache.sweep.ui.screens
 
 import android.os.Build
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,9 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -20,11 +21,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,15 +37,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import kotlinx.coroutines.launch
 import my.id.rmalan.cache.sweep.di.AppContainer
+import my.id.rmalan.cache.sweep.model.AppCacheInfo
 import my.id.rmalan.cache.sweep.model.CleanerCapabilities
 import my.id.rmalan.cache.sweep.model.DeviceStorageInfo
 import my.id.rmalan.cache.sweep.model.ScanResult
 import my.id.rmalan.cache.sweep.model.ShizukuState
 import my.id.rmalan.cache.sweep.util.ByteFormatter
-
-import androidx.lifecycle.compose.LifecycleResumeEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +63,12 @@ fun DiagnosticScreen(
     var scanResult by remember { mutableStateOf<ScanResult?>(null) }
     var isScanning by remember { mutableStateOf(false) }
     var statusMessage by remember { mutableStateOf<String?>(null) }
+
+    // Test package storage inspector state (P0-15)
+    var testPackageInput by remember { mutableStateOf(context.packageName) }
+    var inspectedAppInfo by remember { mutableStateOf<AppCacheInfo?>(null) }
+    var isInspectingPackage by remember { mutableStateOf(false) }
+    var inspectError by remember { mutableStateOf<String?>(null) }
 
     fun refreshAll() {
         hasUsageAccess = container.usageAccessManager.hasAccess()
@@ -91,24 +98,25 @@ fun DiagnosticScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // System Card
+            // System & Storage Card (P0-12)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("System & Storage", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("System & Storage (StatFs)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     HorizontalDivider()
                     DiagnosticRow("Android Version", "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
                     DiagnosticRow("Device Model", "${Build.MANUFACTURER} ${Build.MODEL}")
                     storageInfo?.let {
                         DiagnosticRow("Free Storage", ByteFormatter.format(it.availableBytes))
+                        DiagnosticRow("Used Storage", ByteFormatter.format(it.usedBytes))
                         DiagnosticRow("Total Storage", ByteFormatter.format(it.totalBytes))
                     }
                 }
             }
 
-            // Usage Access Card
+            // Usage Access Card (P0-08 to P0-11)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -126,6 +134,92 @@ fun DiagnosticScreen(
                         ) {
                             Text("Open Usage Access Settings")
                         }
+                    }
+                }
+            }
+
+            // Test Package StorageStats Inspector Card (P0-14, P0-15)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Package StorageStats Inspector", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    HorizontalDivider()
+
+                    OutlinedTextField(
+                        value = testPackageInput,
+                        onValueChange = {
+                            testPackageInput = it
+                            inspectError = null
+                        },
+                        label = { Text("Target Package Name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                testPackageInput = context.packageName
+                                inspectError = null
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Self App")
+                        }
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    val pkg = testPackageInput.trim()
+                                    if (pkg.isBlank()) {
+                                        inspectError = "Please enter a valid package name."
+                                        return@launch
+                                    }
+                                    isInspectingPackage = true
+                                    inspectError = null
+                                    try {
+                                        val info = container.cacheScanner.scanPackage(pkg)
+                                        if (info != null) {
+                                            inspectedAppInfo = info
+                                        } else {
+                                            inspectError = "Package '$pkg' not found on device."
+                                        }
+                                    } catch (e: Exception) {
+                                        inspectError = "Error querying StorageStats: ${e.message}"
+                                    } finally {
+                                        isInspectingPackage = false
+                                    }
+                                }
+                            },
+                            enabled = hasUsageAccess && !isInspectingPackage,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(if (isInspectingPackage) "Inspecting..." else "Inspect Stats")
+                        }
+                    }
+
+                    inspectError?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    inspectedAppInfo?.let { app ->
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        DiagnosticRow("App Label", app.appName)
+                        DiagnosticRow("Package", app.packageName)
+                        DiagnosticRow("App / Code Size", "${ByteFormatter.format(app.appBytes)} (${app.appBytes} B)")
+                        DiagnosticRow("Cache Size", "${ByteFormatter.format(app.cacheBytes)} (${app.cacheBytes} B)")
+                        DiagnosticRow("Data Size", "${ByteFormatter.format(app.dataBytes)} (${app.dataBytes} B)")
+                        DiagnosticRow("Total Storage", "${ByteFormatter.format(app.totalBytes)} (${app.totalBytes} B)")
+                        DiagnosticRow("App Classification", if (app.isSystemApp) "System App" else "User App")
+                        DiagnosticRow("Measurement Status", if (app.measurementAvailable) "SUCCESS" else "FAILED / INACCESSIBLE")
                     }
                 }
             }
@@ -163,13 +257,13 @@ fun DiagnosticScreen(
                 }
             }
 
-            // Scanner Card
+            // Full Scanner Card (P0-13, P0-14, P0-15)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("StorageStats Scanner", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Full StorageStats Scanner", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     HorizontalDivider()
 
                     if (isScanning) {
@@ -196,6 +290,64 @@ fun DiagnosticScreen(
                             DiagnosticRow("Measured Apps", "${res.successfulApps}")
                             DiagnosticRow("Reported Cache", ByteFormatter.format(res.totalReportedCacheBytes))
                             DiagnosticRow("Scan Duration", "${res.durationMillis} ms")
+
+                            if (res.apps.isNotEmpty()) {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                                Text(
+                                    text = "Top Scanned Apps (Cache Size):",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+
+                                val topApps = res.apps
+                                    .filter { it.measurementAvailable }
+                                    .sortedByDescending { it.cacheBytes }
+                                    .take(8)
+
+                                topApps.forEach { app ->
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                testPackageInput = app.packageName
+                                                inspectedAppInfo = app
+                                            }
+                                            .padding(vertical = 4.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = app.appName,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                            Text(
+                                                text = ByteFormatter.format(app.cacheBytes),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = app.packageName,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = "App: ${ByteFormatter.format(app.appBytes)} | Data: ${ByteFormatter.format(app.dataBytes)}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         } ?: Text("No scan performed yet.")
 
                         Button(
@@ -215,7 +367,7 @@ fun DiagnosticScreen(
                             enabled = hasUsageAccess && !isScanning,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Run Cache Scan")
+                            Text("Run Full Cache Scan")
                         }
                     }
                 }

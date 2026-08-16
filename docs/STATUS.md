@@ -3,7 +3,7 @@
 **Last updated:** 2026-08-16
 **Overall status:** In progress
 **Current phase:** Phase 0 — Technical Feasibility
-**Current task:** P0-12 — Storage Statistics Validation (P0-12 to P0-16)
+**Current task:** P0-17 through P0-24 — Shizuku Connection and Privileged UID Validation
 
 ---
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P0-12 through P0-16 — Storage Statistics Validation
+## P0-17 through P0-24 — Shizuku Connection and Privileged UID Validation
 
 **Status:** Ready to start
 
 ### Objective
 
-Implement and verify device storage snapshots (`StatFs`), package enumeration, and `StorageStatsManager` cache querying on target device.
+Verify Shizuku connection state, permission workflow, Binder death handling, and shell UID retrieval on device.
 
 ### Expected outcome
 
-Per-package app/cache/data statistics are queryable and displayed on the diagnostic screen.
+Shizuku connection status and privileged backend UID (expected 2000 for ADB shell) are displayed and verified on the diagnostic screen.
 
 ---
 
@@ -61,6 +61,14 @@ Per-package app/cache/data statistics are queryable and displayed on the diagnos
 * [x] P0-10 Usage Access settings intent implemented (`Settings.ACTION_USAGE_ACCESS_SETTINGS`)
 * [x] P0-11 Usage Access state displayed on diagnostic screen with `LifecycleResumeEffect` auto-refresh and unit tests
 
+## Storage Statistics (P0-12 to P0-16)
+
+* [x] P0-12 Device storage snapshot implemented using `StatFs` (`DeviceStorageRepository`)
+* [x] P0-13 Installed package enumeration implemented via `PackageManager` with `QUERY_ALL_PACKAGES`
+* [x] P0-14 `StorageStatsManager` query implemented with bounded concurrency (`Semaphore(6)`) and per-app error isolation in `AndroidCacheScanner`
+* [x] P0-15 Interactive single-package storage inspector and top scanned apps list with cache/app/data/total size breakdown displayed on diagnostic screen
+* [x] P0-16 StorageStats behavior verified live on physical Android 16 device (Samsung SM-A346E): 542 packages enumerated, 542 measured successfully in 840ms with 15.99 GB total reported cache
+
 ---
 
 # Phase 0 Progress
@@ -81,7 +89,7 @@ Per-package app/cache/data statistics are queryable and displayed on the diagnos
 
 ## Storage statistics
 
-* [ ] P0-12 through P0-16
+* [x] P0-12 through P0-16
 
 ## Shizuku
 
@@ -182,22 +190,25 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk generated
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (all unit tests passed).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (23/23 unit tests passed across 6 test suites).
 ```
 
 ---
 
 # Physical Device Validation
 
-**Status:** Not started
+**Status:** In progress (Validated on Samsung Galaxy A34 5G, SM-A346E, Android 16 / SDK 36)
 
-Still needs validation:
+Validation items:
 
-* [ ] Android version/build recorded
+* [x] Android version/build recorded (Samsung SM-A346E, Android 16, API 36)
+* [x] Usage Access permission verified (AppOps GET_USAGE_STATS: allow)
+* [x] StatFs storage snapshot verified (Total, Used, Free accurately reported)
+* [x] StorageStats returns useful package cache information (542 apps scanned in 840ms, 15.99 GB total reported cache)
+* [x] Single package StorageStats inspector verified with app/cache/data/total size breakdown
 * [ ] Shizuku starts successfully
 * [ ] CacheSweep Shizuku permission works
 * [ ] Shizuku privileged UID identified
-* [ ] StorageStats returns useful package cache information
 * [ ] `clear --cache-only` capability detected
 * [ ] Selective cache clearing tested safely
 * [ ] App data verified intact
@@ -228,7 +239,7 @@ Current implementation follows `TECH_SPEC.md`.
 
 # Most Recent Completed Task
 
-**P0-08 through P0-11 — Usage Access Verification**
+**P0-12 through P0-16 — Storage Statistics Validation**
 
 ---
 
@@ -236,9 +247,9 @@ Current implementation follows `TECH_SPEC.md`.
 
 Implement / Verify:
 
-**P0-12 through P0-16 — Storage statistics validation**
+**P0-17 through P0-24 — Shizuku connection and privileged UID validation**
 
 Then continue with:
 
-* P0-17 through P0-24: Shizuku connection and privileged UID validation
 * P0-25 through P0-29: Privileged backend verification
+* P0-30 through P0-34: Capability detection

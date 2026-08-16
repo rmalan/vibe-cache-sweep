@@ -55,11 +55,11 @@ Do not mark an entire phase complete until its phase gate passes.
 
 ## Storage statistics
 
-* [ ] **P0-12** Implement device storage snapshot using `StatFs`
-* [ ] **P0-13** Implement installed package enumeration
-* [ ] **P0-14** Implement basic `StorageStatsManager` package query
-* [ ] **P0-15** Display cache/app/data size for a test package
-* [ ] **P0-16** Verify StorageStats behavior on physical device
+* [x] **P0-12** Implement device storage snapshot using `StatFs`
+* [x] **P0-13** Implement installed package enumeration
+* [x] **P0-14** Implement basic `StorageStatsManager` package query
+* [x] **P0-15** Display cache/app/data size for a test package
+* [x] **P0-16** Verify StorageStats behavior on physical device
 
 ## Shizuku
 
