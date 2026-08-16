@@ -99,4 +99,54 @@ class CleanupPlanTest {
         val result = plan.validate()
         assertTrue(result.isFailure)
     }
+
+    @Test
+    fun `selective validation checks against scanned package set when provided`() {
+        val scanned = setOf("com.android.chrome", "org.mozilla.firefox")
+        val validPlan = CleanupPlan.selective(listOf("com.android.chrome"))
+        assertTrue(validPlan.validate(scanned).isSuccess)
+
+        val invalidPlan = CleanupPlan.selective(listOf("com.unscanned.app"))
+        val result = invalidPlan.validate(scanned)
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull()?.message?.contains("known scanned packages") == true)
+    }
+
+    @Test
+    fun `fromApps creates selective plan from AppCacheInfo items`() {
+        val apps = listOf(
+            AppCacheInfo(
+                packageName = "com.android.chrome",
+                appName = "Chrome",
+                cacheBytes = 1000L,
+                appBytes = 2000L,
+                dataBytes = 3000L,
+                isSystemApp = false,
+                measurementAvailable = true
+            ),
+            AppCacheInfo(
+                packageName = "my.id.rmalan.cache.sweep", // self-app filtered out
+                appName = "CacheSweep",
+                cacheBytes = 500L,
+                appBytes = 1000L,
+                dataBytes = 1000L,
+                isSystemApp = false,
+                measurementAvailable = true
+            ),
+            AppCacheInfo(
+                packageName = "org.mozilla.firefox",
+                appName = "Firefox",
+                cacheBytes = 2000L,
+                appBytes = 3000L,
+                dataBytes = 4000L,
+                isSystemApp = false,
+                measurementAvailable = true
+            )
+        )
+
+        val plan = CleanupPlan.fromApps(apps)
+        assertEquals(CleanupMode.SELECTIVE, plan.mode)
+        assertEquals(listOf("com.android.chrome", "org.mozilla.firefox"), plan.selectedPackages)
+        assertEquals(3000L, plan.estimatedCacheBytes)
+    }
 }

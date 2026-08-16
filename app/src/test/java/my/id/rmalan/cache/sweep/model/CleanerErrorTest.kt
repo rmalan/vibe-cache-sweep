@@ -33,10 +33,13 @@ class CleanerErrorTest {
 
         val unexpected = CleanerError.Unexpected(IllegalStateException("boom"))
         assertEquals("boom", unexpected.description)
+
+        val notScanned = CleanerError.PackageNotScanned("com.unscanned.app")
+        assertTrue(notScanned.description.contains("scanned"))
     }
 
     @Test
-    fun `cleaning progress computes progress fraction`() {
+    fun `cleaning progress computes progress fraction and display text`() {
         val progress = CleaningProgress(
             current = 5,
             total = 10,
@@ -46,6 +49,7 @@ class CleanerErrorTest {
         assertEquals(0.5f, progress.progressFraction, 0.001f)
         assertEquals("com.test.app", progress.currentPackageName)
         assertEquals("Test App", progress.currentAppName)
+        assertEquals("Cleaning 5 of 10 (Test App)", progress.displayText)
 
         val zeroProgress = CleaningProgress(
             current = 0,
@@ -53,6 +57,7 @@ class CleanerErrorTest {
             currentPackageName = null
         )
         assertEquals(0f, zeroProgress.progressFraction, 0.001f)
+        assertEquals("Cleaning Cache", zeroProgress.displayText)
     }
 
     @Test
@@ -65,6 +70,9 @@ class CleanerErrorTest {
         assertTrue(completeSuccess.isCompleteSuccess)
         assertFalse(completeSuccess.isPartialSuccess)
         assertFalse(completeSuccess.isCompleteFailure)
+        assertEquals(3, completeSuccess.successCount)
+        assertEquals(0, completeSuccess.failureCount)
+        assertEquals("", completeSuccess.errorMessageSummary())
 
         val partial = CleanerBatchResult(
             totalAttempted = 3,
@@ -75,6 +83,10 @@ class CleanerErrorTest {
         assertFalse(partial.isCompleteSuccess)
         assertTrue(partial.isPartialSuccess)
         assertFalse(partial.isCompleteFailure)
+        assertEquals(2, partial.successCount)
+        assertEquals(1, partial.failureCount)
+        assertTrue(partial.getError("pkg.c") is CleanerError.PackageInvalid)
+        assertTrue(partial.errorMessageSummary().contains("pkg.c: Invalid package name: pkg.c"))
 
         val completeFailure = CleanerBatchResult(
             totalAttempted = 2,

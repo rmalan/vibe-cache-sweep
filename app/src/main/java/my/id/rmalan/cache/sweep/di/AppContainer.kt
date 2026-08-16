@@ -40,7 +40,8 @@ class AppContainer(
 
     val cacheCleaner: CacheCleaner =
         ShizukuCacheCleaner(
-            shizukuManager = shizukuManager
+            shizukuManager = shizukuManager,
+            packageRepository = packageRepository
         )
 
     val safetyTestManager =

@@ -16,6 +16,7 @@ interface CacheCleaner {
     suspend fun clearPackages(
         packages: List<String>,
         userId: Int = 0,
+        scannedPackageSet: Set<String>? = null,
         onProgress: (suspend (CleaningProgress) -> Unit)? = null
     ): CleanerBatchResult
 
@@ -26,6 +27,7 @@ interface CacheCleaner {
     suspend fun executePlan(
         plan: CleanupPlan,
         userId: Int = 0,
+        scannedPackageSet: Set<String>? = null,
         onProgress: (suspend (CleaningProgress) -> Unit)? = null
     ): CleanerBatchResult
 }

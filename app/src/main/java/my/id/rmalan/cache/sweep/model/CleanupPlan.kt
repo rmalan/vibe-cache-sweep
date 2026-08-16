@@ -33,18 +33,16 @@ data class CleanupPlan(
     val isGlobalTrim: Boolean
         get() = mode == CleanupMode.GLOBAL_TRIM
 
-    fun validate(): Result<Unit> {
+    fun validate(scannedPackages: Set<String>? = null): Result<Unit> {
         return when (mode) {
             CleanupMode.SELECTIVE -> {
                 if (selectedPackages.isEmpty()) {
                     Result.failure(IllegalArgumentException("Selective cleanup plan requires at least one package"))
                 } else {
                     for (pkg in selectedPackages) {
-                        if (PackageValidator.isSelfPackage(pkg)) {
-                            return Result.failure(IllegalArgumentException("Cannot clean CacheSweep self-package: $pkg"))
-                        }
-                        if (!PackageValidator.isValidFormat(pkg)) {
-                            return Result.failure(IllegalArgumentException("Invalid package name format: $pkg"))
+                        val validation = PackageValidator.validatePackage(pkg, scannedPackages)
+                        if (validation.isFailure) {
+                            return Result.failure(validation.exceptionOrNull() ?: IllegalArgumentException("Invalid package: $pkg"))
                         }
                     }
                     Result.success(Unit)
@@ -71,6 +69,23 @@ data class CleanupPlan(
                 selectedPackages = sanitized,
                 estimatedCacheBytes = maxOf(0L, estimatedCacheBytes),
                 desiredFreeBytes = null
+            )
+        }
+
+        fun fromApps(
+            apps: List<AppCacheInfo>
+        ): CleanupPlan {
+            val validPkgs = apps
+                .map { it.packageName }
+                .filter { PackageValidator.isValid(it) }
+                .distinct()
+            val totalCache = apps
+                .filter { validPkgs.contains(it.packageName) }
+                .sumOf { it.cacheBytes }
+
+            return selective(
+                packages = validPkgs,
+                estimatedCacheBytes = totalCache
             )
         }
 

@@ -3,7 +3,7 @@
 **Last updated:** 2026-08-16
 **Overall status:** In progress
 **Current phase:** Phase 2 (Production Cleaner) — In progress
-**Current task:** P2-05 through P2-11 — Production Selective Cleaning & Multi-Package Engine
+**Current task:** P2-12 through P2-15 — Global Cache Trimming Engine & Fallback
 
 ---
 
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P2-05 through P2-11 — Production Selective Cleaning & Multi-Package Engine
+## P2-12 through P2-15 — Global Cache Trimming Engine & Fallback
 
 **Status:** Ready to start
 
 ### Objective
 
-Productionize multi-package selective cache clear operations with package validation, CacheSweep self-cleaning prohibition, progressive package-count feedback, individual failure isolation, and structured failed-package reporting.
+Productionize global cache trimming (`pm trim-caches <DESIRED_FREE_SPACE>`) fallback mechanism with target free-storage calculation, explicit user consent requirement when degrading from selective to global mode, and graceful handling of unsupported trim operations.
 
 ### Expected outcome
 
-Robust multi-package selective cleaning engine that safely executes cache-only clears, isolates errors per app, and reports granular batch results.
+Safe, reliable global trimming engine that calculates realistic free-storage targets, preserves explicit user intent, and fails gracefully when unsupported.
 
 ---
 
@@ -170,6 +170,17 @@ Robust multi-package selective cleaning engine that safely executes cache-only c
 * [x] Production `ShizukuCacheCleaner` updated with capability gating, robust error handling, progressive feedback, and plan execution
 * [x] Comprehensive unit tests added in `CleanerCapabilitiesTest`, `CleanupPlanTest`, `CleanerErrorTest`, and `ShizukuCacheCleanerTest`
 
+## Selective Cleaning & Multi-Package Engine (P2-05 to P2-11)
+
+* [x] P2-05 Production package cache clear verified with `--cache-only` enforcement and timeout bounds
+* [x] P2-06 Package validation against scanned package set implemented in `PackageValidator.validatePackage`, `PackageValidator.isKnownPackage`, and `CleanupPlan.validate(scannedPackages)`
+* [x] P2-07 CacheSweep self-package cleaning strictly prohibited across validator, plan, cleaner, AIDL service, and command builder
+* [x] P2-08 Multi-package selective cleaning implemented supporting plan generation and batch execution
+* [x] P2-09 Progressive package-count feedback implemented with app display name resolution via `PackageRepository` in `CleaningProgress`
+* [x] P2-10 Robust individual failure isolation implemented: individual package failures (invalid format, self package, not scanned, exit code, or IPC exception) never abort remaining batch
+* [x] P2-11 Granular failed-package reporting implemented with `CleanerBatchResult`, `errors` map, and `errorMessageSummary()`
+* [x] Comprehensive unit tests added in `PackageValidatorTest`, `CleanerErrorTest`, `CleanupPlanTest`, and `ShizukuCacheCleanerTest`
+
 ---
 
 # Phase 0 Gate: PASSED
@@ -275,7 +286,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (109/109 unit tests passed across 23 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (114/114 unit tests passed across 23 test suites).
 ```
 
 ---
@@ -324,16 +335,16 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P2-01 through P2-04 — Cleaner Abstraction & Typed Plan Engine (Phase 2 — Production Cleaner)**
+**P2-05 through P2-11 — Production Selective Cleaning & Multi-Package Engine (Phase 2 — Production Cleaner)**
 
-* Defined production `CacheCleaner` interface with typed capabilities query, single-package clear, multi-package batch clear with progressive feedback, global trim, and `CleanupPlan` execution (`P2-01`)
-* Implemented `CleanerCapabilities` model with readiness helpers (`isReady`, `canCleanSelective`, `canCleanGlobal`, `canCleanAny`) and `UNAVAILABLE` fallback constant (`P2-02`)
-* Implemented typed `CleanupPlan` engine supporting `SELECTIVE` and `GLOBAL_TRIM` modes with package validation, self-clean exclusion, and factory methods (`P2-03`)
-* Implemented structured `CleanerError` hierarchy, `CleaningProgress`, and `CleanerBatchResult` models with error attribution (`P2-04`)
-* Enhanced `PackageValidator` with `isValidFormat` and `isSelfPackage` classification
-* Implemented production `ShizukuCacheCleaner` with capability gating, robust error handling, progressive feedback, and plan execution
-* Added unit tests in `CleanerCapabilitiesTest`, `CleanupPlanTest`, `CleanerErrorTest`, and `ShizukuCacheCleanerTest`
-* All 109 unit tests passing across 23 test suites; debug APKs assemble cleanly
+* Enhanced `PackageValidator` with `isKnownPackage` and typed `validatePackage` Result verification (`P2-06`, `P2-07`)
+* Updated `CleanupPlan.validate(scannedPackages)` and added `CleanupPlan.fromApps(apps)` factory (`P2-06`, `P2-08`)
+* Added `PackageNotScanned` error variant and progress display text in `CleanerError` / `CleaningProgress` (`P2-06`, `P2-09`)
+* Implemented multi-package cleaning engine in `ShizukuCacheCleaner` with app display name resolution via `PackageRepository` (`P2-08`, `P2-09`)
+* Implemented resilient individual failure isolation: individual package failures never abort remaining batch (`P2-10`)
+* Structured failed-package reporting with `CleanerBatchResult`, `errors` map, and `errorMessageSummary()` (`P2-11`)
+* Comprehensive unit tests added in `PackageValidatorTest`, `CleanerErrorTest`, `CleanupPlanTest`, and `ShizukuCacheCleanerTest`
+* All 114 unit tests passing across 23 test suites; debug APKs assemble cleanly
 
 ---
 
@@ -341,11 +352,9 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P2-05 through P2-11 — Production Selective Cleaning & Multi-Package Engine (Phase 2 — Production Cleaner)**
+**P2-12 through P2-15 — Global Cache Trimming Engine & Fallback (Phase 2 — Production Cleaner)**
 
-* Productionize package cache clear with full validation against scanned package set (`P2-05`, `P2-06`)
-* Enforce CacheSweep self-cleaning prohibition across all workflows (`P2-07`)
-* Coordinate multi-package cleaning with progressive package-count updates (`P2-08`, `P2-09`)
-* Ensure individual package failure isolation and continue remaining batch (`P2-10`)
-* Structure detailed failed-package reporting (`P2-11`)
+* Productionize global cache trimming with target free-storage calculation (`P2-12`, `P2-13`)
+* Require explicit user consent before selective → global fallback (`P2-14`)
+* Handle unsupported global trim gracefully (`P2-15`)
 

@@ -207,13 +207,13 @@ Phase 0 is complete only when:
 
 ## Selective cleaning
 
-* [ ] **P2-05** Productionize package cache clear
-* [ ] **P2-06** Validate package against scanned package set
-* [ ] **P2-07** Prevent CacheSweep self-clean during operation
-* [ ] **P2-08** Implement multi-package cleaning
-* [ ] **P2-09** Implement package-count progress
-* [ ] **P2-10** Continue after individual package failure
-* [ ] **P2-11** Report failed packages
+* [x] **P2-05** Productionize package cache clear
+* [x] **P2-06** Validate package against scanned package set
+* [x] **P2-07** Prevent CacheSweep self-clean during operation
+* [x] **P2-08** Implement multi-package cleaning
+* [x] **P2-09** Implement package-count progress
+* [x] **P2-10** Continue after individual package failure
+* [x] **P2-11** Report failed packages
 
 ## Global fallback
 

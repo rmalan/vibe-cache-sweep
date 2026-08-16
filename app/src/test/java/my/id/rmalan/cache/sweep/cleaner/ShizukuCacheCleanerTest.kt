@@ -5,6 +5,7 @@ import kotlinx.coroutines.runBlocking
 import my.id.rmalan.cache.sweep.model.CleanerCapabilities
 import my.id.rmalan.cache.sweep.model.CleanerError
 import my.id.rmalan.cache.sweep.model.CleaningProgress
+import my.id.rmalan.cache.sweep.model.CleanupMode
 import my.id.rmalan.cache.sweep.model.CleanupPlan
 import my.id.rmalan.cache.sweep.shizuku.ICacheOpsService
 import my.id.rmalan.cache.sweep.shizuku.ShizukuManager
@@ -247,7 +248,7 @@ class ShizukuCacheCleanerTest {
     }
 
     @Test
-    fun `executePlan executes selective plan and global trim plan`() = runBlocking {
+    fun `executePlan executes selective plan, global trim plan, and handles invalid plans`() = runBlocking {
         val fakeService = FakeCacheOpsService()
         val fakeManager = FakeShizukuManager(fakeService = fakeService)
         val cleaner = ShizukuCacheCleaner(fakeManager)
@@ -258,10 +259,66 @@ class ShizukuCacheCleanerTest {
         assertTrue(selectiveResult.isCompleteSuccess)
         assertEquals(2, selectiveResult.successfulPackages.size)
 
+        // Selective Plan with scannedPackageSet validation
+        val scannedSet = setOf("com.android.chrome", "org.mozilla.firefox")
+        val validatedResult = cleaner.executePlan(selectivePlan, scannedPackageSet = scannedSet)
+        assertTrue(validatedResult.isCompleteSuccess)
+
+        // Invalid Plan (e.g. self package)
+        val invalidPlan = CleanupPlan(
+            mode = CleanupMode.SELECTIVE,
+            selectedPackages = listOf("my.id.rmalan.cache.sweep")
+        )
+        val invalidResult = cleaner.executePlan(invalidPlan)
+        assertTrue(invalidResult.isCompleteFailure)
+        assertTrue(invalidResult.errors["my.id.rmalan.cache.sweep"] is CleanerError.Unexpected)
+
         // Global Trim Plan
         val globalPlan = CleanupPlan.globalTrim(desiredFreeBytes = 3000000000L)
         val globalResult = cleaner.executePlan(globalPlan)
         assertTrue(globalResult.isCompleteSuccess)
         assertEquals(listOf("global_trim"), globalResult.successfulPackages)
+    }
+
+    @Test
+    fun `clearPackages resolves app name from PackageRepository and validates scannedPackageSet`() = runBlocking {
+        val fakePkgRepo = object : my.id.rmalan.cache.sweep.scanner.PackageRepository {
+            override fun getInstalledPackages(includeSelf: Boolean, includeSystem: Boolean): List<my.id.rmalan.cache.sweep.model.DiscoveredPackage> = emptyList()
+            override fun getPackage(packageName: String): my.id.rmalan.cache.sweep.model.DiscoveredPackage? {
+                return if (packageName == "com.android.chrome") {
+                    my.id.rmalan.cache.sweep.model.DiscoveredPackage(
+                        packageName = "com.android.chrome",
+                        appName = "Google Chrome",
+                        isSystemApp = false,
+                        versionName = "1.0",
+                        versionCode = 1L
+                    )
+                } else null
+            }
+            override fun loadApplicationIcon(packageName: String): android.graphics.drawable.Drawable? = null
+            override fun loadIconThumbnail(packageName: String, sizePx: Int): android.graphics.Bitmap? = null
+        }
+
+        val fakeService = FakeCacheOpsService(clearResult = 0)
+        val fakeManager = FakeShizukuManager(fakeService = fakeService)
+        val cleaner = ShizukuCacheCleaner(fakeManager, fakePkgRepo)
+
+        val progressList = mutableListOf<CleaningProgress>()
+        val scannedSet = setOf("com.android.chrome")
+        val pkgs = listOf("com.android.chrome", "com.not.scanned")
+
+        val result = cleaner.clearPackages(pkgs, userId = 0, scannedPackageSet = scannedSet) { progress ->
+            progressList.add(progress)
+        }
+
+        assertEquals(2, result.totalAttempted)
+        assertEquals(listOf("com.android.chrome"), result.successfulPackages)
+        assertEquals(listOf("com.not.scanned"), result.failedPackages)
+        assertTrue(result.errors["com.not.scanned"] is CleanerError.PackageNotScanned)
+
+        // Verify app name was resolved on Chrome progress
+        val chromeProgress = progressList.first { it.currentPackageName == "com.android.chrome" }
+        assertEquals("Google Chrome", chromeProgress.currentAppName)
+        assertEquals("Cleaning 1 of 2 (Google Chrome)", chromeProgress.displayText)
     }
 }

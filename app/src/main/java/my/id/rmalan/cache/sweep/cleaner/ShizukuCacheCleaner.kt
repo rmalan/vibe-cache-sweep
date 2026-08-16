@@ -8,11 +8,13 @@ import my.id.rmalan.cache.sweep.model.CleanerError
 import my.id.rmalan.cache.sweep.model.CleaningProgress
 import my.id.rmalan.cache.sweep.model.CleanupMode
 import my.id.rmalan.cache.sweep.model.CleanupPlan
+import my.id.rmalan.cache.sweep.scanner.PackageRepository
 import my.id.rmalan.cache.sweep.shizuku.ShizukuManager
 import my.id.rmalan.cache.sweep.util.PackageValidator
 
 class ShizukuCacheCleaner(
-    private val shizukuManager: ShizukuManager
+    private val shizukuManager: ShizukuManager,
+    private val packageRepository: PackageRepository? = null
 ) : CacheCleaner {
 
     override suspend fun capabilities(): CleanerCapabilities = withContext(Dispatchers.IO) {
@@ -34,6 +36,7 @@ class ShizukuCacheCleaner(
     override suspend fun clearPackages(
         packages: List<String>,
         userId: Int,
+        scannedPackageSet: Set<String>?,
         onProgress: (suspend (CleaningProgress) -> Unit)?
     ): CleanerBatchResult = withContext(Dispatchers.IO) {
         if (packages.isEmpty()) {
@@ -88,11 +91,18 @@ class ShizukuCacheCleaner(
         val total = packages.size
 
         for ((index, pkg) in packages.withIndex()) {
+            val appLabel = try {
+                packageRepository?.getPackage(pkg)?.appName
+            } catch (e: Exception) {
+                null
+            }
+
             onProgress?.invoke(
                 CleaningProgress(
                     current = index + 1,
                     total = total,
-                    currentPackageName = pkg
+                    currentPackageName = pkg,
+                    currentAppName = appLabel
                 )
             )
 
@@ -105,6 +115,12 @@ class ShizukuCacheCleaner(
             if (!PackageValidator.isValidFormat(pkg)) {
                 failed.add(pkg)
                 errors[pkg] = CleanerError.PackageInvalid(pkg)
+                continue
+            }
+
+            if (scannedPackageSet != null && !scannedPackageSet.contains(pkg)) {
+                failed.add(pkg)
+                errors[pkg] = CleanerError.PackageNotScanned(pkg)
                 continue
             }
 
@@ -146,9 +162,10 @@ class ShizukuCacheCleaner(
     override suspend fun executePlan(
         plan: CleanupPlan,
         userId: Int,
+        scannedPackageSet: Set<String>?,
         onProgress: (suspend (CleaningProgress) -> Unit)?
     ): CleanerBatchResult = withContext(Dispatchers.IO) {
-        val validation = plan.validate()
+        val validation = plan.validate(scannedPackageSet)
         if (validation.isFailure) {
             val ex = validation.exceptionOrNull() ?: IllegalArgumentException("Invalid plan")
             val targetPkgs = plan.selectedPackages.ifEmpty { listOf("cleanup_plan") }
@@ -162,7 +179,12 @@ class ShizukuCacheCleaner(
 
         when (plan.mode) {
             CleanupMode.SELECTIVE -> {
-                clearPackages(plan.selectedPackages, userId, onProgress)
+                clearPackages(
+                    packages = plan.selectedPackages,
+                    userId = userId,
+                    scannedPackageSet = scannedPackageSet,
+                    onProgress = onProgress
+                )
             }
             CleanupMode.GLOBAL_TRIM -> {
                 val targetBytes = plan.desiredFreeBytes ?: 0L
