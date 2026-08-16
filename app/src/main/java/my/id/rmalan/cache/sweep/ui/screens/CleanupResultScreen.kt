@@ -1,6 +1,7 @@
 package my.id.rmalan.cache.sweep.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,14 +14,12 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Storage
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +37,9 @@ import androidx.compose.ui.unit.dp
 import my.id.rmalan.cache.sweep.model.CleanupMode
 import my.id.rmalan.cache.sweep.model.CleanupResult
 import my.id.rmalan.cache.sweep.scanner.PackageRepository
+import my.id.rmalan.cache.sweep.ui.components.NeoBadge
+import my.id.rmalan.cache.sweep.ui.components.NeoButton
+import my.id.rmalan.cache.sweep.ui.components.NeoCard
 import my.id.rmalan.cache.sweep.ui.components.PartialFailuresSection
 import my.id.rmalan.cache.sweep.util.ByteFormatter
 
@@ -55,11 +57,11 @@ fun CleanupResultScreen(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                Button(
+                NeoButton(
                     onClick = onDone,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 48.dp)
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Done")
                 }
@@ -72,7 +74,7 @@ fun CleanupResultScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
@@ -81,15 +83,20 @@ fun CleanupResultScreen(
                 modifier = Modifier
                     .size(72.dp)
                     .background(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = MaterialTheme.shapes.extraLarge
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .border(
+                        width = 2.5.dp,
+                        color = MaterialTheme.colorScheme.outline,
+                        shape = RoundedCornerShape(16.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.CheckCircle,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.size(36.dp)
                 )
             }
@@ -98,6 +105,7 @@ fun CleanupResultScreen(
                 Text(
                     text = if (result.isSignificantReclaim) "Cleanup complete" else "Cleanup finished",
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.semantics { heading() }
                 )
@@ -109,8 +117,8 @@ fun CleanupResultScreen(
                     Text(
                         text = "${ByteFormatter.format(result.measuredFreedBytes)} freed",
                         style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.semantics { contentDescription = accessibleFreedText }
                     )
                 } else {
@@ -125,15 +133,10 @@ fun CleanupResultScreen(
             }
 
             // Summary Card (Physical Storage & Reported Cache)
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ),
-                shape = MaterialTheme.shapes.large,
+            NeoCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Physical Available Storage
@@ -145,13 +148,14 @@ fun CleanupResultScreen(
                             Icon(
                                 imageVector = Icons.Outlined.Storage,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
-                                text = "Available Storage (Physical)",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
+                                text = "AVAILABLE STORAGE (PHYSICAL)",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.semantics { heading() }
                             )
                         }
@@ -173,14 +177,15 @@ fun CleanupResultScreen(
                         }
                     }
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
 
                     // Reported Cache
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = "Reported Cache",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
+                            text = "REPORTED CACHE",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.semantics { heading() }
                         )
                         MetricComparisonRow(
@@ -200,27 +205,29 @@ fun CleanupResultScreen(
                         }
                     }
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
 
                     // Operation Metadata
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
+                        NeoBadge(
                             text = if (result.mode == CleanupMode.SELECTIVE) {
                                 "${result.successfulPackages} of ${result.attemptedPackages} apps cleaned"
                             } else {
                                 "Global cache trim"
                             },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         if (result.durationMillis > 0) {
                             Text(
                                 text = "Completed in ${String.format("%.1f", result.durationMillis / 1000f)}s",
                                 style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -238,28 +245,24 @@ fun CleanupResultScreen(
             }
 
             // Educational notice (PRD FR-012/FR-013)
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                ),
-                shape = MaterialTheme.shapes.medium,
+            NeoCard(
+                containerColor = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.Top
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Info,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
                         text = "Some cache remains because Android decides which cached files are currently safe to remove.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -281,13 +284,23 @@ private fun MetricComparisonRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (isHighlight) FontWeight.Bold else FontWeight.Normal,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isHighlight) FontWeight.Bold else FontWeight.Normal,
-            color = if (isHighlight) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-        )
+        if (isHighlight) {
+            NeoBadge(
+                text = value,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                textStyle = MaterialTheme.typography.labelMedium
+            )
+        } else {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }

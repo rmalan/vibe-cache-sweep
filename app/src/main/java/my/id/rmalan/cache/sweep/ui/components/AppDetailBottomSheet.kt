@@ -1,5 +1,6 @@
 package my.id.rmalan.cache.sweep.ui.components
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,16 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -49,12 +46,14 @@ fun AppDetailBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         modifier = modifier
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -79,21 +78,15 @@ fun AppDetailBottomSheet(
                         Text(
                             text = app.appName,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Black,
                             modifier = Modifier.semantics { heading() }
                         )
 
-                        Surface(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = MaterialTheme.shapes.extraSmall
-                        ) {
-                            Text(
-                                text = if (app.isSystemApp) "System App" else "User App",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
+                        NeoBadge(
+                            text = if (app.isSystemApp) "System App" else "User App",
+                            containerColor = if (app.isSystemApp) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = if (app.isSystemApp) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
+                        )
                     }
 
                     Text(
@@ -104,25 +97,24 @@ fun AppDetailBottomSheet(
                 }
             }
 
-            HorizontalDivider()
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+            )
 
             // Storage Breakdown Card
-            Card(
+            NeoCard(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
+                containerColor = MaterialTheme.colorScheme.surface
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = "Storage Breakdown",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
+                        text = "STORAGE BREAKDOWN",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.semantics { heading() }
                     )
 
@@ -142,7 +134,10 @@ fun AppDetailBottomSheet(
                         value = "${ByteFormatter.format(app.dataBytes)} (${app.dataBytes} B)"
                     )
 
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 2.dp),
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    )
 
                     StorageMetricRow(
                         label = "Total Storage",
@@ -165,33 +160,33 @@ fun AppDetailBottomSheet(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (supportsSelectiveCleaning && onClearCacheClick != null) {
-                    Button(
+                    NeoButton(
                         onClick = onClearCacheClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp)
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Clear Cache")
                     }
                 }
 
                 // Native Android Storage Settings shortcut (P1-24)
-                Button(
+                NeoButton(
                     onClick = {
                         PackageShortcuts.openStorageSettings(context, app.packageName)
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 48.dp)
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Open Android Storage Settings")
                 }
 
-                OutlinedButton(
+                NeoButton(
                     onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 48.dp)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Close")
                 }
@@ -215,18 +210,27 @@ private fun StorageMetricRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = if (isEmphasized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-            fontWeight = if (isBold || isEmphasized) FontWeight.SemiBold else FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = if (isBold || isEmphasized) FontWeight.Black else FontWeight.Medium,
             modifier = Modifier.weight(1f, fill = false)
         )
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (isEmphasized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-            fontWeight = if (isBold || isEmphasized) FontWeight.Bold else FontWeight.Medium
-        )
+        if (isEmphasized) {
+            NeoBadge(
+                text = value,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                textStyle = MaterialTheme.typography.labelMedium
+            )
+        } else {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = if (isBold) FontWeight.Black else FontWeight.Bold
+            )
+        }
     }
 }

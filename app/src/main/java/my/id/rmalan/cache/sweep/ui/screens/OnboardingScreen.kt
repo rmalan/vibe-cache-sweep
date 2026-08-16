@@ -8,11 +8,14 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,22 +38,15 @@ import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -68,6 +64,10 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import my.id.rmalan.cache.sweep.model.ShizukuState
 import my.id.rmalan.cache.sweep.permissions.UsageAccessManager
 import my.id.rmalan.cache.sweep.shizuku.ShizukuManager
+import my.id.rmalan.cache.sweep.ui.components.NeoBadge
+import my.id.rmalan.cache.sweep.ui.components.NeoButton
+import my.id.rmalan.cache.sweep.ui.components.NeoCard
+import my.id.rmalan.cache.sweep.ui.components.NeoProgressBar
 import my.id.rmalan.cache.sweep.ui.viewmodel.OnboardingStep
 import my.id.rmalan.cache.sweep.ui.viewmodel.OnboardingUiState
 import my.id.rmalan.cache.sweep.ui.viewmodel.OnboardingViewModel
@@ -100,8 +100,9 @@ fun OnboardingScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Step ${state.currentStep.stepNumber} of ${state.currentStep.totalSteps}",
+                        text = "STEP ${state.currentStep.stepNumber} OF ${state.currentStep.totalSteps}",
                         style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black,
                         modifier = Modifier.semantics { heading() }
                     )
                 },
@@ -124,13 +125,10 @@ fun OnboardingScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            LinearProgressIndicator(
-                progress = { state.progressFraction },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+            NeoProgressBar(
+                progress = state.progressFraction,
+                height = 6.dp,
+                modifier = Modifier.fillMaxWidth()
             )
 
             AnimatedContent(
@@ -211,24 +209,31 @@ private fun WelcomeStepContent(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 20.dp),
+            .padding(horizontal = 20.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(72.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Outlined.CleaningServices,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(16.dp)
                 )
-            }
+                .border(
+                    width = 2.5.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.CleaningServices,
+                contentDescription = null,
+                modifier = Modifier.size(40.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -236,7 +241,7 @@ private fun WelcomeStepContent(
         Text(
             text = "CacheSweep",
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Black,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.semantics { heading() }
         )
@@ -246,6 +251,7 @@ private fun WelcomeStepContent(
         Text(
             text = "Personal Android cache inspection & maintenance",
             style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
@@ -277,14 +283,15 @@ private fun WelcomeStepContent(
         Spacer(modifier = Modifier.weight(1f, fill = false))
         Spacer(modifier = Modifier.height(32.dp))
 
-        Button(
+        NeoButton(
             onClick = onGetStarted,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 52.dp),
-            shape = RoundedCornerShape(12.dp)
+                .defaultMinSize(minHeight = 52.dp)
         ) {
-            Text("Get Started", style = MaterialTheme.typography.titleMedium)
+            Text("Get Started", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
@@ -306,22 +313,29 @@ private fun UsageAccessStepContent(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 20.dp),
+            .padding(horizontal = 20.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.size(60.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Default.Storage,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = RoundedCornerShape(16.dp)
                 )
-            }
+                .border(
+                    width = 2.5.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Storage,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -329,7 +343,7 @@ private fun UsageAccessStepContent(
         Text(
             text = "Usage Access",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Black,
             textAlign = TextAlign.Center,
             modifier = Modifier.semantics { heading() }
         )
@@ -345,25 +359,21 @@ private fun UsageAccessStepContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Card(
+        NeoCard(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = if (hasAccess) {
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                } else {
-                    MaterialTheme.colorScheme.surfaceVariant
-                }
-            ),
-            shape = RoundedCornerShape(12.dp)
+            containerColor = if (hasAccess) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            }
         ) {
             Row(
-                modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = if (hasAccess) Icons.Default.CheckCircle else Icons.Default.Warning,
                     contentDescription = null,
-                    tint = if (hasAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                    tint = if (hasAccess) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(28.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
@@ -371,7 +381,7 @@ private fun UsageAccessStepContent(
                     Text(
                         text = if (hasAccess) "Usage Access Granted" else "Usage Access Required",
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Black
                     )
                     Text(
                         text = if (hasAccess) {
@@ -388,26 +398,24 @@ private fun UsageAccessStepContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Card(
+        NeoCard(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-            shape = RoundedCornerShape(12.dp)
+            containerColor = MaterialTheme.colorScheme.surface
         ) {
             Row(
-                modifier = Modifier.padding(14.dp),
                 verticalAlignment = Alignment.Top
             ) {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "CacheSweep uses this permission only to read storage byte counts. We do not track application usage history or upload any data.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -416,29 +424,26 @@ private fun UsageAccessStepContent(
         Spacer(modifier = Modifier.height(32.dp))
 
         if (!hasAccess) {
-            Button(
+            NeoButton(
                 onClick = onGrantAccess,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp),
-                shape = RoundedCornerShape(12.dp)
+                    .heightIn(min = 48.dp)
             ) {
                 Text("Grant Usage Access")
             }
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        Button(
+        NeoButton(
             onClick = onContinue,
+            containerColor = if (hasAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = if (hasAccess) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 48.dp),
-            colors = if (hasAccess) {
-                ButtonDefaults.buttonColors()
-            } else {
-                ButtonDefaults.filledTonalButtonColors()
-            },
-            shape = RoundedCornerShape(12.dp)
+                .heightIn(min = 48.dp)
         ) {
             Text(if (hasAccess) "Continue" else "Continue Without Permission")
         }
@@ -461,22 +466,29 @@ private fun ShizukuStepContent(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 20.dp),
+            .padding(horizontal = 20.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.tertiaryContainer,
-            modifier = Modifier.size(60.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Default.Security,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = MaterialTheme.colorScheme.onTertiaryContainer
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    shape = RoundedCornerShape(16.dp)
                 )
-            }
+                .border(
+                    width = 2.5.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Security,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onTertiaryContainer
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -484,7 +496,7 @@ private fun ShizukuStepContent(
         Text(
             text = "Shizuku Privileged Bridge",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Black,
             textAlign = TextAlign.Center,
             modifier = Modifier.semantics { heading() }
         )
@@ -500,20 +512,17 @@ private fun ShizukuStepContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Card(
+        NeoCard(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = when (shizukuState) {
-                    is ShizukuState.Ready -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                    is ShizukuState.PermissionRequired -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
-                    is ShizukuState.Connecting -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
-                    is ShizukuState.Error -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
-                    ShizukuState.NotRunning -> MaterialTheme.colorScheme.surfaceVariant
-                }
-            ),
-            shape = RoundedCornerShape(12.dp)
+            containerColor = when (shizukuState) {
+                is ShizukuState.Ready -> MaterialTheme.colorScheme.primaryContainer
+                is ShizukuState.PermissionRequired -> MaterialTheme.colorScheme.secondaryContainer
+                is ShizukuState.Connecting -> MaterialTheme.colorScheme.tertiaryContainer
+                is ShizukuState.Error -> MaterialTheme.colorScheme.errorContainer
+                ShizukuState.NotRunning -> MaterialTheme.colorScheme.surfaceVariant
+            }
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = when (shizukuState) {
@@ -525,10 +534,10 @@ private fun ShizukuStepContent(
                         },
                         contentDescription = null,
                         tint = when (shizukuState) {
-                            is ShizukuState.Ready -> MaterialTheme.colorScheme.primary
-                            is ShizukuState.PermissionRequired -> MaterialTheme.colorScheme.secondary
-                            is ShizukuState.Connecting -> MaterialTheme.colorScheme.tertiary
-                            is ShizukuState.Error -> MaterialTheme.colorScheme.error
+                            is ShizukuState.Ready -> MaterialTheme.colorScheme.onPrimaryContainer
+                            is ShizukuState.PermissionRequired -> MaterialTheme.colorScheme.onSecondaryContainer
+                            is ShizukuState.Connecting -> MaterialTheme.colorScheme.onTertiaryContainer
+                            is ShizukuState.Error -> MaterialTheme.colorScheme.onErrorContainer
                             ShizukuState.NotRunning -> MaterialTheme.colorScheme.onSurfaceVariant
                         },
                         modifier = Modifier.size(24.dp)
@@ -543,7 +552,7 @@ private fun ShizukuStepContent(
                             ShizukuState.NotRunning -> if (isInstalled) "Shizuku Not Running" else "Shizuku Not Installed"
                         },
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Black
                     )
                 }
 
@@ -569,26 +578,24 @@ private fun ShizukuStepContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Card(
+        NeoCard(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-            shape = RoundedCornerShape(12.dp)
+            containerColor = MaterialTheme.colorScheme.surface
         ) {
             Row(
-                modifier = Modifier.padding(14.dp),
                 verticalAlignment = Alignment.Top
             ) {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "Shizuku is required for automated cache cleanup. You can still inspect cache usage and open individual app settings without it.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -598,12 +605,13 @@ private fun ShizukuStepContent(
 
         when (shizukuState) {
             is ShizukuState.PermissionRequired -> {
-                Button(
+                NeoButton(
                     onClick = onRequestPermission,
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 48.dp),
-                    shape = RoundedCornerShape(12.dp)
+                        .heightIn(min = 48.dp)
                 ) {
                     Text("Grant Shizuku Permission")
                 }
@@ -616,22 +624,24 @@ private fun ShizukuStepContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (isInstalled) {
-                        OutlinedButton(
+                        NeoButton(
                             onClick = onOpenShizuku,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
                                 .weight(1f)
-                                .heightIn(min = 48.dp),
-                            shape = RoundedCornerShape(12.dp)
+                                .heightIn(min = 48.dp)
                         ) {
                             Text("Open Shizuku")
                         }
                     }
-                    OutlinedButton(
+                    NeoButton(
                         onClick = onRefresh,
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
                             .weight(1f)
-                            .heightIn(min = 48.dp),
-                        shape = RoundedCornerShape(12.dp)
+                            .heightIn(min = 48.dp)
                     ) {
                         Icon(imageVector = Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
@@ -644,17 +654,13 @@ private fun ShizukuStepContent(
             else -> {}
         }
 
-        Button(
+        NeoButton(
             onClick = onContinue,
+            containerColor = if (isReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = if (isReady) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 48.dp),
-            colors = if (isReady) {
-                ButtonDefaults.buttonColors()
-            } else {
-                ButtonDefaults.filledTonalButtonColors()
-            },
-            shape = RoundedCornerShape(12.dp)
+                .heightIn(min = 48.dp)
         ) {
             Text(if (isReady) "Continue" else "Continue Anyway")
         }
@@ -671,22 +677,29 @@ private fun FirstScanStepContent(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 20.dp),
+            .padding(horizontal = 20.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(60.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Outlined.Search,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(16.dp)
                 )
-            }
+                .border(
+                    width = 2.5.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Search,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -694,7 +707,7 @@ private fun FirstScanStepContent(
         Text(
             text = "Ready to Scan",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Black,
             textAlign = TextAlign.Center,
             modifier = Modifier.semantics { heading() }
         )
@@ -710,16 +723,14 @@ private fun FirstScanStepContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        NeoCard(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column {
                 Text(
-                    text = "Setup Summary",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    text = "SETUP SUMMARY",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Black,
                     modifier = Modifier.semantics { heading() }
                 )
 
@@ -730,46 +741,31 @@ private fun FirstScanStepContent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Usage Access:", style = MaterialTheme.typography.bodyMedium)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (state.hasUsageAccess) Icons.Default.CheckCircle else Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = if (state.hasUsageAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = if (state.hasUsageAccess) "Granted" else "Not Granted",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+                    Text("Usage Access:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    NeoBadge(
+                        text = if (state.hasUsageAccess) "GRANTED" else "NOT GRANTED",
+                        containerColor = if (state.hasUsageAccess) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.errorContainer,
+                        contentColor = if (state.hasUsageAccess) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onErrorContainer
+                    )
                 }
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Shizuku Cleaning:", style = MaterialTheme.typography.bodyMedium)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        val isReady = state.shizukuState is ShizukuState.Ready
-                        Icon(
-                            imageVector = if (isReady) Icons.Default.CheckCircle else Icons.Default.Info,
-                            contentDescription = null,
-                            tint = if (isReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = if (isReady) "Ready" else "Manual Only",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+                    val isReady = state.shizukuState is ShizukuState.Ready
+                    Text("Shizuku Cleaning:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    NeoBadge(
+                        text = if (isReady) "READY" else "MANUAL ONLY",
+                        containerColor = if (isReady) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (isReady) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
@@ -777,13 +773,14 @@ private fun FirstScanStepContent(
         Spacer(modifier = Modifier.weight(1f, fill = false))
         Spacer(modifier = Modifier.height(32.dp))
 
-        Button(
+        NeoButton(
             onClick = onStartScan,
             enabled = !state.isCompleting,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 52.dp),
-            shape = RoundedCornerShape(12.dp)
+                .heightIn(min = 52.dp)
         ) {
             if (state.isCompleting) {
                 CircularProgressIndicator(
@@ -792,7 +789,7 @@ private fun FirstScanStepContent(
                     strokeWidth = 2.dp
                 )
             } else {
-                Text("Start First Scan", style = MaterialTheme.typography.titleMedium)
+                Text("Start First Scan", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
@@ -811,28 +808,32 @@ private fun FeatureValueCard(
     description: String,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    NeoCard(
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.Top
         ) {
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                modifier = Modifier.size(40.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(22.dp)
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(10.dp)
                     )
-                }
+                    .border(
+                        width = 1.5.dp,
+                        color = MaterialTheme.colorScheme.outline,
+                        shape = RoundedCornerShape(10.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(22.dp)
+                )
             }
 
             Spacer(modifier = Modifier.width(14.dp))
@@ -841,7 +842,7 @@ private fun FeatureValueCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.Black
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(

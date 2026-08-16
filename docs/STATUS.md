@@ -269,16 +269,22 @@ Robust error isolation and recovery paths ensuring the app never crashes, hangs,
 * [x] `MainActivity` updated with `MainDestination.SETTINGS` destination and dynamic `themeMode` binding
 * [x] Added 16 unit tests across `CleanupHistoryRepositoryTest`, `SettingsViewModelTest`, and `SettingsFormattingTest`; 213/213 unit tests passing across 39 test suites
 
-## Material 3 Theme & Accessibility Review (P4-20 to P4-25)
+## Neobrutalism Design System (D-033)
 
-* [x] P4-20 Material 3 color system configured with restrained, high-contrast palette tokens (`Color.kt`, `Theme.kt`, `D-030`)
-* [x] P4-21 Light mode color scheme refined with WCAG AAA compliant surface/onSurface contrasts
-* [x] P4-22 Dark mode color scheme refined with high-contrast readable tones on true dark backgrounds
-* [x] P4-23 Font scaling verified: Typography tokens use strict SP units across `displayLarge` through `labelSmall` with responsive line heights and non-clipping layouts
-* [x] P4-24 TalkBack semantics helper implemented (`ByteFormatter.formatAccessible`) expanding byte figures into natural spoken words (e.g. `1.42 gigabytes of cache`) and merged row descriptions
-* [x] P4-25 Touch-target review completed: all interactive buttons, chips, switch rows, and list items have minimum 48x48 dp touch bounds
-* [x] Semantic `heading()` attributes applied to all screen and section headings across `DashboardScreen`, `AppCacheListScreen`, `OnboardingScreen`, `SettingsScreen`, `CleaningProgressScreen`, `CleanupResultScreen`, and `DiagnosticScreen`
-* [x] Added 4 unit tests in `ThemeAndAccessibilityTest`; 217/217 unit tests passing across 40 test suites
+* [x] Neobrutalist design tokens implemented (`Color.kt`, `Theme.kt`, `Type.kt`) with punchy high-contrast palette and Cyber-Brutalist dark theme
+* [x] Core Neobrutalist component library created (`NeoComponents.kt`): `NeoCard`, `NeoButton`, `NeoBadge`, and `NeoProgressBar` featuring 2dp–2.5dp solid black/chalk outlines, hard unblurred drop shadows (`offset(4.dp, 4.dp)`), and flat containers
+* [x] Neobrutalism redesign applied across all app screens:
+  - `DashboardScreen`: Replaced all cards with `NeoCard`, `NeoProgressBar`, `NeoButton`, and `NeoBadge`
+  - `AppCacheListScreen`: Restyled search input field (2dp border), Neobrutalist filter chips (solid 1.5dp–2dp border), `NeoProgressBar`, and floating action button
+  - `AppCacheRow`: Metadata badges and byte tags styled with `NeoBadge`
+  - `AppDetailBottomSheet`: Storage breakdown styled with `NeoCard` and `NeoButton` CTAs
+  - `CleanupConfirmationDialog`: High-contrast confirmation modal with `NeoCard` estimate and bordered action buttons
+  - `CleaningProgressScreen`: Chunky progress indicator with `NeoCard` and `NeoProgressBar`
+  - `CleanupResultScreen`: Result card with `NeoCard` metrics comparison table, `NeoBadge` deltas, and `NeoButton` Done CTA
+  - `PartialFailuresSection`: Solid error card with `NeoCard` and expandable failure details
+  - `SettingsScreen`: Modular `NeoCard` sections, `NeoBadge` badges, bold switches, and bordered dialogs
+  - `OnboardingScreen`: 4-step wizard with `NeoProgressBar`, `NeoCard` summary, `NeoBadge` status badges, and `NeoButton` CTAs
+* [x] All 214+ unit tests pass cleanly (`./gradlew testDebugUnitTest`) and APK builds cleanly (`./gradlew assembleDebug`)
 
 ---
 

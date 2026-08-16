@@ -1,5 +1,6 @@
 package my.id.rmalan.cache.sweep.ui.screens
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -62,6 +64,8 @@ import my.id.rmalan.cache.sweep.scanner.PackageRepository
 import my.id.rmalan.cache.sweep.ui.components.AppCacheRow
 import my.id.rmalan.cache.sweep.ui.components.AppDetailBottomSheet
 import my.id.rmalan.cache.sweep.ui.components.CleanupConfirmationDialog
+import my.id.rmalan.cache.sweep.ui.components.NeoBadge
+import my.id.rmalan.cache.sweep.ui.components.NeoProgressBar
 import my.id.rmalan.cache.sweep.ui.viewmodel.AppsEvent
 import my.id.rmalan.cache.sweep.ui.viewmodel.AppsViewModel
 import my.id.rmalan.cache.sweep.ui.viewmodel.CleanerEvent
@@ -224,13 +228,25 @@ fun AppCacheListScreen(
                             }
                             cleanerViewModel.onEvent(CleanerEvent.RequestClean(plan))
                         },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        shape = RoundedCornerShape(12.dp),
                         icon = {
                             Icon(Icons.Outlined.CleaningServices, contentDescription = null)
                         },
                         text = {
-                            Text("$label • ${ByteFormatter.format(totalCache)}")
+                            Text(
+                                text = "$label • ${ByteFormatter.format(totalCache)}",
+                                fontWeight = FontWeight.Black
+                            )
                         },
-                        modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                        modifier = Modifier
+                            .defaultMinSize(minHeight = 48.dp)
+                            .border(
+                                width = 2.dp,
+                                color = MaterialTheme.colorScheme.outline,
+                                shape = RoundedCornerShape(12.dp)
+                            )
                     )
                 }
             }
@@ -261,10 +277,12 @@ fun AppCacheListScreen(
                         }
                     },
                     singleLine = true,
-                    shape = MaterialTheme.shapes.medium,
+                    shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        focusedBorderColor = MaterialTheme.colorScheme.outline,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -284,21 +302,59 @@ fun AppCacheListScreen(
                         FilterChip(
                             selected = state.sort == sortOption,
                             onClick = { viewModel.onEvent(AppsEvent.SortChanged(sortOption)) },
-                            label = { Text(sortOption.label) },
-                            colors = FilterChipDefaults.filterChipColors()
+                            label = { Text(sortOption.label, fontWeight = FontWeight.Bold) },
+                            shape = RoundedCornerShape(8.dp),
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = state.sort == sortOption,
+                                borderColor = MaterialTheme.colorScheme.outline,
+                                selectedBorderColor = MaterialTheme.colorScheme.outline,
+                                borderWidth = 1.5.dp,
+                                selectedBorderWidth = 2.dp
+                            ),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                         )
                     }
 
                     FilterChip(
                         selected = !state.showZeroCacheApps,
                         onClick = { viewModel.onEvent(AppsEvent.ToggleShowZeroCache(!state.showZeroCacheApps)) },
-                        label = { Text("Hide 0 B") }
+                        label = { Text("Hide 0 B", fontWeight = FontWeight.Bold) },
+                        shape = RoundedCornerShape(8.dp),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = !state.showZeroCacheApps,
+                            borderColor = MaterialTheme.colorScheme.outline,
+                            selectedBorderColor = MaterialTheme.colorScheme.outline,
+                            borderWidth = 1.5.dp,
+                            selectedBorderWidth = 2.dp
+                        ),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
                     )
 
                     FilterChip(
                         selected = state.showSystemApps,
                         onClick = { viewModel.onEvent(AppsEvent.ToggleShowSystem(!state.showSystemApps)) },
-                        label = { Text("System Apps") }
+                        label = { Text("System Apps", fontWeight = FontWeight.Bold) },
+                        shape = RoundedCornerShape(8.dp),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = state.showSystemApps,
+                            borderColor = MaterialTheme.colorScheme.outline,
+                            selectedBorderColor = MaterialTheme.colorScheme.outline,
+                            borderWidth = 1.5.dp,
+                            selectedBorderWidth = 2.dp
+                        ),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
                     )
                 }
 
@@ -308,11 +364,12 @@ fun AppCacheListScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        LinearProgressIndicator(
-                            progress = { scanState.progressFraction },
-                            modifier = Modifier.fillMaxWidth()
+                        NeoProgressBar(
+                            progress = scanState.progressFraction,
+                            height = 10.dp
                         )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -321,13 +378,15 @@ fun AppCacheListScreen(
                             Text(
                                 text = "Scanning ${scanState.scannedCount}/${scanState.totalCount} apps",
                                 style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             scanState.currentAppName?.let {
                                 Text(
                                     text = it,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
                                     maxLines = 1
                                 )
                             }
@@ -335,7 +394,10 @@ fun AppCacheListScreen(
                     }
                 }
 
-                HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
+                HorizontalDivider(
+                    modifier = Modifier.padding(top = 4.dp),
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                )
 
                 // Application List (P1-17)
                 if (state.displayedApps.isEmpty()) {

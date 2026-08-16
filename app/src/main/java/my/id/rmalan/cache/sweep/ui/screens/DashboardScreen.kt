@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -77,6 +78,10 @@ import my.id.rmalan.cache.sweep.shizuku.ShizukuManager
 import my.id.rmalan.cache.sweep.ui.components.AppDetailBottomSheet
 import my.id.rmalan.cache.sweep.ui.components.AppIcon
 import my.id.rmalan.cache.sweep.ui.components.CleanupConfirmationDialog
+import my.id.rmalan.cache.sweep.ui.components.NeoBadge
+import my.id.rmalan.cache.sweep.ui.components.NeoButton
+import my.id.rmalan.cache.sweep.ui.components.NeoCard
+import my.id.rmalan.cache.sweep.ui.components.NeoProgressBar
 import my.id.rmalan.cache.sweep.ui.viewmodel.CleanerEvent
 import my.id.rmalan.cache.sweep.ui.viewmodel.CleanerViewModel
 import my.id.rmalan.cache.sweep.ui.viewmodel.DashboardEvent
@@ -314,40 +319,38 @@ fun DashboardScreen(
 
 @Composable
 private fun ScanningStatusBanner(scanState: ScanState) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-        ),
-        shape = RoundedCornerShape(12.dp),
+    NeoCard(
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             when (scanState) {
                 is ScanState.Scanning -> {
-                    LinearProgressIndicator(
-                        progress = { scanState.progressFraction },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(CircleShape)
+                    NeoProgressBar(
+                        progress = scanState.progressFraction,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        trackColor = MaterialTheme.colorScheme.surface,
+                        height = 10.dp
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "Scanning ${scanState.scannedCount}/${scanState.totalCount} apps...",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         scanState.currentAppName?.let {
                             Text(
                                 text = it,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -355,29 +358,31 @@ private fun ScanningStatusBanner(scanState: ScanState) {
                     }
                 }
                 is ScanState.Discovering -> {
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(CircleShape)
+                    NeoProgressBar(
+                        progress = 0.1f,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        trackColor = MaterialTheme.colorScheme.surface,
+                        height = 10.dp
                     )
                     Text(
                         text = "Discovering installed applications...",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
                 else -> {
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(CircleShape)
+                    NeoProgressBar(
+                        progress = 0.5f,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        trackColor = MaterialTheme.colorScheme.surface,
+                        height = 10.dp
                     )
                     Text(
                         text = "Updating cache measurements...",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
@@ -394,15 +399,10 @@ fun DeviceStorageCard(
     usedPercentage: Float,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-        ),
+    NeoCard(
         modifier = modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
@@ -412,15 +412,14 @@ fun DeviceStorageCard(
                 Icon(
                     imageVector = Icons.Outlined.Storage,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
                     text = "DEVICE STORAGE",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    letterSpacing = MaterialTheme.typography.labelMedium.letterSpacing,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.semantics { heading() }
                 )
             }
@@ -441,7 +440,7 @@ fun DeviceStorageCard(
                         Text(
                             text = "${ByteFormatter.format(storageInfo.usedBytes)} used",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Black
                         )
                         Text(
                             text = "${ByteFormatter.format(storageInfo.availableBytes)} available of ${ByteFormatter.format(storageInfo.totalBytes)}",
@@ -449,26 +448,19 @@ fun DeviceStorageCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Text(
+                    NeoBadge(
                         text = String.format(Locale.US, "%.0f%%", usedPercentage * 100),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        containerColor = if (usedPercentage > 0.90f) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = if (usedPercentage > 0.90f) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
+                        textStyle = MaterialTheme.typography.labelLarge
                     )
                 }
 
-                LinearProgressIndicator(
-                    progress = { usedPercentage },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(10.dp)
-                        .clip(CircleShape),
-                    color = if (usedPercentage > 0.90f) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    },
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                NeoProgressBar(
+                    progress = usedPercentage,
+                    color = if (usedPercentage > 0.90f) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    height = 14.dp
                 )
             } else {
                 Text(
@@ -476,11 +468,9 @@ fun DeviceStorageCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(10.dp)
-                        .clip(CircleShape)
+                NeoProgressBar(
+                    progress = 0f,
+                    height = 14.dp
                 )
             }
         }
@@ -502,15 +492,10 @@ fun ApplicationCacheCard(
 ) {
     val accessibleCacheText = ByteFormatter.formatAccessible(totalCacheBytes, "of cache reported")
 
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-        ),
+    NeoCard(
         modifier = modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
@@ -520,14 +505,14 @@ fun ApplicationCacheCard(
                 Icon(
                     imageVector = Icons.Outlined.CleaningServices,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
                     text = "APPLICATION CACHE",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.semantics { heading() }
                 )
             }
@@ -541,8 +526,8 @@ fun ApplicationCacheCard(
             Text(
                 text = ByteFormatter.format(totalCacheBytes),
                 style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.semantics { contentDescription = accessibleCacheText }
             )
 
@@ -559,10 +544,10 @@ fun ApplicationCacheCard(
                     "Scanning apps..."
                 }
 
-                Text(
+                NeoBadge(
                     text = appCountText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
 
                 if (scanDurationMillis > 0) {
@@ -584,7 +569,7 @@ fun ApplicationCacheCard(
 
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 4.dp),
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
             )
 
             Text(
@@ -610,15 +595,11 @@ fun ShizukuStatusCard(
 ) {
     when (shizukuState) {
         is ShizukuState.Ready -> {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.35f)
-                ),
+            NeoCard(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 modifier = modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
@@ -628,13 +609,14 @@ fun ShizukuStatusCard(
                         Icon(
                             imageVector = Icons.Filled.CheckCircle,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(20.dp)
                         )
                         Text(
                             text = "Shizuku Connected (UID ${shizukuState.uid})",
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
 
@@ -642,14 +624,16 @@ fun ShizukuStatusCard(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         if (supportsSelectiveCleaning) {
-                            SuggestionChip(
-                                onClick = {},
-                                label = { Text("Selective Clear") }
+                            NeoBadge(
+                                text = "Selective Clear",
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = MaterialTheme.colorScheme.onSurface
                             )
                         }
-                        SuggestionChip(
-                            onClick = {},
-                            label = { Text("Global Trimming") }
+                        NeoBadge(
+                            text = "Global Trimming",
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -657,15 +641,11 @@ fun ShizukuStatusCard(
         }
 
         is ShizukuState.PermissionRequired -> {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
-                ),
+            NeoCard(
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 modifier = modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
@@ -675,13 +655,14 @@ fun ShizukuStatusCard(
                         Icon(
                             imageVector = Icons.Outlined.Security,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.tertiary,
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
                             text = "Shizuku Permission Required",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
                             modifier = Modifier.semantics { heading() }
                         )
                     }
@@ -689,14 +670,14 @@ fun ShizukuStatusCard(
                     Text(
                         text = "Permission is required to execute system-level cache clearing operations.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
 
-                    Button(
+                    NeoButton(
                         onClick = onGrantPermission,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp)
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Grant Permission")
                     }
@@ -705,37 +686,32 @@ fun ShizukuStatusCard(
         }
 
         is ShizukuState.Connecting -> {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                ),
+            NeoCard(
                 modifier = modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                     Text(
                         text = "Connecting to Shizuku service...",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
         }
 
         is ShizukuState.NotRunning -> {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                ),
+            NeoCard(
                 modifier = modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
@@ -745,13 +721,13 @@ fun ShizukuStatusCard(
                         Icon(
                             imageVector = Icons.Outlined.Info,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
                             text = "Shizuku Isn't Running",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Black,
                             modifier = Modifier.semantics { heading() }
                         )
                     }
@@ -766,20 +742,20 @@ fun ShizukuStatusCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedButton(
+                        NeoButton(
                             onClick = onOpenShizuku,
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 48.dp)
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("Open Shizuku")
                         }
 
-                        FilledTonalButton(
+                        NeoButton(
                             onClick = onCheckAgain,
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 48.dp)
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("Check Again")
                         }
@@ -789,15 +765,11 @@ fun ShizukuStatusCard(
         }
 
         is ShizukuState.Error -> {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
-                ),
+            NeoCard(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
                 modifier = modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
@@ -807,13 +779,14 @@ fun ShizukuStatusCard(
                         Icon(
                             imageVector = Icons.Outlined.Warning,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
+                            tint = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
                             text = "Privileged Service Disconnected",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.semantics { heading() }
                         )
                     }
@@ -821,14 +794,14 @@ fun ShizukuStatusCard(
                     Text(
                         text = "The Shizuku binder connection encountered an error: ${shizukuState.reason}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onErrorContainer
                     )
 
-                    FilledTonalButton(
+                    NeoButton(
                         onClick = onCheckAgain,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp)
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Reconnect")
                     }
@@ -858,14 +831,11 @@ fun PrimaryCleanupHero(
         "Setup Shizuku to clean cache"
     }
 
-    Button(
+    NeoButton(
         onClick = onCleanClick,
         enabled = enabled,
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        ),
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = 72.dp)
@@ -888,13 +858,15 @@ fun PrimaryCleanupHero(
                 Icon(
                     imageVector = Icons.Outlined.CleaningServices,
                     contentDescription = null,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
                 Column {
                     Text(
                         text = "CLEAN CACHE",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                     Text(
                         text = if (isShizukuReady) {
@@ -910,18 +882,12 @@ fun PrimaryCleanupHero(
 
             if (totalCacheBytes > 0L) {
                 Spacer(modifier = Modifier.width(8.dp))
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
-                ) {
-                    Text(
-                        text = ByteFormatter.format(totalCacheBytes),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
+                NeoBadge(
+                    text = ByteFormatter.format(totalCacheBytes),
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    textStyle = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }
@@ -951,32 +917,39 @@ fun LargestCachesCard(
             Text(
                 text = "Largest caches",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Black,
                 modifier = Modifier.semantics { heading() }
             )
 
             if (scannedAppsCount > 0) {
-                TextButton(
-                    onClick = onViewAllClick,
-                    modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                Row(
+                    modifier = Modifier
+                        .clickable(
+                            role = Role.Button,
+                            onClick = onViewAllClick
+                        )
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("View all ($scannedAppsCount) →")
+                    NeoBadge(
+                        text = "VIEW ALL ($scannedAppsCount) →",
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        borderWidth = 1.5.dp,
+                        textStyle = MaterialTheme.typography.labelMedium
+                    )
                 }
             }
         }
 
         if (largestApps.isEmpty()) {
-            Card(
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-                ),
+            NeoCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
+                        .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -987,11 +960,8 @@ fun LargestCachesCard(
                 }
             }
         } else {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-                ),
+            NeoCard(
+                contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -1024,7 +994,7 @@ fun LargestCachesCard(
                                 Text(
                                     text = app.appName,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
+                                    fontWeight = FontWeight.Bold,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -1039,11 +1009,10 @@ fun LargestCachesCard(
 
                             Spacer(modifier = Modifier.width(8.dp))
 
-                            Text(
+                            NeoBadge(
                                 text = ByteFormatter.format(app.cacheBytes),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             )
 
                             Spacer(modifier = Modifier.width(8.dp))
@@ -1059,13 +1028,13 @@ fun LargestCachesCard(
                         if (index < largestApps.lastIndex) {
                             HorizontalDivider(
                                 modifier = Modifier.padding(start = 68.dp),
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
                             )
                         }
                     }
 
                     HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                     )
 
                     Box(
@@ -1086,14 +1055,14 @@ fun LargestCachesCard(
                             Text(
                                 text = "View all $scannedAppsCount applications",
                                 style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold
                             )
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }

@@ -1,10 +1,12 @@
 package my.id.rmalan.cache.sweep.ui.screens
 
 import android.content.Intent
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -36,21 +38,18 @@ import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -76,6 +75,9 @@ import my.id.rmalan.cache.sweep.model.AppSort
 import my.id.rmalan.cache.sweep.model.ShizukuState
 import my.id.rmalan.cache.sweep.model.ThemeMode
 import my.id.rmalan.cache.sweep.shizuku.ShizukuManager
+import my.id.rmalan.cache.sweep.ui.components.NeoBadge
+import my.id.rmalan.cache.sweep.ui.components.NeoButton
+import my.id.rmalan.cache.sweep.ui.components.NeoCard
 import my.id.rmalan.cache.sweep.ui.viewmodel.SettingsEvent
 import my.id.rmalan.cache.sweep.ui.viewmodel.SettingsViewModel
 import my.id.rmalan.cache.sweep.util.SettingsFormatter
@@ -114,7 +116,7 @@ fun SettingsScreen(
                 title = {
                     Text(
                         text = "Settings",
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Black,
                         modifier = Modifier.semantics { heading() }
                     )
                 },
@@ -148,11 +150,8 @@ fun SettingsScreen(
                 title = "Scanning"
             )
 
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                ),
+            NeoCard(
+                contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(vertical = 4.dp)) {
@@ -166,7 +165,7 @@ fun SettingsScreen(
 
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
                     )
 
                     // P4-12: Show zero-cache apps
@@ -179,7 +178,7 @@ fun SettingsScreen(
 
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
                     )
 
                     // P4-13: Sort preference
@@ -198,11 +197,8 @@ fun SettingsScreen(
                 title = "Appearance"
             )
 
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                ),
+            NeoCard(
+                contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 SettingsClickableRow(
@@ -219,15 +215,10 @@ fun SettingsScreen(
                 title = "Shizuku Service"
             )
 
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                ),
+            NeoCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Row(
@@ -239,7 +230,7 @@ fun SettingsScreen(
                             Text(
                                 text = "Service Status",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.Black
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
@@ -251,8 +242,9 @@ fun SettingsScreen(
                                     is ShizukuState.Error -> "Error: ${s.reason}"
                                 },
                                 style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
                                 color = when (state.shizukuState) {
-                                    is ShizukuState.Ready -> MaterialTheme.colorScheme.primary
+                                    is ShizukuState.Ready -> MaterialTheme.colorScheme.onSurface
                                     ShizukuState.PermissionRequired -> MaterialTheme.colorScheme.error
                                     else -> MaterialTheme.colorScheme.onSurfaceVariant
                                 }
@@ -267,7 +259,7 @@ fun SettingsScreen(
                             },
                             contentDescription = null,
                             tint = when (state.shizukuState) {
-                                is ShizukuState.Ready -> MaterialTheme.colorScheme.primary
+                                is ShizukuState.Ready -> MaterialTheme.colorScheme.onSurface
                                 ShizukuState.PermissionRequired -> MaterialTheme.colorScheme.error
                                 else -> MaterialTheme.colorScheme.outline
                             },
@@ -280,34 +272,35 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         if (state.shizukuState == ShizukuState.PermissionRequired) {
-                            Button(
+                            NeoButton(
                                 onClick = { viewModel.onEvent(SettingsEvent.RequestShizukuPermission) },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .heightIn(min = 48.dp)
+                                containerColor = MaterialTheme.colorScheme.tertiary,
+                                contentColor = MaterialTheme.colorScheme.onTertiary,
+                                modifier = Modifier.weight(1f)
                             ) {
                                 Text("Grant Permission")
                             }
                         } else if (state.shizukuState == ShizukuState.NotRunning) {
-                            FilledTonalButton(
+                            NeoButton(
                                 onClick = {
                                     val launchIntent = shizukuManager?.createShizukuLaunchIntent()
                                     if (launchIntent != null) {
                                         context.startActivity(launchIntent)
                                     }
                                 },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .heightIn(min = 48.dp)
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f)
                             ) {
                                 Text("Open Shizuku")
                             }
                         }
 
-                        OutlinedButton(
+                        NeoButton(
                             onClick = { viewModel.onEvent(SettingsEvent.RefreshShizuku) },
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
                             modifier = (if (state.shizukuState is ShizukuState.Ready) Modifier.fillMaxWidth() else Modifier.weight(1f))
-                                .heightIn(min = 48.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Refresh,
@@ -327,15 +320,10 @@ fun SettingsScreen(
                 title = "Data & History"
             )
 
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                ),
+            NeoCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Row(
@@ -347,7 +335,7 @@ fun SettingsScreen(
                             Text(
                                 text = "Cleanup History",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.Black
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
@@ -357,23 +345,19 @@ fun SettingsScreen(
                             )
                         }
 
-                        Icon(
-                            imageVector = Icons.Outlined.Storage,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
+                        NeoBadge(
+                            text = "${state.historyCount} RECORDS",
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
 
-                    OutlinedButton(
+                    NeoButton(
                         onClick = { showClearHistoryDialog = true },
                         enabled = state.historyCount > 0 && !state.isClearingHistory,
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp)
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.DeleteOutline,
@@ -392,15 +376,10 @@ fun SettingsScreen(
                 title = "Privacy & Guarantees"
             )
 
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                ),
+            NeoCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     PrivacyBulletItem(
@@ -424,27 +403,28 @@ fun SettingsScreen(
                 title = "About"
             )
 
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                ),
+            NeoCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(
-                        text = "CacheSweep",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Version ${state.appVersion}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "CacheSweep",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Black
+                        )
+                        NeoBadge(
+                            text = "v${state.appVersion}",
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Personal Android cache-cleaning utility designed for precision, transparency, and safety.",
@@ -462,9 +442,12 @@ fun SettingsScreen(
     if (showSortDialog) {
         AlertDialog(
             onDismissRequest = { showSortDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(16.dp),
             title = {
                 Text(
                     text = "Default Sort Order",
+                    fontWeight = FontWeight.Black,
                     modifier = Modifier.semantics { heading() }
                 )
             },
@@ -490,14 +473,17 @@ fun SettingsScreen(
                                 onClick = {
                                     viewModel.onEvent(SettingsEvent.SetSortMode(sort))
                                     showSortDialog = false
-                                }
+                                },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = MaterialTheme.colorScheme.onSurface
+                                )
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
                                     text = SettingsFormatter.sortModeLabel(sort),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = SettingsFormatter.sortModeDescription(sort),
@@ -514,9 +500,14 @@ fun SettingsScreen(
                     onClick = { showSortDialog = false },
                     modifier = Modifier.defaultMinSize(minHeight = 48.dp)
                 ) {
-                    Text("Close")
+                    Text("Close", fontWeight = FontWeight.Bold)
                 }
-            }
+            },
+            modifier = Modifier.border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = RoundedCornerShape(16.dp)
+            )
         )
     }
 
@@ -524,9 +515,12 @@ fun SettingsScreen(
     if (showThemeDialog) {
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(16.dp),
             title = {
                 Text(
                     text = "App Theme",
+                    fontWeight = FontWeight.Black,
                     modifier = Modifier.semantics { heading() }
                 )
             },
@@ -552,14 +546,17 @@ fun SettingsScreen(
                                 onClick = {
                                     viewModel.onEvent(SettingsEvent.SetThemeMode(theme))
                                     showThemeDialog = false
-                                }
+                                },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = MaterialTheme.colorScheme.onSurface
+                                )
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
                                     text = SettingsFormatter.themeModeLabel(theme),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = SettingsFormatter.themeModeDescription(theme),
@@ -576,9 +573,14 @@ fun SettingsScreen(
                     onClick = { showThemeDialog = false },
                     modifier = Modifier.defaultMinSize(minHeight = 48.dp)
                 ) {
-                    Text("Close")
+                    Text("Close", fontWeight = FontWeight.Bold)
                 }
-            }
+            },
+            modifier = Modifier.border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = RoundedCornerShape(16.dp)
+            )
         )
     }
 
@@ -586,6 +588,8 @@ fun SettingsScreen(
     if (showClearHistoryDialog) {
         AlertDialog(
             onDismissRequest = { showClearHistoryDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(16.dp),
             icon = {
                 Icon(
                     imageVector = Icons.Outlined.DeleteOutline,
@@ -596,6 +600,7 @@ fun SettingsScreen(
             title = {
                 Text(
                     text = "Clear Cleanup History?",
+                    fontWeight = FontWeight.Black,
                     modifier = Modifier.semantics { heading() }
                 )
             },
@@ -610,12 +615,20 @@ fun SettingsScreen(
                         viewModel.onEvent(SettingsEvent.ClearHistory)
                         showClearHistoryDialog = false
                     },
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
                     ),
-                    modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = 48.dp)
+                        .border(
+                            width = 2.dp,
+                            color = MaterialTheme.colorScheme.outline,
+                            shape = RoundedCornerShape(10.dp)
+                        )
                 ) {
-                    Text("Clear History")
+                    Text("Clear History", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -623,9 +636,14 @@ fun SettingsScreen(
                     onClick = { showClearHistoryDialog = false },
                     modifier = Modifier.defaultMinSize(minHeight = 48.dp)
                 ) {
-                    Text("Cancel")
+                    Text("Cancel", fontWeight = FontWeight.Bold)
                 }
-            }
+            },
+            modifier = Modifier.border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = RoundedCornerShape(16.dp)
+            )
         )
     }
 }
@@ -645,15 +663,15 @@ private fun SettingsSectionHeader(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.size(18.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = title,
+            text = title.uppercase(),
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Black,
             modifier = Modifier.semantics { heading() }
         )
     }
@@ -683,7 +701,7 @@ private fun SettingsSwitchRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
@@ -694,7 +712,12 @@ private fun SettingsSwitchRow(
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colorScheme.surface,
+                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                checkedBorderColor = MaterialTheme.colorScheme.outline
+            )
         )
     }
 }
@@ -723,13 +746,14 @@ private fun SettingsClickableRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Icon(
@@ -751,7 +775,7 @@ private fun PrivacyBulletItem(
         Text(
             text = "• $title",
             style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.Black
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(

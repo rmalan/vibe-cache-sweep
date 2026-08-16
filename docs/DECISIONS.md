@@ -366,3 +366,40 @@ Adheres to simplicity guidelines ("stupid simple code"), eliminates dead spike c
 ## Consequences
 
 Single-module project structure with faster build times, cleaner UI navigation, and zero dead code while retaining all strict safety and security invariants.
+
+---
+
+# D-033 — Neobrutalism Design System Implementation Across Whole Application
+
+**Status:** Accepted
+
+## Context
+
+The previous UI utilized default Material 3 styling with soft elevations, subtle tonal containers, and pastel dynamic colors that reduced visual punch and contrast. To establish a distinctive, tactile, utilitarian aesthetic suited for an offline systems-level Android utility, the user requested transitioning the entire application to Neobrutalism design.
+
+## Decision
+
+1. **Design Tokens & Palette**:
+   - Light Theme: `#F7F5F0` Warm Canvas, `#FFFFFF` Surface, `#121417` Solid Jet Black Outlines (2dp–2.5dp width), `#FFD028` Electric Yellow Primary, `#00C9A7` Mint Secondary, `#8B5CF6` Purple Tertiary, `#FF5252` Coral Error.
+   - Dark Theme (Cyber-Brutalist): `#121417` Charcoal Canvas, `#1E2228` Slate Surface, `#E4E4E7` Chalk Outlines, `#D4FF00` Neon Volt Primary, `#00F0FF` Cyber Cyan Secondary.
+   - Disabled `dynamicColor` by default so device-level pastel palettes do not wash out the high-contrast aesthetic.
+2. **Core Component Library (`NeoComponents.kt`)**:
+   - `NeoCard`: Solid unblurred drop shadows (`offset(4.dp, 4.dp)`), 2dp solid outlines, flat container surfaces.
+   - `NeoButton`: Chunky tactile button with 2dp border, solid shadow underlay, bold typography.
+   - `NeoBadge`: Solid pill badges with solid borders for metadata, system tags, and byte values.
+   - `NeoProgressBar`: Rectangular bordered gauge with flat solid progress fill.
+3. **Application-Wide Adoption**:
+   - Updated all screens: `DashboardScreen`, `AppCacheListScreen`, `AppDetailBottomSheet`, `CleanupConfirmationDialog`, `CleaningProgressScreen`, `CleanupResultScreen`, `PartialFailuresSection`, `SettingsScreen`, `OnboardingScreen`, and `AppCacheRow`.
+4. **Safety & Accessibility Invariants**:
+   - Maintained all strict SP typography units for system font scaling.
+   - Preserved all TalkBack accessibility labels and screen reader semantic descriptors.
+   - Maintained strict zero-command security guarantees (zero `pm clear` without `--cache-only`, zero `sh -c`).
+
+## Reason
+
+Delivers a high-contrast, tactile, modern aesthetic across all application screens with zero unnecessary complexity or bloat ("stupid simple code"), ensuring clear readability of disk statistics and satisfying user requirements.
+
+## Consequences
+
+CacheSweep features a consistent, bold Neobrutalist design system in both Light and Cyber-Brutalist Dark themes with 100% unit test coverage passing.
+

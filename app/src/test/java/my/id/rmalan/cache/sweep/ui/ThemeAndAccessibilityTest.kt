@@ -55,6 +55,21 @@ class ThemeAndAccessibilityTest {
     }
 
     @Test
+    fun `neobrutalism theme tokens provide high-contrast solid outlines and accents`() {
+        // Light mode outlines must be dark/black
+        assertTrue(LightColorScheme.outline.alpha > 0.9f)
+        assertTrue(LightColorScheme.outline.red < 0.3f)
+        assertTrue(LightColorScheme.outline.green < 0.3f)
+        assertTrue(LightColorScheme.outline.blue < 0.3f)
+
+        // Dark mode outlines must be crisp/light
+        assertTrue(DarkColorScheme.outline.alpha > 0.8f)
+        assertTrue(DarkColorScheme.outline.red > 0.7f)
+        assertTrue(DarkColorScheme.outline.green > 0.7f)
+        assertTrue(DarkColorScheme.outline.blue > 0.7f)
+    }
+
+    @Test
     fun `typography definitions use SP units for dynamic font scaling`() {
         assertEquals(TextUnitType.Sp, Typography.displayLarge.fontSize.type)
         assertEquals(TextUnitType.Sp, Typography.headlineMedium.fontSize.type)
