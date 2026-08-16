@@ -117,14 +117,14 @@ data class CleanupPlan(
         }
 
         fun globalTrim(
-            desiredFreeBytes: Long,
+            desiredFreeBytes: Long? = null,
             estimatedCacheBytes: Long = 0L
         ): CleanupPlan {
             return CleanupPlan(
                 mode = CleanupMode.GLOBAL_TRIM,
                 selectedPackages = emptyList(),
                 estimatedCacheBytes = maxOf(0L, estimatedCacheBytes),
-                desiredFreeBytes = maxOf(0L, desiredFreeBytes)
+                desiredFreeBytes = desiredFreeBytes?.let { maxOf(0L, it) }
             )
         }
 
@@ -137,7 +137,7 @@ data class CleanupPlan(
                 estimatedCacheBytes = estimatedCacheBytes
             )
             return globalTrim(
-                desiredFreeBytes = target,
+                desiredFreeBytes = if (target > 0L) target else null,
                 estimatedCacheBytes = estimatedCacheBytes
             )
         }

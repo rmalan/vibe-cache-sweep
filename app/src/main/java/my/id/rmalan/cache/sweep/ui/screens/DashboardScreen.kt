@@ -226,19 +226,28 @@ fun DashboardScreen(
                     isScanning = state.isScanning,
                     onCleanClick = {
                         if (state.isShizukuReady) {
+                            val storage = state.deviceStorage
                             val plan = if (state.supportsSelectiveCleaning) {
                                 val targetApps = state.allScannedApps.filter { it.cacheBytes > 0 }
                                 if (targetApps.isNotEmpty()) {
                                     CleanupPlan.fromApps(targetApps)
+                                } else if (storage != null) {
+                                    CleanupPlan.globalTrim(
+                                        deviceStorage = storage,
+                                        estimatedCacheBytes = state.totalReportedCacheBytes
+                                    )
                                 } else {
                                     CleanupPlan.globalTrim(
-                                        deviceStorage = state.deviceStorage ?: DeviceStorageInfo(0L, 0L),
                                         estimatedCacheBytes = state.totalReportedCacheBytes
                                     )
                                 }
+                            } else if (storage != null) {
+                                CleanupPlan.globalTrim(
+                                    deviceStorage = storage,
+                                    estimatedCacheBytes = state.totalReportedCacheBytes
+                                )
                             } else {
                                 CleanupPlan.globalTrim(
-                                    deviceStorage = state.deviceStorage ?: DeviceStorageInfo(0L, 0L),
                                     estimatedCacheBytes = state.totalReportedCacheBytes
                                 )
                             }

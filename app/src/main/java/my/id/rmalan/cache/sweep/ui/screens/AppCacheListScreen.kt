@@ -218,13 +218,18 @@ fun AppCacheListScreen(
 
                     ExtendedFloatingActionButton(
                         onClick = {
-                            val plan = if (!state.supportsSelectiveCleaning || !hasSelected) {
+                            val plan = if (state.supportsSelectiveCleaning) {
+                                if (targetApps.isNotEmpty()) {
+                                    CleanupPlan.fromApps(targetApps)
+                                } else {
+                                    CleanupPlan.globalTrim(
+                                        estimatedCacheBytes = totalCache
+                                    )
+                                }
+                            } else {
                                 CleanupPlan.globalTrim(
-                                    desiredFreeBytes = 0L,
                                     estimatedCacheBytes = totalCache
                                 )
-                            } else {
-                                CleanupPlan.fromApps(targetApps)
                             }
                             cleanerViewModel.onEvent(CleanerEvent.RequestClean(plan))
                         },

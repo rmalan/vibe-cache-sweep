@@ -101,6 +101,24 @@ class CleanupPlanTest {
     }
 
     @Test
+    fun `global trim factory with null desiredFreeBytes creates valid plan`() {
+        val plan = CleanupPlan.globalTrim(estimatedCacheBytes = 5000000L)
+        assertNull(plan.desiredFreeBytes)
+        assertEquals(5000000L, plan.estimatedCacheBytes)
+        val result = plan.validate()
+        assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `global trim factory with zero storage fallback creates valid plan with null desiredFreeBytes`() {
+        val storage = DeviceStorageInfo(totalBytes = 0L, availableBytes = 0L)
+        val plan = CleanupPlan.globalTrim(deviceStorage = storage, estimatedCacheBytes = 0L)
+        assertNull(plan.desiredFreeBytes)
+        val result = plan.validate()
+        assertTrue(result.isSuccess)
+    }
+
+    @Test
     fun `selective validation checks against scanned package set when provided`() {
         val scanned = setOf("com.android.chrome", "org.mozilla.firefox")
         val validPlan = CleanupPlan.selective(listOf("com.android.chrome"))

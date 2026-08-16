@@ -472,13 +472,14 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (includin
 
 # Most Recent Completed Task
 
-**Retirement of Phase 0 Fixture & Diagnostic Spike (D-032)**
+**Bugfix: App Cache List "Clean All Cache" Plan Validation Error**
 
-* Removed `:fixture` standalone test subproject and deleted `fixture/` directory.
-* Removed `DiagnosticScreen.kt`, `SafetyTestManager.kt`, and `SafetyTestManagerTest.kt`.
-* Cleaned `MainActivity` destination routing, `DashboardScreen` top bar, and `OnboardingScreen` header.
-* Streamlined Gradle project into a single `:app` module.
-* Verified clean build and 214/214 unit tests passing across 39 test suites.
+* Resolved `Plan validation failed: Global trim target bytes must be positive` occurring when cleaning from `AppCacheListScreen`.
+* Root cause: `AppCacheListScreen` FAB condition `if (!state.supportsSelectiveCleaning || !hasSelected)` incorrectly triggered `globalTrim` with `desiredFreeBytes = 0L` when no apps were individually selected (`!hasSelected`), failing validation.
+* Fixed FAB onClick logic to generate selective cleanup (`CleanupPlan.fromApps(targetApps)`) whenever selective cleaning is supported, and use `CleanupPlan.globalTrim(estimatedCacheBytes = totalCache)` with nullable `desiredFreeBytes` when global trim is needed.
+* Updated `CleanupPlan.globalTrim` factory to support nullable `desiredFreeBytes` and compute target bytes safely.
+* Added unit tests in `CleanupPlanTest` and `CleanupCoordinatorTest` covering `desiredFreeBytes = null` resolution and execution.
+* Verified 217/217 unit tests passing.
 
 ---
 

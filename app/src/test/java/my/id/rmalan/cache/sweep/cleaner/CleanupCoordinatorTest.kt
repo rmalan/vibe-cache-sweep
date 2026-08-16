@@ -422,6 +422,38 @@ class CleanupCoordinatorTest {
     }
 
     @Test
+    fun `global trim with null desiredFreeBytes computes target from pre-clean storage snapshot`() = runTest {
+        val fakeCleaner = FakeCacheCleaner()
+        val fakeStorage = FakeDeviceStorageRepository(
+            snapshots = mutableListOf(
+                DeviceStorageInfo(100_000_000_000L, 50_000_000_000L),
+                DeviceStorageInfo(100_000_000_000L, 55_000_000_000L)
+            )
+        )
+        val fakeStats = FakeStorageStatsRepository()
+
+        val coordinator = CleanupCoordinator(
+            cleaner = fakeCleaner,
+            storage = fakeStorage,
+            storageStatsRepository = fakeStats,
+            settlingDelayMillis = 0L
+        )
+
+        val statesEmitted = mutableListOf<CleaningState>()
+        val plan = CleanupPlan.globalTrim(estimatedCacheBytes = 5_000_000_000L)
+
+        val result = coordinator.clean(
+            plan = plan,
+            onProgress = { statesEmitted.add(it) }
+        )
+
+        assertTrue(statesEmitted.last() is CleaningState.Completed)
+        assertEquals(CleanupMode.GLOBAL_TRIM, result.mode)
+        assertEquals(1, fakeCleaner.executedPlans.size)
+        assertEquals(55_000_000_000L, fakeCleaner.executedPlans[0].desiredFreeBytes)
+    }
+
+    @Test
     fun `negative storage delta is clamped to zero`() = runTest {
         val fakeCleaner = FakeCacheCleaner()
         // Available space decreased from 50GB to 48GB during cleanup (e.g. background writes)
