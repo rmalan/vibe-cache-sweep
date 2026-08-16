@@ -2,6 +2,7 @@ package my.id.rmalan.cache.sweep.model
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -41,11 +42,40 @@ class StorageModelsTest {
             appBytes = 0L,
             dataBytes = 0L,
             isSystemApp = true,
-            measurementAvailable = false
+            measurementAvailable = false,
+            errorMessage = "Permission denied"
         )
         assertEquals(0L, app.totalBytes)
         assertTrue(app.isSystemApp)
         assertFalse(app.measurementAvailable)
+        assertEquals("Permission denied", app.errorMessage)
+    }
+
+    @Test
+    fun appCacheInfo_fromPackageAndStats_mapsFieldsAccurately() {
+        val pkg = DiscoveredPackage(
+            packageName = "com.example.pkg",
+            appName = "My App",
+            isSystemApp = false
+        )
+        val stats = PackageStorageStats(
+            cacheBytes = 50_000L,
+            appBytes = 150_000L,
+            dataBytes = 250_000L,
+            measurementAvailable = true,
+            errorMessage = null
+        )
+
+        val info = AppCacheInfo.fromPackageAndStats(pkg, stats)
+        assertEquals("com.example.pkg", info.packageName)
+        assertEquals("My App", info.appName)
+        assertEquals(50_000L, info.cacheBytes)
+        assertEquals(150_000L, info.appBytes)
+        assertEquals(250_000L, info.dataBytes)
+        assertEquals(450_000L, info.totalBytes)
+        assertFalse(info.isSystemApp)
+        assertTrue(info.measurementAvailable)
+        assertNull(info.errorMessage)
     }
 
     @Test

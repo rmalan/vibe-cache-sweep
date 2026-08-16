@@ -1,7 +1,6 @@
 package my.id.rmalan.cache.sweep.scanner
 
 import android.content.Context
-import android.os.Process
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.sync.Semaphore
@@ -10,6 +9,7 @@ import kotlinx.coroutines.withContext
 import my.id.rmalan.cache.sweep.model.AppCacheInfo
 import my.id.rmalan.cache.sweep.model.DiscoveredPackage
 import my.id.rmalan.cache.sweep.model.ScanResult
+import my.id.rmalan.cache.sweep.storage.AndroidStorageStatsRepository
 import my.id.rmalan.cache.sweep.storage.StorageStatsRepository
 
 class AndroidCacheScanner(
@@ -19,7 +19,7 @@ class AndroidCacheScanner(
 
     constructor(
         context: Context,
-        storageStatsRepository: StorageStatsRepository
+        storageStatsRepository: StorageStatsRepository = AndroidStorageStatsRepository(context)
     ) : this(
         packageRepository = AndroidPackageRepository(context),
         storageStatsRepository = storageStatsRepository
@@ -63,31 +63,7 @@ class AndroidCacheScanner(
     }
 
     private fun scanPackageInternal(pkg: DiscoveredPackage): AppCacheInfo {
-        return try {
-            val stats = storageStatsRepository.query(
-                packageName = pkg.packageName,
-                storageUuid = pkg.storageUuid,
-                userHandle = Process.myUserHandle()
-            )
-            AppCacheInfo(
-                packageName = pkg.packageName,
-                appName = pkg.appName,
-                cacheBytes = stats.cacheBytes,
-                appBytes = stats.appBytes,
-                dataBytes = stats.dataBytes,
-                isSystemApp = pkg.isSystemApp,
-                measurementAvailable = true
-            )
-        } catch (e: Exception) {
-            AppCacheInfo(
-                packageName = pkg.packageName,
-                appName = pkg.appName,
-                cacheBytes = 0L,
-                appBytes = 0L,
-                dataBytes = 0L,
-                isSystemApp = pkg.isSystemApp,
-                measurementAvailable = false
-            )
-        }
+        val stats = storageStatsRepository.queryStats(pkg)
+        return AppCacheInfo.fromPackageAndStats(pkg, stats)
     }
 }

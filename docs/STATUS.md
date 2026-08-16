@@ -3,14 +3,14 @@
 **Last updated:** 2026-08-16
 **Overall status:** In progress
 **Current phase:** Phase 1 — Production Cache Scanner
-**Current task:** P1-06 through P1-09 — StorageStats Repository & Per-Package Storage Model
+**Current task:** P1-10 through P1-16 — Production CacheScanner Engine (Progressive State, Metrics, Aggregation)
 
 ---
 
 # At a Glance
 
 * [x] Phase 0 — Technical Feasibility
-* [ ] Phase 1 — Production Cache Scanner (P1-01 to P1-05 Complete)
+* [ ] Phase 1 — Production Cache Scanner (P1-01 to P1-09 Complete)
 * [ ] Phase 2 — Production Cleaner
 * [ ] Phase 3 — Cleanup Coordinator & Results
 * [ ] Phase 4 — Product UI & Persistence
@@ -20,17 +20,17 @@
 
 # Current Task
 
-## P1-06 through P1-09 — Production StorageStats Repository & Per-Package Storage Model
+## P1-10 through P1-16 — Production CacheScanner Engine
 
 **Status:** Ready to start
 
 ### Objective
 
-Implement production `StorageStatsRepository` handling internal/default storage volumes, resilient fallback for packages whose stats cannot be queried, and per-package cache/app/data storage modeling.
+Implement production `CacheScanner` with progressive scan state emission (`Flow`), bounded concurrency, duration measurement, aggregate reported cache calculations, and attempted vs successful measurement tracking.
 
 ### Expected outcome
 
-Robust `StorageStatsRepository` integrated with `DiscoveredPackage` and `AndroidCacheScanner`.
+Robust reactive scanner interface and implementation ready to power the user-facing cache list UI.
 
 ---
 
@@ -127,6 +127,14 @@ Robust `StorageStatsRepository` integrated with `DiscoveredPackage` and `Android
 * [x] P1-05 CacheSweep self-package filtering implemented (`includeSelf = false` by default)
 * [x] Comprehensive unit tests added in `DiscoveredPackageTest`, `AndroidPackageRepositoryTest`, and `AndroidCacheScannerTest`
 
+## StorageStats Repository & Per-Package Storage Model (P1-06 to P1-09)
+
+* [x] P1-06 Production `StorageStatsRepository` interface and `AndroidStorageStatsRepository` implementation created
+* [x] P1-07 Volume UUID resolution implemented defaulting gracefully to `StorageManager.UUID_DEFAULT`
+* [x] P1-08 Robust exception isolation implemented (`SecurityException`, `IOException`, `IllegalArgumentException`, etc.) returning typed unmeasured stats with error descriptions
+* [x] P1-09 Dedicated `PackageStorageStats` model created with `ZERO` / `failed(...)` factories, non-negative value coercion, and `AppCacheInfo.fromPackageAndStats` mapping
+* [x] Comprehensive unit tests added in `PackageStorageStatsTest`, `AndroidStorageStatsRepositoryTest`, `StorageModelsTest`, and updated `AndroidCacheScannerTest`
+
 ---
 
 # Phase 0 Gate: PASSED
@@ -222,7 +230,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk and fixtu
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (46/46 unit tests passed across 12 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (51/51 unit tests passed across 14 test suites).
 ```
 
 ---
@@ -271,14 +279,14 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 # Most Recent Completed Task
 
-**P1-01 through P1-05 — Package Discovery & Enumeration (Phase 1 — Production Cache Scanner)**
+**P1-06 through P1-09 — StorageStats Repository & Per-Package Storage Model (Phase 1 — Production Cache Scanner)**
 
-* Created `DiscoveredPackage` model
-* Implemented `PackageRepository` and `AndroidPackageRepository`
-* Integrated memory-bounded LRU icon caching and thumbnail loading
-* Implemented system app classification and self-package filtering
-* Updated `AndroidCacheScanner` and `AppContainer`
-* Added comprehensive unit tests (46/46 tests passing)
+* Created `PackageStorageStats` domain model with zero/failed factories and computed `totalBytes`
+* Defined `StorageStatsRepository` interface with `DiscoveredPackage` and `UUID` overloads
+* Implemented `AndroidStorageStatsRepository` handling default internal storage volume resolution and exception isolation
+* Refined `AppCacheInfo` with `fromPackageAndStats` factory and error message tracking
+* Integrated with `AndroidCacheScanner` and `AppContainer`
+* Added comprehensive unit test suites (`PackageStorageStatsTest`, `AndroidStorageStatsRepositoryTest`, updated `StorageModelsTest` and `AndroidCacheScannerTest` — 51/51 tests passing)
 
 ---
 
@@ -286,9 +294,11 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md`.
 
 Begin:
 
-**P1-06 through P1-09 — StorageStats Repository & Per-Package Storage Model (Phase 1 — Production Cache Scanner)**
+**P1-10 through P1-16 — Production CacheScanner Engine (Phase 1 — Production Cache Scanner)**
 
-* Implement production `StorageStatsRepository` (`P1-06`)
-* Handle default/internal storage volume resolution (`P1-07`)
-* Handle packages whose stats cannot be queried (`P1-08`)
-* Implement per-package cache/app/data model refinement (`P1-09`)
+* Refine `CacheScanner` interface with progressive scan flow (`Flow<ScanState>`) (`P1-10`, `P1-12`)
+* Configure bounded concurrency (`Semaphore(6)`) (`P1-11`)
+* Implement partial failure accounting and error tracking (`P1-13`)
+* Compute aggregate reported cache bytes (`P1-14`)
+* Track attempted vs successful package measurement metrics (`P1-15`)
+* Record scan duration (`P1-16`)

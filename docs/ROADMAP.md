@@ -146,10 +146,10 @@ Phase 0 is complete only when:
 
 ## StorageStats repository
 
-* [ ] **P1-06** Implement production `StorageStatsRepository`
-* [ ] **P1-07** Handle default/internal storage
-* [ ] **P1-08** Handle packages whose stats cannot be queried
-* [ ] **P1-09** Implement per-package cache/app/data model
+* [x] **P1-06** Implement production `StorageStatsRepository`
+* [x] **P1-07** Handle default/internal storage
+* [x] **P1-08** Handle packages whose stats cannot be queried
+* [x] **P1-09** Implement per-package cache/app/data model
 
 ## Scanner
 

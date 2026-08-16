@@ -1,10 +1,9 @@
 package my.id.rmalan.cache.sweep.scanner
 
-import android.app.usage.StorageStats
 import android.os.UserHandle
-import android.os.storage.StorageManager
 import kotlinx.coroutines.test.runTest
 import my.id.rmalan.cache.sweep.model.DiscoveredPackage
+import my.id.rmalan.cache.sweep.model.PackageStorageStats
 import my.id.rmalan.cache.sweep.storage.StorageStatsRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,47 +25,59 @@ class AndroidCacheScannerTest {
     }
 
     private class FakeStorageStatsRepository(
-        private val statsMap: Map<String, StorageStats> = emptyMap(),
+        private val statsMap: Map<String, PackageStorageStats> = emptyMap(),
         private val failingPackages: Set<String> = emptySet()
-    ) : StorageStatsRepository() {
-        override fun query(packageName: String, storageUuid: UUID?, userHandle: UserHandle): StorageStats {
+    ) : StorageStatsRepository {
+        override fun queryStats(packageName: String, storageUuid: UUID?, userHandle: UserHandle?): PackageStorageStats {
             if (failingPackages.contains(packageName)) {
-                throw SecurityException("Package stats access denied for $packageName")
+                return PackageStorageStats.failed("Access denied for $packageName")
             }
-            return statsMap[packageName] ?: throw IllegalArgumentException("Unknown package: $packageName")
+            return statsMap[packageName] ?: PackageStorageStats.failed("Unknown package: $packageName")
         }
     }
 
     @Test
-    fun `scan handles partial package query failures gracefully`() = runTest {
+    fun `scan handles successful and failed package queries accurately`() = runTest {
         val packages = listOf(
             DiscoveredPackage("com.example.app1", "App 1", isSystemApp = false),
             DiscoveredPackage("com.example.failing", "Failing App", isSystemApp = false),
-            DiscoveredPackage("com.example.app2", "App 2", isSystemApp = false)
+            DiscoveredPackage("com.example.app2", "App 2", isSystemApp = true)
         )
 
-        // Since StorageStats has no public constructor on all JVMs, we test the failing path
-        val failingRepo = FakeStorageStatsRepository(
-            failingPackages = setOf("com.example.app1", "com.example.failing", "com.example.app2")
+        val statsMap = mapOf(
+            "com.example.app1" to PackageStorageStats(cacheBytes = 10_000_000L, appBytes = 5_000_000L, dataBytes = 2_000_000L),
+            "com.example.app2" to PackageStorageStats(cacheBytes = 25_000_000L, appBytes = 15_000_000L, dataBytes = 10_000_000L)
+        )
+
+        val repo = FakeStorageStatsRepository(
+            statsMap = statsMap,
+            failingPackages = setOf("com.example.failing")
         )
 
         val scanner = AndroidCacheScanner(
             packageRepository = FakePackageRepository(packages),
-            storageStatsRepository = failingRepo
+            storageStatsRepository = repo
         )
 
         val result = scanner.scan()
 
         assertEquals(3, result.attemptedApps)
-        assertEquals(0, result.successfulApps)
-        assertEquals(0L, result.totalReportedCacheBytes)
+        assertEquals(2, result.successfulApps)
+        assertEquals(35_000_000L, result.totalReportedCacheBytes)
         assertEquals(3, result.apps.size)
         assertTrue(result.durationMillis >= 0)
+
+        val app1 = result.apps.find { it.packageName == "com.example.app1" }
+        assertNotNull(app1)
+        assertTrue(app1!!.measurementAvailable)
+        assertEquals(10_000_000L, app1.cacheBytes)
+        assertEquals(17_000_000L, app1.totalBytes)
 
         val failingApp = result.apps.find { it.packageName == "com.example.failing" }
         assertNotNull(failingApp)
         assertFalse(failingApp!!.measurementAvailable)
         assertEquals("Failing App", failingApp.appName)
+        assertEquals("Access denied for com.example.failing", failingApp.errorMessage)
     }
 
     @Test
@@ -96,5 +107,6 @@ class AndroidCacheScannerTest {
         assertEquals("Test App", result?.appName)
         assertFalse(result!!.measurementAvailable)
         assertEquals(0L, result.cacheBytes)
+        assertEquals("Access denied for com.example.app", result.errorMessage)
     }
 }

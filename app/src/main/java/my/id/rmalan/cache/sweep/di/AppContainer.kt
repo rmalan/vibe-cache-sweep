@@ -10,6 +10,7 @@ import my.id.rmalan.cache.sweep.scanner.AndroidPackageRepository
 import my.id.rmalan.cache.sweep.scanner.CacheScanner
 import my.id.rmalan.cache.sweep.scanner.PackageRepository
 import my.id.rmalan.cache.sweep.shizuku.ShizukuManager
+import my.id.rmalan.cache.sweep.storage.AndroidStorageStatsRepository
 import my.id.rmalan.cache.sweep.storage.DeviceStorageRepository
 import my.id.rmalan.cache.sweep.storage.StorageStatsRepository
 
@@ -22,8 +23,8 @@ class AppContainer(
     val packageRepository: PackageRepository =
         AndroidPackageRepository(context)
 
-    val storageStatsRepository =
-        StorageStatsRepository(context)
+    val storageStatsRepository: StorageStatsRepository =
+        AndroidStorageStatsRepository(context)
 
     val deviceStorageRepository =
         DeviceStorageRepository()
@@ -45,4 +46,3 @@ class AppContainer(
     val safetyTestManager =
         my.id.rmalan.cache.sweep.cleaner.SafetyTestManager(context)
 }
-
