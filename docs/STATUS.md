@@ -286,7 +286,7 @@ All roadmap phases (Phase 0 through Phase 5) and the Final Release Gate have bee
 * [x] P5-18 Zero arbitrary shell execution interfaces, `sh -c`, `Runtime.getRuntime().exec` verified; `ProcessBuilder` strictly restricted to `PackageCommands.kt` and `CapabilityProbe.kt`; mandatory `--cache-only` enforced
 * [x] P5-19 Production logging audited: zero `android.util.Log` calls, zero `System.out`/`System.err` prints, zero `printStackTrace()`, zero sensitive info leakage
 * [x] P5-20 Exported Android components audited: `MainActivity` confirmed as sole exported application activity with `MAIN`/`LAUNCHER`; zero exported services/receivers; `ShizukuProvider` protected with `INTERACT_ACROSS_USERS_FULL`; `allowBackup="false"` enforced
-* [x] Automated audit test suite implemented in `SecurityPrivacyComponentAuditTest.kt` with 17 dedicated security tests; 261/261 unit tests passing
+* [x] Automated audit test suite implemented in `SecurityPrivacyComponentAuditTest.kt` with 18 dedicated security and manifest tests; 262/262 unit tests passing
 
 ## Compatibility & OEM Validation (P5-21 to P5-24) (D-038)
 
@@ -325,7 +325,7 @@ All roadmap phases (Phase 0 through Phase 5) and the Final Release Gate have bee
 # Final Release Gate: PASSED
 
 * [x] Build passes (`./gradlew assembleRelease` and `./gradlew assembleDebug`)
-* [x] Tests pass (261/261 unit tests passing across 42 suites via `./gradlew testDebugUnitTest`)
+* [x] Tests pass (262/262 unit tests passing across 43 suites via `./gradlew testDebugUnitTest`)
 * [x] Physical-device validation passes (Samsung Galaxy A34 5G / Android 16 / SDK 36)
 * [x] Selective cleanup is either validated or capability-disabled (Root-gated via `CapabilityProbe`)
 * [x] Global fallback works (`pm trim-caches` verified live on device)
@@ -476,7 +476,7 @@ SUCCESS: ./gradlew assembleDebug and ./gradlew assembleRelease completed success
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (261/261 unit tests passed across 42 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (262/262 unit tests passed across 43 test suites).
 ```
 
 ---
@@ -539,7 +539,7 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (includin
 * **P5-30 (Tag Milestone Release)**:
   - Tagged `v1.0.0` milestone release.
 * **Build & Test Verification**:
-  - 261/261 unit tests passed across 42 suites (`./gradlew testDebugUnitTest`).
+  - 262/262 unit tests passed across 43 suites (`./gradlew testDebugUnitTest`).
   - Both Debug and Release APKs compile and build cleanly.
 
 ---
