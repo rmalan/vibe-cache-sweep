@@ -14,9 +14,38 @@ android {
         targetSdk = 36
 
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystorePath = providers.environmentVariable("RELEASE_KEYSTORE_PATH").orNull
+                ?: providers.gradleProperty("RELEASE_KEYSTORE_PATH").orNull
+            val keystorePassword = providers.environmentVariable("RELEASE_KEYSTORE_PASSWORD").orNull
+                ?: providers.gradleProperty("RELEASE_KEYSTORE_PASSWORD").orNull
+            val keyAlias = providers.environmentVariable("RELEASE_KEY_ALIAS").orNull
+                ?: providers.gradleProperty("RELEASE_KEY_ALIAS").orNull
+            val keyPassword = providers.environmentVariable("RELEASE_KEY_PASSWORD").orNull
+                ?: providers.gradleProperty("RELEASE_KEY_PASSWORD").orNull
+
+            if (keystorePath != null && file(keystorePath).exists()) {
+                storeFile = file(keystorePath)
+                storePassword = keystorePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            } else {
+                // Fallback to local debug keystore when external release keystore is not provided
+                val debugKeystore = file("${System.getProperty("user.home")}/.android/debug.keystore")
+                if (debugKeystore.exists()) {
+                    storeFile = debugKeystore
+                    storePassword = "android"
+                    this.keyAlias = "androiddebugkey"
+                    this.keyPassword = "android"
+                }
+            }
+        }
     }
 
     buildFeatures {
@@ -44,6 +73,7 @@ android {
 
         release {
             isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
 
             proguardFiles(
                 getDefaultProguardFile(

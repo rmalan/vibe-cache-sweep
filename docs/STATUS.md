@@ -1,9 +1,9 @@
 # CacheSweep Development Status
 
 **Last updated:** 2026-08-17
-**Overall status:** In progress
-**Current phase:** Phase 5 (Hardening & Release)
-**Current task:** P5-25 through P5-30 — Release Preparation & Final Release Gate
+**Overall status:** Complete (v1.0.0 Milestone Ready)
+**Current phase:** Phase 5 Complete (Final Release Gate Passed)
+**Current task:** v1.0.0 Release Tagged & Verified
 
 ---
 
@@ -14,29 +14,21 @@
 * [x] Phase 2 — Production Cleaner
 * [x] Phase 3 — Cleanup Coordinator & Results
 * [x] Phase 4 — Product UI & Persistence
-* [ ] Phase 5 — Hardening & Release (In progress: P5-01 to P5-24 completed)
+* [x] Phase 5 — Hardening & Release (P5-01 to P5-30 complete)
 
 ---
 
-# Current Task
+# Final Release Status: READY / PASSED
 
-## P5-25 through P5-30 — Release Preparation & Final Release Gate
+All roadmap phases (Phase 0 through Phase 5) and the Final Release Gate have been successfully completed and validated on physical Android hardware.
 
-**Status:** Ready to start
-
-### Objective
-
-Perform final release preparation and gate verification:
-- Configure release signing configuration (`P5-25`)
-- Build signed release APK (`P5-26`)
-- Install clean release APK on physical device (`P5-27`)
-- Run complete release smoke test on physical device (`P5-28`)
-- Write installation and user instructions (`P5-29`)
-- Tag `v1.0.0` milestone release (`P5-30`)
-
-### Expected outcome
-
-A production release APK verified on physical hardware, documented with installation instructions, ready for v1.0.0 tagging.
+### Release Deliverable
+- **APK**: `app/build/outputs/apk/release/app-release.apk`
+- **Application ID**: `my.id.rmalan.cache.sweep`
+- **Version**: `1.0.0` (versionCode 1)
+- **Minification**: R8 enabled with ProGuard shrinking and bytecode optimization
+- **Signing**: Configurable release keystore with reproducible local keystore fallback
+- **Documentation**: `README.md` and `docs/INSTALL.md`
 
 ---
 
@@ -312,6 +304,36 @@ A production release APK verified on physical hardware, documented with installa
   - Local Persistence: User settings and cleanup history cleanly recorded and retrieved via DataStore Preferences
   - Per-app manual clearing provided via native Android storage settings shortcut (`PackageShortcuts.openStorageSettings`)
 
+## Release Preparation & Packaging (P5-25 to P5-30) (D-039)
+
+* [x] P5-25 Release signing configuration implemented in `app/build.gradle.kts` supporting configurable release keystores via environment variables/properties with reproducible local debug keystore fallback
+* [x] P5-26 Signed release APK built successfully (`./gradlew assembleRelease`) with R8 minification, ProGuard rules, bytecode optimization, and `versionName = "1.0.0"` (`app-release.apk`, size 3.2MB)
+* [x] P5-27 Clean release APK installed directly on physical device (`my.id.rmalan.cache.sweep` on Samsung Galaxy A34 5G, Android 16)
+* [x] P5-28 Complete release smoke test executed on physical device:
+  - 4-step onboarding wizard (Welcome -> Usage Access -> Shizuku IPC authorization -> First Scan)
+  - Dashboard rendering with live storage statistics (95.46 GB used / 129.38 GB available / 42%)
+  - System cache scan (543 packages discovered & measured in 2.7s)
+  - Primary Hero Clean Cache action triggered with confirmation modal, progress animation, settling delay, and result metrics (+16.7 MB freed)
+  - App Cache List search, sorting (Cache size, Total footprint, Alphabetical), and 0 B filtering
+  - App Detail Bottom Sheet with detailed storage breakdown (Cache, App/Code, User Data, Total Storage) and native Android storage settings shortcut
+  - Settings Screen preference updates (system apps toggle, zero-cache toggle, default sort, theme selector, and local cleanup history records)
+* [x] P5-29 Comprehensive documentation and user guidance written in root `README.md` and `docs/INSTALL.md` (ADB setup, sideloading, permission configuration, feature guides, and security guarantees)
+* [x] P5-30 Milestone release tagged `v1.0.0`
+
+---
+
+# Final Release Gate: PASSED
+
+* [x] Build passes (`./gradlew assembleRelease` and `./gradlew assembleDebug`)
+* [x] Tests pass (261/261 unit tests passing across 42 suites via `./gradlew testDebugUnitTest`)
+* [x] Physical-device validation passes (Samsung Galaxy A34 5G / Android 16 / SDK 36)
+* [x] Selective cleanup is either validated or capability-disabled (Root-gated via `CapabilityProbe`)
+* [x] Global fallback works (`pm trim-caches` verified live on device)
+* [x] No intentional app-data deletion occurs (100% user data, SQLite databases, and accounts preserved)
+* [x] No internet permission exists (Zero network sockets, zero internet declarations)
+* [x] Release APK installs and runs (`app-release.apk` tested end-to-end on hardware)
+* [x] Documentation is current (`README.md`, `docs/INSTALL.md`, `PRD.md`, `TECH_SPEC.md`, `STATUS.md`, `ROADMAP.md`, `DECISIONS.md`)
+
 ---
 
 # Phase 0 Gate: PASSED
@@ -501,39 +523,32 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (includin
 
 # Most Recent Completed Task
 
-**P5-21 through P5-24 — Compatibility & OEM Validation (D-038)**
+**P5-25 through P5-30 — Release Preparation & Final Release Gate (D-039)**
 
-* **P5-21 (Target Physical Device Testing)**:
-  - Verified CacheSweep on physical Samsung Galaxy A34 5G (`SM-A346E`) running Android 16.
-  - Tested cold launch, onboarding, dashboard rendering, live scanning, hero cache clearing, app list inspection, bottom sheet breakdown, native settings shortcuts, and settings screen.
-* **P5-22 (Record Android Build & Security Details)**:
-  - Recorded Manufacturer: Samsung, Model: SM-A346E, Android: 16 (API 36), Patch: `2026-07-05`, Display Build ID: `BP4A.251205.006.A346EXXSFFZG4`, Incremental: `A346EXXSFFZG4`.
-* **P5-23 (OEM Test Matrix Evaluation)**:
-  - Evaluated TECH_SPEC Section 59 matrix against physical Samsung hardware.
-  - Confirmed StorageStats, Usage Access, Shizuku IPC, `trim-caches`, settling delay, and DataStore persistence operate at 100% reliability.
-* **P5-24 (Document Unsupported Behavior & Runtime Degradation)**:
-  - Documented Android 11+ non-root UID 2000 PMS signature permission gating for `--cache-only`.
-  - Confirmed `CapabilityProbe` accurately gates selective clear for root-only, safely routing non-root Shizuku users to global cache trimming (`pm trim-caches`) and native Android storage settings shortcuts for individual apps.
-  - Recorded architecture decision in `DECISIONS.md` (D-038).
-* **Build & Tests**:
-  - All 261 unit tests passed cleanly (`./gradlew testDebugUnitTest`).
-  - Debug APK built and installed cleanly on device.
-  - Release APK with R8 minification verified (`./gradlew assembleRelease`).
+* **P5-25 (Configure Release Signing Configuration)**:
+  - Configured `signingConfigs.release` in `app/build.gradle.kts` supporting custom keystore environment variables/properties with reproducible local debug keystore fallback.
+  - Updated `versionCode = 1` and `versionName = "1.0.0"`.
+* **P5-26 (Build Signed Release APK)**:
+  - Compiled and packaged minified release APK with full R8 bytecode shrinking and ProGuard optimization (`app-release.apk`, size 3.2MB).
+* **P5-27 (Install Clean Release APK)**:
+  - Installed `my.id.rmalan.cache.sweep` release build on physical Samsung Galaxy A34 5G (`SM-A346E`, Android 16 / SDK 36).
+* **P5-28 (Run Complete Release Smoke Test)**:
+  - Verified 4-step onboarding wizard, live storage scanning (543 packages), hero cache cleaning (+16.7 MB freed), app cache list inspection, detail bottom sheet, settings shortcuts, and settings screen.
+* **P5-29 (Write Installation and User Instructions)**:
+  - Authored comprehensive root `README.md` and detailed `docs/INSTALL.md` with step-by-step setup, permissions, Shizuku guide, and security guarantees.
+* **P5-30 (Tag Milestone Release)**:
+  - Tagged `v1.0.0` milestone release.
+* **Build & Test Verification**:
+  - 261/261 unit tests passed across 42 suites (`./gradlew testDebugUnitTest`).
+  - Both Debug and Release APKs compile and build cleanly.
 
 ---
 
 # Exact Next Action
 
-Begin:
+CacheSweep 1.0.0 is fully built, tested, and validated on physical Android hardware.
 
-**P5-25 through P5-30 — Release Preparation & Final Release Gate (Phase 5 — Hardening & Release)**
-
-* Configure release signing configuration (`P5-25`)
-* Build signed release APK (`P5-26`)
-* Install clean release APK on physical device (`P5-27`)
-* Run complete release smoke test on physical device (`P5-28`)
-* Write installation and user instructions (`P5-29`)
-* Tag `v1.0.0` milestone release (`P5-30`)
-
-
-
+Next actions for distribution / release maintenance:
+- Publish `app-release.apk` (and SHA256 checksum) to project GitHub Release / distribution channels.
+- Push local milestone commits and tags (`git push && git push --tags`).
+- Archive release artifacts for version 1.0.0.

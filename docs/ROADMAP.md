@@ -335,7 +335,7 @@ Phase 0 is complete only when:
 
 **Goal:** Produce a reliable personal release APK.
 
-**Phase status:** In progress
+**Phase status:** Complete
 
 ## Failure scenarios
 
@@ -375,26 +375,26 @@ Phase 0 is complete only when:
 
 ## Release
 
-* [ ] **P5-25** Configure release signing
-* [ ] **P5-26** Build release APK
-* [ ] **P5-27** Install clean release APK
-* [ ] **P5-28** Run release smoke test
-* [ ] **P5-29** Write installation instructions
-* [ ] **P5-30** Tag `v1.0.0`
+* [x] **P5-25** Configure release signing
+* [x] **P5-26** Build release APK
+* [x] **P5-27** Install clean release APK
+* [x] **P5-28** Run release smoke test
+* [x] **P5-29** Write installation instructions
+* [x] **P5-30** Tag `v1.0.0`
 
 ## Final Release Gate
 
 CacheSweep 1.0 is ready when:
 
-* [ ] Build passes
-* [ ] Tests pass
-* [ ] Physical-device validation passes
-* [ ] Selective cleanup is either validated or capability-disabled
-* [ ] Global fallback works
-* [ ] No intentional app-data deletion occurs
-* [ ] No internet permission exists
-* [ ] Release APK installs and runs
-* [ ] Documentation is current
+* [x] Build passes
+* [x] Tests pass
+* [x] Physical-device validation passes
+* [x] Selective cleanup is either validated or capability-disabled
+* [x] Global fallback works
+* [x] No intentional app-data deletion occurs
+* [x] No internet permission exists
+* [x] Release APK installs and runs
+* [x] Documentation is current
 
 ---
 
