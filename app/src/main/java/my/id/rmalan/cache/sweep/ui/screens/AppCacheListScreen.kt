@@ -50,6 +50,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,7 +91,7 @@ fun AppCacheListScreen(
     val cleanerState = cleanerViewModel?.uiState?.collectAsState()?.value
     val context = LocalContext.current
 
-    var isSelectionMode by remember { mutableStateOf(false) }
+    var isSelectionMode by rememberSaveable { mutableStateOf(false) }
 
     LifecycleResumeEffect(Unit) {
         cleanerViewModel?.loadCapabilities()

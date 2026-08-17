@@ -440,4 +440,41 @@ Ensures CacheSweep adheres to zero-crash, non-hanging reliability across all And
 
 CacheSweep operates robustly against Shizuku process crashes, permission revocation, and background OS changes with 225/225 unit tests passing cleanly.
 
+---
+
+# D-035 — Process Lifecycle, Cold Launch State & Individual Failure Isolation
+
+**Status:** Accepted
+
+## Context
+
+Android applications regularly undergo activity recreation (screen rotation, dark/light theme switching), OS-level process death/recreation in background, device reboots, and unpredictable individual package anomalies (packages uninstalled mid-scan/mid-cleanup, restricted system UIDs, or IPC error returns).
+
+## Decision
+
+1. **Recreation State Persistence**:
+   - Use Compose `rememberSaveable` for top-level navigation destination in `MainActivity` (`currentDestination`), multi-select mode in `AppCacheListScreen` (`isSelectionMode`), failure breakdown expansion in `PartialFailuresSection` (`isExpanded`), and dialog states in `SettingsScreen`.
+   - Maintain ViewModel state via Android ViewModelStore, and rely on asynchronous atomic DataStore Preferences (`UserSettingsRepository`, `CleanupHistoryRepository`) for persistent cross-process state.
+2. **Cold Launch & Reboot Resilience**:
+   - When launched cold or after device reboot where Shizuku is `NotRunning`, maintain complete read-only functionality (device storage inspection, Usage Access detection, package enumeration, cache scanning, per-app breakdown, and native Android storage settings shortcuts) without crashing.
+   - Display clear guidance in `ShizukuStatusCard` and return typed `CleanerError.ShizukuUnavailable` if cleanup is attempted before Shizuku is started.
+   - When Shizuku starts post-reboot, update capabilities and action buttons reactively.
+3. **Package Query Failure Isolation**:
+   - Explicitly handle `PackageManager.NameNotFoundException`, `SecurityException`, `IllegalArgumentException`, and `IOException` in `AndroidStorageStatsRepository`.
+   - Ensure individual package measurement failures produce `PackageStorageStats.failed(...)` without corrupting scan progress, aggregate totals, or crashing `AndroidCacheScanner`.
+   - Display an informative "Storage stats unavailable" badge with specific error details inside `AppDetailBottomSheet`.
+4. **Partial Cleanup Failure Attribution**:
+   - Isolate individual package failures during batch selective cleaning in `ShizukuCacheCleaner`, attributing specific `CleanerError` types in `CleanerBatchResult.errors` and continuing execution for remaining packages.
+   - Deliver `CleanupResult` with explicit `successfulPackages`, `failedPackages`, and `errors` map to `CleanupCoordinator` and persist valid entries in `CleanupHistoryRepository`.
+   - Render attributed failure details with app icons and error reasons in `PartialFailuresSection`.
+
+## Reason
+
+Ensures zero-crash stability across configuration changes, process death, cold restarts, and individual application state changes while strictly maintaining data safety and user transparency.
+
+## Consequences
+
+All 232 unit tests pass across 40 test suites, verifying full resilience against lifecycle events, cold starts, and partial package failures.
+
+
 

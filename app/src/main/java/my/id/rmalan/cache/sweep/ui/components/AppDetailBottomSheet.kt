@@ -118,20 +118,29 @@ fun AppDetailBottomSheet(
                         modifier = Modifier.semantics { heading() }
                     )
 
+                    if (!app.measurementAvailable) {
+                        NeoBadge(
+                            text = "Storage stats unavailable: ${app.errorMessage ?: "Measurement failed"}",
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            borderColor = MaterialTheme.colorScheme.outline
+                        )
+                    }
+
                     StorageMetricRow(
                         label = "Cache",
-                        value = "${ByteFormatter.format(app.cacheBytes)} (${app.cacheBytes} B)",
-                        isEmphasized = true
+                        value = if (app.measurementAvailable) "${ByteFormatter.format(app.cacheBytes)} (${app.cacheBytes} B)" else "Unavailable",
+                        isEmphasized = app.measurementAvailable
                     )
 
                     StorageMetricRow(
                         label = "Application / Code",
-                        value = "${ByteFormatter.format(app.appBytes)} (${app.appBytes} B)"
+                        value = if (app.measurementAvailable) "${ByteFormatter.format(app.appBytes)} (${app.appBytes} B)" else "Unavailable"
                     )
 
                     StorageMetricRow(
                         label = "User Data",
-                        value = "${ByteFormatter.format(app.dataBytes)} (${app.dataBytes} B)"
+                        value = if (app.measurementAvailable) "${ByteFormatter.format(app.dataBytes)} (${app.dataBytes} B)" else "Unavailable"
                     )
 
                     HorizontalDivider(
@@ -141,7 +150,7 @@ fun AppDetailBottomSheet(
 
                     StorageMetricRow(
                         label = "Total Storage",
-                        value = "${ByteFormatter.format(app.totalBytes)} (${app.totalBytes} B)",
+                        value = if (app.measurementAvailable) "${ByteFormatter.format(app.totalBytes)} (${app.totalBytes} B)" else "Unavailable",
                         isBold = true
                     )
                 }

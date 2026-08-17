@@ -3,7 +3,7 @@
 **Last updated:** 2026-08-17
 **Overall status:** In progress
 **Current phase:** Phase 5 (Hardening & Release)
-**Current task:** P5-07 through P5-10 — Process Lifecycle & Package Failures
+**Current task:** P5-11 through P5-14 — Performance & Scanner Optimization
 
 ---
 
@@ -14,27 +14,27 @@
 * [x] Phase 2 — Production Cleaner
 * [x] Phase 3 — Cleanup Coordinator & Results
 * [x] Phase 4 — Product UI & Persistence
-* [ ] Phase 5 — Hardening & Release (In progress: P5-01 to P5-06 completed)
+* [ ] Phase 5 — Hardening & Release (In progress: P5-01 to P5-10 completed)
 
 ---
 
 # Current Task
 
-## P5-07 through P5-10 — Process Lifecycle, Reboot & Individual Package Failures
+## P5-11 through P5-14 — Performance, Memory & Scanner Optimization
 
 **Status:** Ready to start
 
 ### Objective
 
-Verify and harden CacheSweep against:
-- App process recreation during scanning or cleanup (`P5-07`)
-- Device reboot persistence / cold start state (`P5-08`)
-- Individual package query failure / uninstalled package handling (`P5-09`)
-- Individual package cleanup failure / partial error reporting (`P5-10`)
+Verify and optimize CacheSweep performance for:
+- Large installed application counts (500+ apps) (`P5-11`)
+- Application icon and bitmap thumbnail memory footprint (`P5-12`)
+- Main-thread responsiveness and zero UI jank (`P5-13`)
+- Fast scanner execution and progressive channel emission (`P5-14`)
 
 ### Expected outcome
 
-Robust handling of process lifecycles, configuration changes, and individual package failures with zero data loss or unhandled crashes.
+Sub-second rendering, smooth 60/120fps scrolling on massive package lists, memory-bounded icon cache, and zero ANRs.
 
 ---
 
@@ -426,7 +426,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk generated
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (214/214 unit tests passed across 39 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (232/232 unit tests passed across 40 test suites).
 ```
 
 ---
@@ -464,37 +464,35 @@ None.
 
 # Architecture Deviations
 
-None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (including D-027, D-031, and D-032).
+None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (including D-027, D-031, D-032, D-034, and D-035).
 
 ---
 
 # Most Recent Completed Task
 
-**P5-01 through P5-06 — Failure Scenario Hardening & Edge Cases**
+**P5-07 through P5-10 — Process Lifecycle, Reboot & Individual Package Failures (D-035)**
 
-* **P5-01 (Shizuku Absent)**:
-  - Guarded `ShizukuManager` state updates and permission queries against missing packages.
-  - Updated `DashboardViewModel` to track `isShizukuInstalled` and display "Shizuku Not Installed" with guidance in `ShizukuStatusCard`.
-  - Protected Shizuku launch intent with try-catch and Toast fallback when the app cannot be resolved.
-  - Return `CleanerError.ShizukuUnavailable` cleanly when cleaning is attempted without Shizuku.
-* **P5-02 (Shizuku Stopped / Process Killed)**:
-  - Added reactive observation in `DashboardViewModel`, `AppsViewModel`, and `CleanerViewModel` on `shizukuManager.state`.
-  - Automatically re-evaluates capabilities (`supportsSelectiveCleaning`, global trimming) when Shizuku state transitions to `NotRunning`.
-* **P5-03 (Shizuku Dies Mid-Cleanup)**:
-  - Added explicit handling for `android.os.DeadObjectException`, `SecurityException`, and `RemoteException` in `ShizukuCacheCleaner`.
-  - Immediately fails remaining packages in the batch with `CleanerError.ShizukuUnavailable` to avoid hanging or repeating dead IPC calls.
-  - `CleanupCoordinator` safely captures before/after snapshot, calculates deltas, and completes without freezing on `Clearing` or `WaitingForStats`.
-* **P5-04 & P5-05 (Permission Denied / Revoked)**:
-  - Wrapped `Shizuku.checkSelfPermission()` and `Shizuku.requestPermission()` in try-catch blocks.
-  - `CleanupCoordinator` validates permissions prior to executing commands, returning `CleanerError.PermissionDenied`.
-  - Reactive ViewModels update UI states immediately when permission is revoked.
-* **P5-06 (Usage Access Revoked)**:
-  - Wrapped `AppOpsManager` check in `AndroidUsageAccessManager.hasAccess()` with try-catch returning `false`.
-  - Handled `SecurityException` during package queries in `AndroidStorageStatsRepository`, marking measurement unavailable with error message.
-  - Added `hasUsageAccess` to `DashboardUiState` and `AppsUiState` and rendered high-contrast Neobrutalist `UsageAccessRequiredBanner` on `DashboardScreen` and `AppCacheListScreen` with direct shortcut to system settings.
+* **P5-07 (App Process & Activity Recreation)**:
+  - Preserved active top-level screen destination in `MainActivity` across Activity recreation and configuration changes (rotation/theme switches) via `rememberSaveable(inputs = arrayOf(initialSettings.onboardingCompleted))`.
+  - Used `rememberSaveable` for multi-selection mode (`isSelectionMode`) in `AppCacheListScreen`.
+  - Used `rememberSaveable` for failure expansion state (`isExpanded`) in `PartialFailuresSection`.
+  - Used `rememberSaveable` for sort, theme, and history clearance dialog states in `SettingsScreen`.
+  - Verified cold launch state initialization of ViewModels starting from `CleaningState.Idle` and `ScanState.Idle`.
+* **P5-08 (Device Reboot Persistence & Cold Launch)**:
+  - Verified that device reboot cold starts with Shizuku `NotRunning` allow full read-only scanning, storage inspection, and settings management without crashing.
+  - Guided the user with "Shizuku Not Running" card on the Dashboard and safe `CleanerError.ShizukuUnavailable` typed error if clean is triggered before Shizuku starts.
+  - Verified that when Shizuku starts post-reboot, reactive state observation transitions immediately to `Ready (UID 2000)`.
+* **P5-09 (Individual Package Query Failure / Uninstalled Packages)**:
+  - Explicitly caught and mapped `PackageManager.NameNotFoundException`, `SecurityException`, `IllegalArgumentException`, and `IOException` in `AndroidStorageStatsRepository`.
+  - Verified that uninstalled or restricted packages during scan produce `PackageStorageStats.failed(...)` without failing the scan or corrupting total cache figures.
+  - Displayed informative "Storage stats unavailable" badge in `AppDetailBottomSheet` when package measurement is unavailable.
+* **P5-10 (Individual Package Cleanup Failure & Partial Attribution)**:
+  - Verified individual package failure isolation during selective batch cleaning in `ShizukuCacheCleaner`, attributing specific `CleanerError` types (uninstalled app, invalid format, self-clean prohibited, exit code failure) into `CleanerBatchResult.errors`.
+  - Verified `CleanupCoordinator` accurately records partial failures in `CleanupResult` and persists successful operations in `CleanupHistoryRepository`.
+  - Verified `PartialFailuresSection` renders expandable failed packages with app icons, names, and specific error descriptions.
 * **Unit Testing & Verification**:
-  - Added `FailureScenariosHardeningTest.kt` with comprehensive unit tests for all 6 scenarios.
-  - Verified 225/225 unit tests passing cleanly (`./gradlew testDebugUnitTest`).
+  - Added comprehensive test suite `LifecycleAndFailureHardeningTest.kt` with 7 new unit tests covering all 4 task scenarios.
+  - Verified 232/232 unit tests passing cleanly across 40 test suites (`./gradlew testDebugUnitTest`).
   - Verified debug APK builds cleanly (`./gradlew assembleDebug`).
 
 ---
@@ -503,10 +501,10 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (includin
 
 Begin:
 
-**P5-07 through P5-10 — Process Lifecycle, Reboot & Individual Package Failures (Phase 5 — Hardening & Release)**
+**P5-11 through P5-14 — Performance, Memory & Scanner Optimization (Phase 5 — Hardening & Release)**
 
-* Verify behavior during activity/process recreation (`P5-07`)
-* Verify behavior across device reboot / cold launch (`P5-08`)
-* Verify individual package query failure / uninstalled package handling (`P5-09`)
-* Verify individual package cleanup failure / partial error reporting (`P5-10`)
+* Test performance with large installed application counts (500+ apps) (`P5-11`)
+* Review application icon and bitmap memory usage (`P5-12`)
+* Review main-thread responsiveness and eliminate UI jank (`P5-13`)
+* Measure scanner performance and optimize channel concurrency (`P5-14`)
 

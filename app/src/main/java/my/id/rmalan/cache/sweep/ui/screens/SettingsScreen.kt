@@ -60,6 +60,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,9 +95,9 @@ fun SettingsScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var showSortDialog by remember { mutableStateOf(false) }
-    var showThemeDialog by remember { mutableStateOf(false) }
-    var showClearHistoryDialog by remember { mutableStateOf(false) }
+    var showSortDialog by rememberSaveable { mutableStateOf(false) }
+    var showThemeDialog by rememberSaveable { mutableStateOf(false) }
+    var showClearHistoryDialog by rememberSaveable { mutableStateOf(false) }
 
     LifecycleResumeEffect(Unit) {
         viewModel.onEvent(SettingsEvent.RefreshShizuku)

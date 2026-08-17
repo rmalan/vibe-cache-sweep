@@ -50,6 +50,8 @@ open class AndroidStorageStatsRepository(
                 measurementAvailable = true,
                 errorMessage = null
             )
+        } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+            PackageStorageStats.failed("Package not found (uninstalled): ${e.message}")
         } catch (e: SecurityException) {
             PackageStorageStats.failed("Permission denied: ${e.message}")
         } catch (e: IOException) {

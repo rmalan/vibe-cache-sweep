@@ -14,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,7 +68,7 @@ class MainActivity : ComponentActivity() {
 
             CacheSweepTheme(darkTheme = darkTheme) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    var currentDestination by remember(initialSettings.onboardingCompleted) {
+                    var currentDestination by rememberSaveable(initialSettings.onboardingCompleted) {
                         mutableStateOf(
                             if (initialSettings.onboardingCompleted) {
                                 MainDestination.DASHBOARD

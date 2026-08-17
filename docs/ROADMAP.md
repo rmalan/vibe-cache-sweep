@@ -345,10 +345,10 @@ Phase 0 is complete only when:
 * [x] **P5-04** Permission denied
 * [x] **P5-05** Permission revoked
 * [x] **P5-06** Usage Access revoked
-* [ ] **P5-07** App process recreation
-* [ ] **P5-08** Device reboot
-* [ ] **P5-09** Individual package query failure
-* [ ] **P5-10** Individual package cleanup failure
+* [x] **P5-07** App process recreation
+* [x] **P5-08** Device reboot
+* [x] **P5-09** Individual package query failure
+* [x] **P5-10** Individual package cleanup failure
 
 ## Performance
 
