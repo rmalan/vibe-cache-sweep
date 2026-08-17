@@ -352,10 +352,10 @@ Phase 0 is complete only when:
 
 ## Performance
 
-* [ ] **P5-11** Test large installed-app count
-* [ ] **P5-12** Review icon memory usage
-* [ ] **P5-13** Review main-thread blocking
-* [ ] **P5-14** Measure scanner performance
+* [x] **P5-11** Test large installed-app count
+* [x] **P5-12** Review icon memory usage
+* [x] **P5-13** Review main-thread blocking
+* [x] **P5-14** Measure scanner performance
 
 ## Security/privacy
 

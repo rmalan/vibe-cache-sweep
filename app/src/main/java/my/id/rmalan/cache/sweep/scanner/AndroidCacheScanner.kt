@@ -10,8 +10,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import my.id.rmalan.cache.sweep.model.AppCacheInfo
 import my.id.rmalan.cache.sweep.model.DiscoveredPackage
@@ -77,22 +75,32 @@ class AndroidCacheScanner(
             return@flow
         }
 
-        val completedChannel = Channel<AppCacheInfo>(Channel.UNLIMITED)
         val effectiveConcurrency = concurrencyLimit.coerceAtLeast(1)
-        val semaphore = Semaphore(effectiveConcurrency)
+        val packageChannel = Channel<DiscoveredPackage>(Channel.BUFFERED)
+        val completedChannel = Channel<AppCacheInfo>(Channel.BUFFERED)
 
         coroutineScope {
-            val workerJobs = installedPackages.map { pkg ->
+            // Producer job feeding packages into work channel
+            launch(ioDispatcher) {
+                for (pkg in installedPackages) {
+                    packageChannel.send(pkg)
+                }
+                packageChannel.close()
+            }
+
+            // Fixed worker pool of effectiveConcurrency workers
+            val workers = List(effectiveConcurrency) {
                 launch(ioDispatcher) {
-                    val appInfo = semaphore.withPermit {
-                        scanPackageInternal(pkg)
+                    for (pkg in packageChannel) {
+                        val appInfo = scanPackageInternal(pkg)
+                        completedChannel.send(appInfo)
                     }
-                    completedChannel.send(appInfo)
                 }
             }
 
+            // Completion job to close completed channel when all workers finish
             launch(ioDispatcher) {
-                workerJobs.joinAll()
+                workers.joinAll()
                 completedChannel.close()
             }
 

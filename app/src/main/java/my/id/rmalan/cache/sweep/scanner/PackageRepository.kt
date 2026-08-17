@@ -42,4 +42,13 @@ interface PackageRepository {
      * @return Scaled Bitmap thumbnail if found, null otherwise.
      */
     fun loadIconThumbnail(packageName: String, sizePx: Int = 128): Bitmap?
+
+    /**
+     * Retrieves an already-cached bitmap thumbnail from memory without blocking or disk I/O.
+     *
+     * @param packageName The target package name.
+     * @param sizePx The target width and height in pixels.
+     * @return Cached Bitmap if already in memory, null otherwise.
+     */
+    fun getCachedIconThumbnail(packageName: String, sizePx: Int = 128): Bitmap? = null
 }

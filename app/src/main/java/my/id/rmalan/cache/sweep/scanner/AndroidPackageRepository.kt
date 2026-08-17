@@ -7,7 +7,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.os.storage.StorageManager
-import android.util.LruCache
+import androidx.collection.LruCache
 import my.id.rmalan.cache.sweep.model.DiscoveredPackage
 
 class AndroidPackageRepository(
@@ -18,8 +18,8 @@ class AndroidPackageRepository(
     private val selfPackageName: String = context.packageName
 
     // Memory-bounded icon caches to avoid OOM when browsing large app lists
-    private val iconCache = LruCache<String, Drawable>(150)
-    private val thumbnailCache = LruCache<String, Bitmap>(150)
+    private val iconCache = LruCache<String, Drawable>(50)
+    private val thumbnailCache = LruCache<String, Bitmap>(250)
 
     override fun getInstalledPackages(
         includeSelf: Boolean,
@@ -129,6 +129,16 @@ class AndroidPackageRepository(
         } catch (e: Exception) {
             null
         }
+    }
+
+    override fun getCachedIconThumbnail(packageName: String, sizePx: Int): Bitmap? {
+        if (packageName.isBlank() || sizePx <= 0) return null
+        return thumbnailCache.get("${packageName}_$sizePx")
+    }
+
+    fun clearCache() {
+        iconCache.evictAll()
+        thumbnailCache.evictAll()
     }
 
     companion object {

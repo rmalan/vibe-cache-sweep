@@ -34,10 +34,15 @@ fun AppIcon(
     size: Dp = 44.dp,
     contentDescription: String? = null
 ) {
-    var iconBitmap by remember(packageName) { mutableStateOf<Bitmap?>(null) }
+    val initialBitmap = remember(packageName) {
+        if (packageRepository != null && packageName.isNotBlank()) {
+            packageRepository.getCachedIconThumbnail(packageName, sizePx = 128)
+        } else null
+    }
+    var iconBitmap by remember(packageName) { mutableStateOf(initialBitmap) }
 
     LaunchedEffect(packageName) {
-        if (packageRepository != null && packageName.isNotBlank()) {
+        if (iconBitmap == null && packageRepository != null && packageName.isNotBlank()) {
             val bitmap = withContext(Dispatchers.IO) {
                 packageRepository.loadIconThumbnail(packageName, sizePx = 128)
             }
