@@ -14,5 +14,5 @@ build/
 .externalNativeBuild
 .cxx
 local.properties
-
-
+*.apk
+*.sha256
