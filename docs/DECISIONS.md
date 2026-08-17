@@ -512,5 +512,58 @@ Guarantees sub-second rendering, smooth 60/120fps list scrolling across 500+ app
 
 All 240 unit tests pass across 41 test suites (`./gradlew testDebugUnitTest`), and the debug APK builds cleanly (`./gradlew assembleDebug`).
 
+---
+
+# D-037 — Security, Privacy, and Component Invariant Enforcement (P5-15 to P5-20)
+
+**Status:** Accepted
+
+## Context
+
+CacheSweep is an offline, private, and personal utility designed to interact with low-level Android storage statistics and privileged Shizuku APIs. As defined in `PRD.md`, `TECH_SPEC.md`, and `AGENTS.md`, strict security and privacy invariants must be guaranteed and programmatically enforced:
+1. Complete offline isolation with zero network connectivity or permissions.
+2. Complete privacy with zero analytics, user tracking, or third-party telemetry.
+3. Zero crash reporters, background uploading mechanisms, or cloud synchronizers.
+4. Absolute prohibition of arbitrary shell execution, unvalidated command execution, and unsafe `pm clear` without `--cache-only`.
+5. Clean production logging with zero sensitive information leakage.
+6. Minimal attack surface with `MainActivity` as the sole exported application entry point, `allowBackup="false"`, and permission-gated providers.
+
+## Decision
+
+1. **Zero Internet Permission & Network Isolation (`P5-15`)**:
+   - Enforce zero declaration of `android.permission.INTERNET`, `ACCESS_NETWORK_STATE`, or `ACCESS_WIFI_STATE` across `AndroidManifest.xml` and merged build manifests.
+   - Forbid networking dependencies (e.g. OkHttp, Retrofit, Ktor, Volley, Apache) in `libs.versions.toml` and `app/build.gradle.kts`.
+   - Enforce zero network socket, URL, or HTTP client usages in source code.
+2. **Zero Analytics Tracking (`P5-16`)**:
+   - Enforce zero analytics libraries (Firebase Analytics, Google Analytics, Mixpanel, Segment, Amplitude, Flurry, AppCenter Analytics, Matomo, PostHog, etc.) across dependencies and source files.
+   - Keep all UI and ViewModel event handling strictly local and in-memory.
+3. **Zero Telemetry & Remote Crash Reporting (`P5-17`)**:
+   - Prohibit crash reporting frameworks (Crashlytics, Sentry, Bugsnag, Datadog, ACRA) and push messaging/cloud synchronizers (FCM, OneSignal, Pusher).
+   - Ensure all errors and failures are modeled cleanly in domain representations (`CleanerError`, `ScanState.Failed`) and handled locally.
+4. **Zero Arbitrary Shell Execution & Injection Protection (`P5-18`)**:
+   - Prohibit `sh -c`, `su`, `/bin/sh`, `/system/bin/sh`, and `Runtime.getRuntime().exec` across production code.
+   - Strictly restrict `ProcessBuilder` invocations to approved command classes (`PackageCommands.kt` and `CapabilityProbe.kt`).
+   - Restrict AIDL `ICacheOpsService` to strongly-typed domain methods only.
+   - Enforce mandatory `--cache-only` flag and `PackageValidator` checks on all package clear command builders.
+5. **Clean Production Logging (`P5-19`)**:
+   - Prohibit `android.util.Log` (`Log.v`, `Log.d`, `Log.i`, `Log.w`, `Log.e`, `Log.wtf`), `System.out.println`, `System.err.println`, and `printStackTrace()` in production source code.
+   - Prevent any leakage of package metadata, tokens, or system metrics to logcat.
+6. **Exported Android Component Hardening (`P5-20`)**:
+   - Maintain `MainActivity` with `MAIN` and `LAUNCHER` intent filters as the only exported Activity.
+   - Enforce zero exported Services and zero exported BroadcastReceivers.
+   - Guard `ShizukuProvider` with signature permission `android.permission.INTERACT_ACROSS_USERS_FULL` and `multiprocess="false"`.
+   - Set `android:allowBackup="false"` to prevent unauthorized extraction via ADB backup.
+7. **Continuous Automated Verification**:
+   - Implement `SecurityPrivacyComponentAuditTest.kt` verifying all 6 security and privacy dimensions automatically during every test and build cycle.
+
+## Reason
+
+Guarantees 100% offline, private, and secure operation of CacheSweep with zero chance of regression.
+
+## Consequences
+
+All 261 unit and security audit tests pass cleanly (`./gradlew testDebugUnitTest`), and release builds compile and link with full R8 optimization (`./gradlew assembleRelease`).
+
+
 
 

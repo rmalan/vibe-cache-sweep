@@ -359,12 +359,12 @@ Phase 0 is complete only when:
 
 ## Security/privacy
 
-* [ ] **P5-15** Confirm no INTERNET permission
-* [ ] **P5-16** Confirm no analytics
-* [ ] **P5-17** Confirm no telemetry
-* [ ] **P5-18** Confirm no arbitrary shell interface
-* [ ] **P5-19** Review production logs
-* [ ] **P5-20** Review exported components
+* [x] **P5-15** Confirm no INTERNET permission
+* [x] **P5-16** Confirm no analytics
+* [x] **P5-17** Confirm no telemetry
+* [x] **P5-18** Confirm no arbitrary shell interface
+* [x] **P5-19** Review production logs
+* [x] **P5-20** Review exported components
 
 ## Compatibility
 

@@ -3,7 +3,7 @@
 **Last updated:** 2026-08-17
 **Overall status:** In progress
 **Current phase:** Phase 5 (Hardening & Release)
-**Current task:** P5-15 through P5-20 — Security, Privacy & Component Audit
+**Current task:** P5-21 through P5-24 — Compatibility & OEM Validation
 
 ---
 
@@ -14,29 +14,27 @@
 * [x] Phase 2 — Production Cleaner
 * [x] Phase 3 — Cleanup Coordinator & Results
 * [x] Phase 4 — Product UI & Persistence
-* [ ] Phase 5 — Hardening & Release (In progress: P5-01 to P5-14 completed)
+* [ ] Phase 5 — Hardening & Release (In progress: P5-01 to P5-20 completed)
 
 ---
 
 # Current Task
 
-## P5-15 through P5-20 — Security, Privacy & Component Audit
+## P5-21 through P5-24 — Compatibility & OEM Validation
 
 **Status:** Ready to start
 
 ### Objective
 
-Audit and verify complete adherence to security and privacy invariants:
-- Confirm zero `android.permission.INTERNET` declaration in any module (`P5-15`)
-- Confirm zero analytics tracking libraries or analytics code (`P5-16`)
-- Confirm zero telemetry, remote logging, or background crash reporters (`P5-17`)
-- Confirm zero arbitrary shell execution interface or unvalidated command injection (`P5-18`)
-- Review production logging for zero sensitive information leakage (`P5-19`)
-- Audit exported Android components (`MainActivity` as sole exported entry) (`P5-20`)
+Perform compatibility verification and document OEM behavior across Android versions and device manufacturers:
+- Validate against target physical device running Android 11+ (`P5-21`)
+- Record Android build, security patch level, and device behavior (`P5-22`)
+- Test additional OEM devices or variations if available (`P5-23`)
+- Document any platform-specific limitations or unsupported behavior (`P5-24`)
 
 ### Expected outcome
 
-Automated and hermetic audit verification guaranteeing 100% offline, private, and secure operation.
+Comprehensive verification of CacheSweep's behavior across OEM ROMs with documented runtime degradation.
 
 ---
 
@@ -286,6 +284,16 @@ Automated and hermetic audit verification guaranteeing 100% offline, private, an
   - `OnboardingScreen`: 4-step wizard with `NeoProgressBar`, `NeoCard` summary, `NeoBadge` status badges, and `NeoButton` CTAs
 * [x] All 214+ unit tests pass cleanly (`./gradlew testDebugUnitTest`) and APK builds cleanly (`./gradlew assembleDebug`)
 
+## Security, Privacy & Component Audit (P5-15 to P5-20) (D-037)
+
+* [x] P5-15 Zero `android.permission.INTERNET`, `ACCESS_NETWORK_STATE`, and `ACCESS_WIFI_STATE` verified across manifest, merged build manifests, dependencies, and source tree
+* [x] P5-16 Zero analytics tracking libraries (Firebase, Mixpanel, Segment, Amplitude, etc.) and tracking code verified
+* [x] P5-17 Zero telemetry, remote crash reporters (Crashlytics, Sentry, Bugsnag), and background uploading mechanisms verified
+* [x] P5-18 Zero arbitrary shell execution interfaces, `sh -c`, `Runtime.getRuntime().exec` verified; `ProcessBuilder` strictly restricted to `PackageCommands.kt` and `CapabilityProbe.kt`; mandatory `--cache-only` enforced
+* [x] P5-19 Production logging audited: zero `android.util.Log` calls, zero `System.out`/`System.err` prints, zero `printStackTrace()`, zero sensitive info leakage
+* [x] P5-20 Exported Android components audited: `MainActivity` confirmed as sole exported application activity with `MAIN`/`LAUNCHER`; zero exported services/receivers; `ShizukuProvider` protected with `INTERACT_ACROSS_USERS_FULL`; `allowBackup="false"` enforced
+* [x] Automated audit test suite implemented in `SecurityPrivacyComponentAuditTest.kt` with 17 dedicated security tests; 261/261 unit tests passing
+
 ---
 
 # Phase 0 Gate: PASSED
@@ -420,7 +428,7 @@ These must not be violated.
 # Build Status
 
 ```text
-SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk generated).
+SUCCESS: ./gradlew assembleDebug and ./gradlew assembleRelease completed successfully (debug and release APKs verified).
 ```
 
 ---
@@ -428,7 +436,7 @@ SUCCESS: ./gradlew assembleDebug completed successfully (app-debug.apk generated
 # Test Status
 
 ```text
-SUCCESS: ./gradlew testDebugUnitTest completed successfully (240/240 unit tests passed across 41 test suites).
+SUCCESS: ./gradlew testDebugUnitTest completed successfully (261/261 unit tests passed across 42 test suites).
 ```
 
 ---
@@ -466,34 +474,38 @@ None.
 
 # Architecture Deviations
 
-None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (including D-027, D-031, D-032, D-034, D-035, and D-036).
+None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (including D-027, D-031, D-032, D-034, D-035, D-036, and D-037).
 
 ---
 
 # Most Recent Completed Task
 
-**P5-11 through P5-14 — Performance, Memory & Scanner Optimization (D-036)**
+**P5-15 through P5-20 — Security, Privacy & Component Audit (D-037)**
 
-* **P5-11 (Large Installed Application Counts — 500+ apps)**:
-  - Validated and benchmarked scanner against 550+ and 1000+ package datasets.
-  - Verified that total reported cache, attempted apps count, successful apps count, and partial failure isolation remain 100% accurate without memory bloat.
-  - Benchmarked `AppFilter.filterAndSort` across 1000+ applications: Cache descending, Total descending, and Alphabetical sorting complete in under 50ms; search and system filtering complete in under 20ms.
-* **P5-12 (Application Icon & Bitmap Thumbnail Memory Footprint)**:
-  - Configured `androidx.collection.LruCache` in `AndroidPackageRepository` with 250 thumbnail entries (~16MB total memory) and 50 raw drawable entries.
-  - Implemented `getCachedIconThumbnail(packageName, sizePx)` for instant memory-cached lookup.
-  - Verified LRU eviction behavior under load (e.g. 500 package queries strictly bound memory to 250 entries, evicting oldest bitmaps).
-* **P5-13 (Main-Thread Responsiveness & Zero UI Jank)**:
-  - Updated `AppIcon` Composable to check `getCachedIconThumbnail` synchronously during initial composition, eliminating coroutine dispatches and placeholder flicker during fast list scrolling.
-  - Uncached icons asynchronously resolve on `Dispatchers.IO` without blocking the main thread.
-  - Benchmarked sequential search keystrokes over hundreds of apps executing in sub-millisecond per event.
-* **P5-14 (Scanner Concurrency & Fixed Channel Worker Pool)**:
-  - Refactored `AndroidCacheScanner` to use a fixed worker pool of $N$ coroutines (where $N = \text{effectiveConcurrency}$, default 6, configurable) reading from a buffered `Channel<DiscoveredPackage>`, replacing unbounded $O(N)$ coroutine spawning.
-  - Streamed results through a buffered `completedChannel`, strictly bounding memory consumption.
-  - Maintained monotonic progressive `ScanState.Scanning` state updates and duration tracking.
+* **P5-15 (No INTERNET Permission)**:
+  - Verified 0 declarations of `android.permission.INTERNET`, `ACCESS_NETWORK_STATE`, and `ACCESS_WIFI_STATE` across `AndroidManifest.xml` and all merged build manifests.
+  - Verified 0 networking libraries (OkHttp, Retrofit, Ktor, Volley, Apache, Cronet) in `libs.versions.toml` and `app/build.gradle.kts`.
+  - Verified 0 network socket or HTTP client classes imported in production source code.
+* **P5-16 (No Analytics)**:
+  - Verified 0 analytics libraries (Firebase Analytics, Google Analytics, Mixpanel, Segment, Amplitude, Flurry, AppCenter Analytics, Matomo, PostHog, AppsFlyer, etc.) across dependencies and source files.
+  - Verified 0 event tracking methods or tracker identifiers in ViewModels or repositories.
+* **P5-17 (No Telemetry & Remote Crash Reporters)**:
+  - Verified 0 crash reporting frameworks (Crashlytics, Sentry, Bugsnag, Datadog, ACRA) and 0 push messaging/cloud services (FCM, OneSignal, Pusher).
+  - Verified all errors are modeled locally with structured domain objects (`CleanerError`, `ScanState.Failed`).
+* **P5-18 (No Arbitrary Shell Execution Interfaces)**:
+  - Verified 0 `sh -c`, `su`, `/bin/sh`, `/system/bin/sh`, and `Runtime.getRuntime().exec` across production code.
+  - Restricted `ProcessBuilder` invocations exclusively to approved command classes (`PackageCommands.kt` and `CapabilityProbe.kt`).
+  - Restricted AIDL `ICacheOpsService` to strongly-typed domain methods only.
+  - Enforced mandatory `--cache-only` flag and `PackageValidator` validation on all clear commands.
+* **P5-19 (Review Production Logging)**:
+  - Audited production source code for 0 `android.util.Log` calls, 0 `System.out`/`System.err` prints, 0 `printStackTrace()`, and 0 sensitive data leakage.
+* **P5-20 (Review Exported Android Components)**:
+  - Audited Android components: `MainActivity` confirmed as the sole exported application activity with `MAIN`/`LAUNCHER`; 0 exported services; 0 exported broadcast receivers; `ShizukuProvider` guarded with `INTERACT_ACROSS_USERS_FULL` and `multiprocess="false"`; `allowBackup="false"` enforced.
 * **Unit Testing & Verification**:
-  - Added comprehensive test suite `PerformanceAndOptimizationTest.kt` with 8 new unit tests covering 500+ and 1000+ app scans, stress test with 8 workers, icon memory eviction, main-thread responsiveness, and worker pool concurrency boundaries.
-  - Verified 240/240 unit tests passing cleanly across 41 test suites (`./gradlew testDebugUnitTest`).
+  - Implemented `SecurityPrivacyComponentAuditTest.kt` with 17 automated security and privacy unit tests.
+  - Verified 261/261 unit tests passing cleanly across 42 test suites (`./gradlew testDebugUnitTest`).
   - Verified debug APK builds cleanly (`./gradlew assembleDebug`).
+  - Verified release APK with R8 minification builds cleanly (`./gradlew assembleRelease`).
 
 ---
 
@@ -501,12 +513,11 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (includin
 
 Begin:
 
-**P5-15 through P5-20 — Security, Privacy & Component Audit (Phase 5 — Hardening & Release)**
+**P5-21 through P5-24 — Compatibility & OEM Validation (Phase 5 — Hardening & Release)**
 
-* Confirm zero `android.permission.INTERNET` in manifest or dependencies (`P5-15`)
-* Confirm zero analytics libraries or tracking code (`P5-16`)
-* Confirm zero telemetry, remote crash reporters, or background uploading (`P5-17`)
-* Confirm zero arbitrary shell execution or privilege escalation vector (`P5-18`)
-* Review production logging for zero sensitive information leakage (`P5-19`)
-* Audit exported Android components (`MainActivity` as sole exported entry) (`P5-20`)
+* Test target physical device running Android 11+ (`P5-21`)
+* Record Android build, security patch level, and device behavior (`P5-22`)
+* Test additional OEM devices or variations if available (`P5-23`)
+* Document any platform-specific limitations or unsupported behavior (`P5-24`)
+
 
