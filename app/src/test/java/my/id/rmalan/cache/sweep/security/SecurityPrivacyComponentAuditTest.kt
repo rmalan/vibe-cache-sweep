@@ -642,4 +642,20 @@ class SecurityPrivacyComponentAuditTest {
         val allowBackup = appElement.getAttribute("android:allowBackup")
         assertEquals("allowBackup must be explicitly set to false to prevent adb backup extraction", "false", allowBackup)
     }
+
+    @Test
+    fun p5_20_manifest_applicationDeclaresIcons() {
+        val root = getProjectRoot()
+        val manifestFile = File(root, "app/src/main/AndroidManifest.xml")
+        val doc = parseManifest(manifestFile)
+
+        val appNodes = doc.getElementsByTagName("application")
+        assertEquals(1, appNodes.length)
+        val appElement = appNodes.item(0) as Element
+
+        val icon = appElement.getAttribute("android:icon")
+        val roundIcon = appElement.getAttribute("android:roundIcon")
+        assertEquals("@mipmap/ic_launcher", icon)
+        assertEquals("@mipmap/ic_launcher_round", roundIcon)
+    }
 }
