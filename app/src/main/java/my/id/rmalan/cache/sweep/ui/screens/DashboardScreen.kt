@@ -945,9 +945,6 @@ fun PrimaryCleanupHero(
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = 72.dp)
-            .semantics(mergeDescendants = true) {
-                contentDescription = heroAccessibilityLabel
-            }
     ) {
         Row(
             modifier = Modifier

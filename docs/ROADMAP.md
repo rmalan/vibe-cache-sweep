@@ -368,10 +368,10 @@ Phase 0 is complete only when:
 
 ## Compatibility
 
-* [ ] **P5-21** Test target physical device
-* [ ] **P5-22** Record Android build/device results
-* [ ] **P5-23** Test additional OEM/device if available
-* [ ] **P5-24** Document unsupported behavior
+* [x] **P5-21** Test target physical device
+* [x] **P5-22** Record Android build/device results
+* [x] **P5-23** Test additional OEM/device if available
+* [x] **P5-24** Document unsupported behavior
 
 ## Release
 

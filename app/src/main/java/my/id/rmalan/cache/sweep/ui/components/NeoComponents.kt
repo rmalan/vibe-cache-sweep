@@ -136,6 +136,8 @@ fun NeoButton(
         }
 
         Surface(
+            onClick = onClick,
+            enabled = enabled,
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 48.dp)
@@ -143,11 +145,6 @@ fun NeoButton(
                     width = borderWidth,
                     color = if (enabled) borderColor else borderColor.copy(alpha = 0.5f),
                     shape = RoundedCornerShape(cornerRadius)
-                )
-                .clickable(
-                    enabled = enabled,
-                    role = Role.Button,
-                    onClick = onClick
                 ),
             shape = RoundedCornerShape(cornerRadius),
             color = actualContainerColor
