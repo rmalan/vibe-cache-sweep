@@ -1,9 +1,9 @@
 # CacheSweep Development Status
 
-**Last updated:** 2026-08-16
+**Last updated:** 2026-08-17
 **Overall status:** In progress
-**Current phase:** Phase 5 (Hardening & Release) — Ready to start
-**Current task:** P5-01 through P5-06 — Failure Scenario Hardening
+**Current phase:** Phase 5 (Hardening & Release)
+**Current task:** P5-07 through P5-10 — Process Lifecycle & Package Failures
 
 ---
 
@@ -14,29 +14,27 @@
 * [x] Phase 2 — Production Cleaner
 * [x] Phase 3 — Cleanup Coordinator & Results
 * [x] Phase 4 — Product UI & Persistence
-* [ ] Phase 5 — Hardening & Release
+* [ ] Phase 5 — Hardening & Release (In progress: P5-01 to P5-06 completed)
 
 ---
 
 # Current Task
 
-## P5-01 through P5-06 — Failure Scenario Hardening & Edge Cases
+## P5-07 through P5-10 — Process Lifecycle, Reboot & Individual Package Failures
 
 **Status:** Ready to start
 
 ### Objective
 
-Harden CacheSweep against all real-world failure scenarios and edge cases outlined in ROADMAP.md Phase 5:
-- Shizuku absent (`P5-01`)
-- Shizuku stopped / process killed (`P5-02`)
-- Shizuku dies / connection drops mid-cleanup (`P5-03`)
-- Permission denied (`P5-04`)
-- Permission revoked while app is running (`P5-05`)
-- Usage Access revoked while app is running (`P5-06`)
+Verify and harden CacheSweep against:
+- App process recreation during scanning or cleanup (`P5-07`)
+- Device reboot persistence / cold start state (`P5-08`)
+- Individual package query failure / uninstalled package handling (`P5-09`)
+- Individual package cleanup failure / partial error reporting (`P5-10`)
 
 ### Expected outcome
 
-Robust error isolation and recovery paths ensuring the app never crashes, hangs, or leaves inconsistent state when system privileges or background services fail.
+Robust handling of process lifecycles, configuration changes, and individual package failures with zero data loss or unhandled crashes.
 
 ---
 
@@ -472,14 +470,32 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (includin
 
 # Most Recent Completed Task
 
-**Bugfix: App Cache List "Clean All Cache" Plan Validation Error**
+**P5-01 through P5-06 — Failure Scenario Hardening & Edge Cases**
 
-* Resolved `Plan validation failed: Global trim target bytes must be positive` occurring when cleaning from `AppCacheListScreen`.
-* Root cause: `AppCacheListScreen` FAB condition `if (!state.supportsSelectiveCleaning || !hasSelected)` incorrectly triggered `globalTrim` with `desiredFreeBytes = 0L` when no apps were individually selected (`!hasSelected`), failing validation.
-* Fixed FAB onClick logic to generate selective cleanup (`CleanupPlan.fromApps(targetApps)`) whenever selective cleaning is supported, and use `CleanupPlan.globalTrim(estimatedCacheBytes = totalCache)` with nullable `desiredFreeBytes` when global trim is needed.
-* Updated `CleanupPlan.globalTrim` factory to support nullable `desiredFreeBytes` and compute target bytes safely.
-* Added unit tests in `CleanupPlanTest` and `CleanupCoordinatorTest` covering `desiredFreeBytes = null` resolution and execution.
-* Verified 217/217 unit tests passing.
+* **P5-01 (Shizuku Absent)**:
+  - Guarded `ShizukuManager` state updates and permission queries against missing packages.
+  - Updated `DashboardViewModel` to track `isShizukuInstalled` and display "Shizuku Not Installed" with guidance in `ShizukuStatusCard`.
+  - Protected Shizuku launch intent with try-catch and Toast fallback when the app cannot be resolved.
+  - Return `CleanerError.ShizukuUnavailable` cleanly when cleaning is attempted without Shizuku.
+* **P5-02 (Shizuku Stopped / Process Killed)**:
+  - Added reactive observation in `DashboardViewModel`, `AppsViewModel`, and `CleanerViewModel` on `shizukuManager.state`.
+  - Automatically re-evaluates capabilities (`supportsSelectiveCleaning`, global trimming) when Shizuku state transitions to `NotRunning`.
+* **P5-03 (Shizuku Dies Mid-Cleanup)**:
+  - Added explicit handling for `android.os.DeadObjectException`, `SecurityException`, and `RemoteException` in `ShizukuCacheCleaner`.
+  - Immediately fails remaining packages in the batch with `CleanerError.ShizukuUnavailable` to avoid hanging or repeating dead IPC calls.
+  - `CleanupCoordinator` safely captures before/after snapshot, calculates deltas, and completes without freezing on `Clearing` or `WaitingForStats`.
+* **P5-04 & P5-05 (Permission Denied / Revoked)**:
+  - Wrapped `Shizuku.checkSelfPermission()` and `Shizuku.requestPermission()` in try-catch blocks.
+  - `CleanupCoordinator` validates permissions prior to executing commands, returning `CleanerError.PermissionDenied`.
+  - Reactive ViewModels update UI states immediately when permission is revoked.
+* **P5-06 (Usage Access Revoked)**:
+  - Wrapped `AppOpsManager` check in `AndroidUsageAccessManager.hasAccess()` with try-catch returning `false`.
+  - Handled `SecurityException` during package queries in `AndroidStorageStatsRepository`, marking measurement unavailable with error message.
+  - Added `hasUsageAccess` to `DashboardUiState` and `AppsUiState` and rendered high-contrast Neobrutalist `UsageAccessRequiredBanner` on `DashboardScreen` and `AppCacheListScreen` with direct shortcut to system settings.
+* **Unit Testing & Verification**:
+  - Added `FailureScenariosHardeningTest.kt` with comprehensive unit tests for all 6 scenarios.
+  - Verified 225/225 unit tests passing cleanly (`./gradlew testDebugUnitTest`).
+  - Verified debug APK builds cleanly (`./gradlew assembleDebug`).
 
 ---
 
@@ -487,11 +503,10 @@ None. Current implementation follows `TECH_SPEC.md` and `DECISIONS.md` (includin
 
 Begin:
 
-**P5-01 through P5-06 — Failure Scenario Hardening & Edge Cases (Phase 5 — Hardening & Release)**
+**P5-07 through P5-10 — Process Lifecycle, Reboot & Individual Package Failures (Phase 5 — Hardening & Release)**
 
-* Verify graceful handling when Shizuku is absent (`P5-01`)
-* Verify behavior when Shizuku service is stopped or not running (`P5-02`)
-* Verify recovery when Shizuku binder dies mid-operation (`P5-03`)
-* Verify error paths when Shizuku permission is denied or revoked (`P5-04`, `P5-05`)
-* Verify error paths when Usage Access is revoked (`P5-06`)
+* Verify behavior during activity/process recreation (`P5-07`)
+* Verify behavior across device reboot / cold launch (`P5-08`)
+* Verify individual package query failure / uninstalled package handling (`P5-09`)
+* Verify individual package cleanup failure / partial error reporting (`P5-10`)
 

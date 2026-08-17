@@ -86,6 +86,8 @@ import my.id.rmalan.cache.sweep.ui.viewmodel.CleanerEvent
 import my.id.rmalan.cache.sweep.ui.viewmodel.CleanerViewModel
 import my.id.rmalan.cache.sweep.ui.viewmodel.DashboardEvent
 import my.id.rmalan.cache.sweep.ui.viewmodel.DashboardViewModel
+import android.widget.Toast
+import my.id.rmalan.cache.sweep.permissions.UsageAccessManager
 import my.id.rmalan.cache.sweep.util.ByteFormatter
 import my.id.rmalan.cache.sweep.util.DashboardTimeFormatter
 
@@ -96,6 +98,7 @@ fun DashboardScreen(
     cleanerViewModel: CleanerViewModel,
     shizukuManager: ShizukuManager,
     packageRepository: PackageRepository? = null,
+    usageAccessManager: UsageAccessManager? = null,
     onOpenAppList: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier
@@ -108,6 +111,9 @@ fun DashboardScreen(
         shizukuManager.updateState()
         viewModel.refreshStorage()
         cleanerViewModel.loadCapabilities()
+        if (state.hasUsageAccess && state.allScannedApps.isEmpty() && !state.isScanning) {
+            viewModel.scan()
+        }
         onPauseOrDispose { }
     }
 
@@ -184,6 +190,25 @@ fun DashboardScreen(
                     ScanningStatusBanner(scanState = state.scanState)
                 }
 
+                // Usage Access Required Banner (P5-06)
+                if (!state.hasUsageAccess) {
+                    UsageAccessRequiredBanner(
+                        onGrantAccess = {
+                            try {
+                                val intent = usageAccessManager?.createSettingsIntent()
+                                    ?: android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    context,
+                                    "Could not open Usage Access settings",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    )
+                }
+
                 // 1. Device Storage Card (P4-05)
                 DeviceStorageCard(
                     storageInfo = state.deviceStorage,
@@ -200,15 +225,30 @@ fun DashboardScreen(
                     lastScanTimeMillis = state.lastScanTimeMillis
                 )
 
-                // 3. Shizuku Status Card (P4-08)
+                // 3. Shizuku Status Card (P4-08, P5-01, P5-02)
                 ShizukuStatusCard(
                     shizukuState = state.shizukuState,
+                    isInstalled = state.isShizukuInstalled,
                     supportsSelectiveCleaning = state.supportsSelectiveCleaning,
                     onGrantPermission = { shizukuManager.requestPermission() },
                     onOpenShizuku = {
                         val launchIntent = shizukuManager.createShizukuLaunchIntent()
                         if (launchIntent != null) {
-                            context.startActivity(launchIntent)
+                            try {
+                                context.startActivity(launchIntent)
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    context,
+                                    "Failed to launch Shizuku: ${e.localizedMessage ?: "Unknown error"}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Shizuku app not found. Please install Shizuku to continue.",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     },
                     onCheckAgain = {
@@ -591,7 +631,59 @@ fun ApplicationCacheCard(
 }
 
 /**
- * Shizuku Connection Status Card (P4-08)
+ * Usage Access Permission Required Banner (P5-06)
+ */
+@Composable
+fun UsageAccessRequiredBanner(
+    onGrantAccess: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    NeoCard(
+        containerColor = MaterialTheme.colorScheme.errorContainer,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Security,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = "Usage Access Required",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.semantics { heading() }
+                )
+            }
+
+            Text(
+                text = "Android Usage Access permission is required to calculate per-app cache and storage footprints.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+
+            NeoButton(
+                onClick = onGrantAccess,
+                containerColor = MaterialTheme.colorScheme.error,
+                contentColor = MaterialTheme.colorScheme.onError,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Open Usage Access Settings")
+            }
+        }
+    }
+}
+
+/**
+ * Shizuku Connection Status Card (P4-08, P5-01, P5-02)
  */
 @Composable
 fun ShizukuStatusCard(
@@ -600,7 +692,8 @@ fun ShizukuStatusCard(
     onGrantPermission: () -> Unit,
     onOpenShizuku: () -> Unit,
     onCheckAgain: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isInstalled: Boolean = true
 ) {
     when (shizukuState) {
         is ShizukuState.Ready -> {
@@ -734,7 +827,7 @@ fun ShizukuStatusCard(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "Shizuku Isn't Running",
+                            text = if (isInstalled) "Shizuku Isn't Running" else "Shizuku Not Installed",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Black,
                             modifier = Modifier.semantics { heading() }
@@ -742,7 +835,11 @@ fun ShizukuStatusCard(
                     }
 
                     Text(
-                        text = "Start Shizuku to enable system cache cleanup without root. You can still inspect storage and open individual app settings.",
+                        text = if (isInstalled) {
+                            "Start Shizuku to enable system cache cleanup without root. You can still inspect storage and open individual app settings."
+                        } else {
+                            "Shizuku is required for automated cache cleanup without root. You can still inspect storage and open individual app settings."
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -757,7 +854,7 @@ fun ShizukuStatusCard(
                             contentColor = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Open Shizuku")
+                            Text(if (isInstalled) "Open Shizuku" else "Install / Guide")
                         }
 
                         NeoButton(

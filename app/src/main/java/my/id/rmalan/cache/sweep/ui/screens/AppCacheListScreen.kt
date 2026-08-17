@@ -72,6 +72,10 @@ import my.id.rmalan.cache.sweep.ui.viewmodel.CleanerEvent
 import my.id.rmalan.cache.sweep.ui.viewmodel.CleanerViewModel
 import my.id.rmalan.cache.sweep.util.ByteFormatter
 
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LifecycleResumeEffect
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppCacheListScreen(
@@ -84,8 +88,18 @@ fun AppCacheListScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val cleanerState = cleanerViewModel?.uiState?.collectAsState()?.value
+    val context = LocalContext.current
 
     var isSelectionMode by remember { mutableStateOf(false) }
+
+    LifecycleResumeEffect(Unit) {
+        cleanerViewModel?.loadCapabilities()
+        viewModel.loadCapabilities()
+        if (state.hasUsageAccess && state.rawApps.isEmpty() && !state.isScanning) {
+            viewModel.scan()
+        }
+        onPauseOrDispose { }
+    }
 
     // Trigger initial scan if apps list is empty
     LaunchedEffect(Unit) {
@@ -266,6 +280,25 @@ fun AppCacheListScreen(
                 .padding(innerPadding)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
+                // Usage Access Required Banner (P5-06)
+                if (!state.hasUsageAccess) {
+                    UsageAccessRequiredBanner(
+                        onGrantAccess = {
+                            try {
+                                val intent = android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    context,
+                                    "Could not open Usage Access settings",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+
                 // Search Input Field (P1-21)
                 OutlinedTextField(
                     value = state.query,

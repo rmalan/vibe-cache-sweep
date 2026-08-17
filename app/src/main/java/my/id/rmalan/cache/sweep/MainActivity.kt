@@ -101,7 +101,8 @@ class MainActivity : ComponentActivity() {
                                 factory = DashboardViewModel.Factory(
                                     deviceStorageRepository = app.container.deviceStorageRepository,
                                     cacheScanner = app.container.cacheScanner,
-                                    shizukuManager = app.container.shizukuManager
+                                    shizukuManager = app.container.shizukuManager,
+                                    usageAccessManager = app.container.usageAccessManager
                                 )
                             )
                             val cleanerViewModel: CleanerViewModel = viewModel(
@@ -115,6 +116,7 @@ class MainActivity : ComponentActivity() {
                                 cleanerViewModel = cleanerViewModel,
                                 shizukuManager = app.container.shizukuManager,
                                 packageRepository = app.container.packageRepository,
+                                usageAccessManager = app.container.usageAccessManager,
                                 onOpenAppList = {
                                     currentDestination = MainDestination.APP_CACHE_LIST
                                 },
@@ -132,7 +134,8 @@ class MainActivity : ComponentActivity() {
                                 factory = AppsViewModel.Factory(
                                     cacheScanner = app.container.cacheScanner,
                                     shizukuManager = app.container.shizukuManager,
-                                    userSettingsRepository = app.container.userSettingsRepository
+                                    userSettingsRepository = app.container.userSettingsRepository,
+                                    usageAccessManager = app.container.usageAccessManager
                                 )
                             )
                             val cleanerViewModel: CleanerViewModel = viewModel(

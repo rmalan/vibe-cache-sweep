@@ -133,6 +133,19 @@ class ShizukuCacheCleaner(
                     val lastError = try { service.lastError } catch (e: Exception) { "" }
                     errors[pkg] = CleanerError.CommandFailed(exitCode, lastError)
                 }
+            } catch (e: android.os.DeadObjectException) {
+                failed.add(pkg)
+                errors[pkg] = CleanerError.ShizukuUnavailable
+                // Service died mid-batch: fail remaining packages immediately with ShizukuUnavailable
+                for (remainingIdx in (index + 1) until total) {
+                    val remPkg = packages[remainingIdx]
+                    failed.add(remPkg)
+                    errors[remPkg] = CleanerError.ShizukuUnavailable
+                }
+                break
+            } catch (e: SecurityException) {
+                failed.add(pkg)
+                errors[pkg] = CleanerError.PermissionDenied
             } catch (e: Exception) {
                 failed.add(pkg)
                 errors[pkg] = CleanerError.Unexpected(e)
@@ -252,6 +265,20 @@ class ShizukuCacheCleaner(
                             errors = mapOf("global_trim" to CleanerError.CommandFailed(exitCode, lastError))
                         )
                     }
+                } catch (e: android.os.DeadObjectException) {
+                    CleanerBatchResult(
+                        totalAttempted = 1,
+                        successfulPackages = emptyList(),
+                        failedPackages = listOf("global_trim"),
+                        errors = mapOf("global_trim" to CleanerError.ShizukuUnavailable)
+                    )
+                } catch (e: SecurityException) {
+                    CleanerBatchResult(
+                        totalAttempted = 1,
+                        successfulPackages = emptyList(),
+                        failedPackages = listOf("global_trim"),
+                        errors = mapOf("global_trim" to CleanerError.PermissionDenied)
+                    )
                 } catch (e: Exception) {
                     CleanerBatchResult(
                         totalAttempted = 1,

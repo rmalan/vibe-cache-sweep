@@ -403,3 +403,41 @@ Delivers a high-contrast, tactile, modern aesthetic across all application scree
 
 CacheSweep features a consistent, bold Neobrutalist design system in both Light and Cyber-Brutalist Dark themes with 100% unit test coverage passing.
 
+---
+
+# D-034 — Privilege and Permission Failure Hardening Architecture
+
+**Status:** Accepted
+
+## Context
+
+In real-world Android usage, external dependencies and system permissions may fail at any time:
+- Shizuku may be uninstalled or killed by OEM background task killers.
+- The privileged Shizuku binder may die mid-operation while processing multi-package cache clearing or global trimming.
+- Shizuku permission or Usage Access permission may be denied or revoked while the app is in the background.
+- External package manager operations may throw `SecurityException` or `DeadObjectException`.
+
+## Decision
+
+1. **Defensive API Wrapping & IPC Isolation**:
+   - Wrap all `Shizuku.*` and `AppOpsManager` invocations in safe try-catch blocks with typed fallback states (`ShizukuState.NotRunning`, `ShizukuState.Error`, `hasUsageAccess = false`).
+   - In `ShizukuCacheCleaner`, catch `DeadObjectException` during batch processing and fail remaining packages immediately with `CleanerError.ShizukuUnavailable` to avoid hanging or repeated failed IPC attempts on a dead binder.
+2. **Reactive Observation**:
+   - Have `DashboardViewModel`, `AppsViewModel`, and `CleanerViewModel` observe `ShizukuManager.state` reactively, updating capabilities and action states dynamically when Shizuku starts, stops, or changes permissions.
+3. **Usage Access Revocation Handling**:
+   - Check `UsageAccessManager.hasAccess()` in `DashboardViewModel` and `AppsViewModel` during initialization, refresh, and resume.
+   - Display prominent Neobrutalist warning banners on `DashboardScreen` and `AppCacheListScreen` when Usage Access is missing, providing direct one-tap shortcuts to Android Usage Access Settings.
+4. **Resilient Cleanup Coordination**:
+   - Ensure `CleanupCoordinator` safely captures before/after snapshots and deltas, handles partial failure attributions, and transitions cleanly to `Completed` or `Failed` without leaving the user stuck on `Clearing` or `WaitingForStats`.
+5. **Safe Intent Launches**:
+   - Protect all external Activity launches (`ACTION_USAGE_ACCESS_SETTINGS`, Shizuku launch intent) with try-catch and friendly Toast feedback when apps are missing.
+
+## Reason
+
+Ensures CacheSweep adheres to zero-crash, non-hanging reliability across all Android devices and edge cases while keeping the codebase simple, modular, and testable ("stupid simple code").
+
+## Consequences
+
+CacheSweep operates robustly against Shizuku process crashes, permission revocation, and background OS changes with 225/225 unit tests passing cleanly.
+
+

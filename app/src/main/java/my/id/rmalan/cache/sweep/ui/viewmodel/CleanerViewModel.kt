@@ -62,6 +62,16 @@ class CleanerViewModel(
 
     init {
         loadCapabilities()
+        observeShizukuState()
+    }
+
+    private fun observeShizukuState() {
+        val manager = shizukuManager ?: return
+        viewModelScope.launch {
+            manager.state.collect {
+                loadCapabilities()
+            }
+        }
     }
 
     fun loadCapabilities() {

@@ -17,6 +17,8 @@ import my.id.rmalan.cache.sweep.shizuku.ShizukuManager
 import my.id.rmalan.cache.sweep.storage.UserSettingsRepository
 import my.id.rmalan.cache.sweep.util.AppFilter
 
+import my.id.rmalan.cache.sweep.permissions.UsageAccessManager
+
 data class AppsUiState(
     val rawApps: List<AppCacheInfo> = emptyList(),
     val displayedApps: List<AppCacheInfo> = emptyList(),
@@ -27,6 +29,7 @@ data class AppsUiState(
     val selectedPackages: Set<String> = emptySet(),
     val selectedAppDetail: AppCacheInfo? = null,
     val isScanning: Boolean = false,
+    val hasUsageAccess: Boolean = true,
     val scanState: ScanState = ScanState.Idle,
     val scanResult: ScanResult? = null,
     val supportsSelectiveCleaning: Boolean = false,
@@ -56,7 +59,8 @@ sealed interface AppsEvent {
 class AppsViewModel(
     private val cacheScanner: CacheScanner,
     private val shizukuManager: ShizukuManager? = null,
-    private val userSettingsRepository: UserSettingsRepository? = null
+    private val userSettingsRepository: UserSettingsRepository? = null,
+    private val usageAccessManager: UsageAccessManager? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AppsUiState())
@@ -64,7 +68,17 @@ class AppsViewModel(
 
     init {
         loadCapabilities()
+        observeShizukuState()
         observeUserSettings()
+    }
+
+    private fun observeShizukuState() {
+        val manager = shizukuManager ?: return
+        viewModelScope.launch {
+            manager.state.collect {
+                loadCapabilities()
+            }
+        }
     }
 
     private fun observeUserSettings() {
@@ -90,7 +104,7 @@ class AppsViewModel(
         }
     }
 
-    private fun loadCapabilities() {
+    fun loadCapabilities() {
         viewModelScope.launch {
             val caps = shizukuManager?.fetchCapabilities()
             _uiState.update {
@@ -186,7 +200,19 @@ class AppsViewModel(
 
     fun scan() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isScanning = true, errorMessage = null) }
+            val hasAccess = usageAccessManager?.hasAccess() ?: true
+            if (!hasAccess) {
+                _uiState.update {
+                    it.copy(
+                        hasUsageAccess = false,
+                        isScanning = false,
+                        errorMessage = "Usage Access permission is required to calculate cache usage."
+                    )
+                }
+                return@launch
+            }
+
+            _uiState.update { it.copy(hasUsageAccess = true, isScanning = true, errorMessage = null) }
             try {
                 cacheScanner.scanFlow().collect { scanState ->
                     _uiState.update { state ->
@@ -224,11 +250,12 @@ class AppsViewModel(
     class Factory(
         private val cacheScanner: CacheScanner,
         private val shizukuManager: ShizukuManager? = null,
-        private val userSettingsRepository: UserSettingsRepository? = null
+        private val userSettingsRepository: UserSettingsRepository? = null,
+        private val usageAccessManager: UsageAccessManager? = null
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return AppsViewModel(cacheScanner, shizukuManager, userSettingsRepository) as T
+            return AppsViewModel(cacheScanner, shizukuManager, userSettingsRepository, usageAccessManager) as T
         }
     }
 }

@@ -100,29 +100,47 @@ open class ShizukuManager(
     }
 
     open fun updateState() {
-        if (!Shizuku.pingBinder()) {
-            _state.value = ShizukuState.NotRunning
-            return
-        }
-
-        if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
-            val uid = try {
-                Shizuku.getUid()
-            } catch (e: Exception) {
-                -1
+        try {
+            val isPing = try { Shizuku.pingBinder() } catch (e: Exception) { false }
+            if (!isPing) {
+                _state.value = ShizukuState.NotRunning
+                return
             }
-            _state.value = ShizukuState.Ready(uid)
-            ensureServiceBound()
-        } else {
-            _state.value = ShizukuState.PermissionRequired
+
+            val isGranted = try {
+                Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+            } catch (e: Exception) {
+                false
+            }
+
+            if (isGranted) {
+                val uid = try {
+                    Shizuku.getUid()
+                } catch (e: Exception) {
+                    -1
+                }
+                _state.value = ShizukuState.Ready(uid)
+                ensureServiceBound()
+            } else {
+                _state.value = ShizukuState.PermissionRequired
+            }
+        } catch (e: Exception) {
+            _state.value = ShizukuState.Error(e.message ?: "Failed to update Shizuku state")
         }
     }
 
     open fun requestPermission() {
-        if (Shizuku.pingBinder()) {
+        try {
+            val isPing = try { Shizuku.pingBinder() } catch (e: Exception) { false }
+            if (!isPing) {
+                _state.value = ShizukuState.NotRunning
+                return
+            }
             if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                 Shizuku.requestPermission(SHIZUKU_PERMISSION_REQUEST_CODE)
             }
+        } catch (e: Exception) {
+            _state.value = ShizukuState.Error(e.message ?: "Failed to request Shizuku permission")
         }
     }
 

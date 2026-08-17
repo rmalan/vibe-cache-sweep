@@ -18,6 +18,8 @@ import my.id.rmalan.cache.sweep.scanner.CacheScanner
 import my.id.rmalan.cache.sweep.shizuku.ShizukuManager
 import my.id.rmalan.cache.sweep.storage.DeviceStorageRepository
 
+import my.id.rmalan.cache.sweep.permissions.UsageAccessManager
+
 data class DashboardUiState(
     val isLoading: Boolean = true,
     val isScanning: Boolean = false,
@@ -28,6 +30,8 @@ data class DashboardUiState(
     val largestApps: List<AppCacheInfo> = emptyList(),
     val allScannedApps: List<AppCacheInfo> = emptyList(),
     val shizukuState: ShizukuState = ShizukuState.NotRunning,
+    val isShizukuInstalled: Boolean = false,
+    val hasUsageAccess: Boolean = true,
     val cleanerCapabilities: CleanerCapabilities? = null,
     val scanDurationMillis: Long = 0L,
     val lastScanTimeMillis: Long = 0L,
@@ -61,20 +65,34 @@ sealed interface DashboardEvent {
 class DashboardViewModel(
     private val deviceStorageRepository: DeviceStorageRepository,
     private val cacheScanner: CacheScanner,
-    private val shizukuManager: ShizukuManager? = null
+    private val shizukuManager: ShizukuManager? = null,
+    private val usageAccessManager: UsageAccessManager? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     init {
+        refreshStatus()
         refreshStorage()
         observeShizukuState()
         loadCapabilities()
         scan()
     }
 
+    fun refreshStatus() {
+        val hasAccess = usageAccessManager?.hasAccess() ?: true
+        val isInstalled = shizukuManager?.isShizukuInstalled() ?: false
+        _uiState.update {
+            it.copy(
+                hasUsageAccess = hasAccess,
+                isShizukuInstalled = isInstalled
+            )
+        }
+    }
+
     fun refreshStorage() {
+        refreshStatus()
         try {
             val storage = deviceStorageRepository.snapshot()
             _uiState.update { it.copy(deviceStorage = storage) }
@@ -87,7 +105,8 @@ class DashboardViewModel(
         if (shizukuManager != null) {
             viewModelScope.launch {
                 shizukuManager.state.collect { state ->
-                    _uiState.update { it.copy(shizukuState = state) }
+                    val isInstalled = shizukuManager.isShizukuInstalled()
+                    _uiState.update { it.copy(shizukuState = state, isShizukuInstalled = isInstalled) }
                     if (state is ShizukuState.Ready) {
                         loadCapabilities()
                     }
@@ -110,6 +129,19 @@ class DashboardViewModel(
     fun scan() {
         viewModelScope.launch {
             refreshStorage()
+            val hasAccess = usageAccessManager?.hasAccess() ?: true
+            if (!hasAccess) {
+                _uiState.update {
+                    it.copy(
+                        hasUsageAccess = false,
+                        isScanning = false,
+                        isLoading = false,
+                        errorMessage = "Usage Access permission is required to calculate cache usage."
+                    )
+                }
+                return@launch
+            }
+
             _uiState.update { it.copy(isScanning = true, errorMessage = null) }
             try {
                 cacheScanner.scanFlow().collect { scanState ->
@@ -179,14 +211,16 @@ class DashboardViewModel(
     class Factory(
         private val deviceStorageRepository: DeviceStorageRepository,
         private val cacheScanner: CacheScanner,
-        private val shizukuManager: ShizukuManager? = null
+        private val shizukuManager: ShizukuManager? = null,
+        private val usageAccessManager: UsageAccessManager? = null
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             return DashboardViewModel(
                 deviceStorageRepository = deviceStorageRepository,
                 cacheScanner = cacheScanner,
-                shizukuManager = shizukuManager
+                shizukuManager = shizukuManager,
+                usageAccessManager = usageAccessManager
             ) as T
         }
     }

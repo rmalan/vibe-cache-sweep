@@ -285,7 +285,21 @@ fun SettingsScreen(
                                 onClick = {
                                     val launchIntent = shizukuManager?.createShizukuLaunchIntent()
                                     if (launchIntent != null) {
-                                        context.startActivity(launchIntent)
+                                        try {
+                                            context.startActivity(launchIntent)
+                                        } catch (e: Exception) {
+                                            android.widget.Toast.makeText(
+                                                context,
+                                                "Failed to open Shizuku: ${e.localizedMessage ?: "Unknown error"}",
+                                                android.widget.Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    } else {
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            "Shizuku app not found. Please install Shizuku to continue.",
+                                            android.widget.Toast.LENGTH_SHORT
+                                        ).show()
                                     }
                                 },
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,

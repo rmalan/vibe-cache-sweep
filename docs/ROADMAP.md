@@ -339,12 +339,12 @@ Phase 0 is complete only when:
 
 ## Failure scenarios
 
-* [ ] **P5-01** Shizuku absent
-* [ ] **P5-02** Shizuku stopped
-* [ ] **P5-03** Shizuku dies during cleanup
-* [ ] **P5-04** Permission denied
-* [ ] **P5-05** Permission revoked
-* [ ] **P5-06** Usage Access revoked
+* [x] **P5-01** Shizuku absent
+* [x] **P5-02** Shizuku stopped
+* [x] **P5-03** Shizuku dies during cleanup
+* [x] **P5-04** Permission denied
+* [x] **P5-05** Permission revoked
+* [x] **P5-06** Usage Access revoked
 * [ ] **P5-07** App process recreation
 * [ ] **P5-08** Device reboot
 * [ ] **P5-09** Individual package query failure
